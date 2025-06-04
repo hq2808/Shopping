@@ -1,0 +1,62 @@
+# === Java / Maven / Gradle ===
+target/
+build/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+
+# Maven Wrapper
+.mvn/
+!/.mvn/wrapper/maven-wrapper.jar
+
+# Gradle
+.gradle/
+gradle-app.setting
+
+# === IDEs ===
+.idea/
+*.iws
+*.ipr
+.vscode/
+
+# === Logs ===
+*.log
+logs/
+*.log.*
+
+# === Temporary / Generated ===
+out/
+tmp/
+*.tmp
+
+# === OS / Editor ===
+.DS_Store
+Thumbs.db
+
+# === Spring Boot ===
+application-*.yml
+application-*.properties
+.env
+.env.*
+
+# === Database ===
+*.h2.db
+*.mv.db
+*.sqlite
+
+# === Docker ===
+docker-compose.override.yml
+.env.docker
+
+# === Test Reports ===
+test-output/
+surefire-reports/
+jacoco.exec
+coverage/
+
+# === Node.js frontend (nếu có Angular) ===
+**/frontend/node_modules/
+**/frontend/dist/
+**/frontend/.angular/
