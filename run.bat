@@ -9,8 +9,8 @@ echo.
 
 :: 1. Don dep container cu tranh xung dot
 echo [1/4] Dang kiem tra va don dep cac container cu de tranh xung dot...
-docker stop shopee_mini_db shopee_mini_app >nul 2>&1
-docker rm shopee_mini_db shopee_mini_app >nul 2>&1
+docker stop shopee_mini_db shopee_mini_app shopee_mini_redis shopee_mini_rabbitmq >nul 2>&1
+docker rm shopee_mini_db shopee_mini_app shopee_mini_redis shopee_mini_rabbitmq >nul 2>&1
 echo.
 
 :: 2. Khoi chay Docker Compose

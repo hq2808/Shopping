@@ -35,8 +35,14 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items;
 
+    @Column(name = "trace_id", unique = true)
+    private String traceId;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        if (this.traceId == null) {
+            this.traceId = java.util.UUID.randomUUID().toString();
+        }
     }
 }

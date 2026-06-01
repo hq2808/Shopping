@@ -27,6 +27,13 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @PostMapping("/async")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<OrderResponse> createOrderAsync(@Valid @RequestBody OrderRequest request, Principal principal) {
+        OrderResponse response = orderService.createOrderAsync(principal.getName(), request);
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<List<OrderResponse>> getUserOrders(Principal principal) {

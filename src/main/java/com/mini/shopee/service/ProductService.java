@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final ProductCacheService productCacheService;
 
     @Transactional(readOnly = true)
     public Page<Product> getAllProducts(String name, Pageable pageable) {
@@ -38,7 +39,12 @@ public class ProductService {
                 .price(dto.getPrice())
                 .stock(dto.getStock())
                 .build();
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+
+        // Sync to Redis immediately
+        productCacheService.syncProduct(savedProduct);
+
+        return savedProduct;
     }
 
     @Transactional
@@ -48,12 +54,20 @@ public class ProductService {
         product.setDescription(dto.getDescription());
         product.setPrice(dto.getPrice());
         product.setStock(dto.getStock());
-        return productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+
+        // Sync to Redis immediately
+        productCacheService.syncProduct(savedProduct);
+
+        return savedProduct;
     }
 
     @Transactional
     public void deleteProduct(Long id) {
         Product product = getProductById(id);
         productRepository.delete(product);
+
+        // Evict from Redis immediately
+        productCacheService.evictProduct(id);
     }
 }

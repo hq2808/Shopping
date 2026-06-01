@@ -18,5 +18,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
            "WHERE o.user = :user " +
            "ORDER BY o.createdAt DESC")
     List<Order> findByUserWithItemsAndProducts(@Param("user") User user);
+
+    boolean existsByTraceId(String traceId);
 }
 

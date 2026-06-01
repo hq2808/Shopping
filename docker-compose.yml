@@ -11,9 +11,39 @@ services:
       POSTGRES_DB: shopee_mini
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U sa_user -d shopee_mini"]
       interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopee-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: shopee_mini_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - shopee-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: shopee_mini_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
       timeout: 5s
       retries: 5
     networks:
@@ -28,11 +58,43 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/shopee_mini
       SPRING_DATASOURCE_USERNAME: sa_user
       SPRING_DATASOURCE_PASSWORD: sa_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     depends_on:
       postgres-db:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - shopee-net
+
+  test-runner:
+    profiles:
+      - test
+    image: maven:3.9.6-eclipse-temurin-21-alpine
+    container_name: shopee_test_runner
+    environment:
+      - SPRING_PROFILES_ACTIVE=test-docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/shopee_test
+      - SPRING_DATASOURCE_USERNAME=sa_user
+      - SPRING_DATASOURCE_PASSWORD=sa_password
+      - SPRING_DATA_REDIS_HOST=redis
+      - SPRING_DATA_REDIS_PORT=6379
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
+      - SPRING_RABBITMQ_USERNAME=guest
+      - SPRING_RABBITMQ_PASSWORD=guest
+    volumes:
+      - .:/app
+      - maven-cache:/root/.m2
+    networks:
+      - shopee-net
+    working_dir: /app
+    command: mvn verify
 
 networks:
   shopee-net:
@@ -40,3 +102,6 @@ networks:
 
 volumes:
   pgdata:
+  redisdata:
+  rabbitdata:
+  maven-cache:

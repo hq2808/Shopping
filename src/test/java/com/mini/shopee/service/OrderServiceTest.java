@@ -8,6 +8,8 @@ import com.mini.shopee.entity.User;
 import com.mini.shopee.exception.BadRequestException;
 import com.mini.shopee.repository.ProductRepository;
 import com.mini.shopee.repository.UserRepository;
+import com.mini.shopee.BaseIntegrationTest;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +20,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
-public class OrderServiceTest {
+public class OrderServiceTest extends BaseIntegrationTest {
 
     @Autowired
     private OrderService orderService;
@@ -29,6 +30,12 @@ public class OrderServiceTest {
 
     @Autowired
     private ProductRepository productRepository;
+
+    @AfterEach
+    public void tearDown() {
+        productRepository.deleteAll();
+        userRepository.deleteAll();
+    }
 
     private User testUser;
     private Product product1;

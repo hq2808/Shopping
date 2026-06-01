@@ -3,10 +3,21 @@ spring:
     name: shopee
   
   datasource:
-    url: jdbc:postgresql://localhost:5432/shopee_mini
+    url: jdbc:postgresql://${SPRING_DATASOURCE_HOST:localhost}:5432/shopee_mini
     username: sa_user
     password: sa_password
     driver-class-name: org.postgresql.Driver
+
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
   
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect

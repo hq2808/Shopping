@@ -66,6 +66,20 @@
                     Trước khi kiểm thử, Tester yêu cầu lập trình viên chạy cụm Docker Compose: <code>docker compose up --build -d</code>.
                 </p>
 
+                <div class="alert alert-success">
+                    <h5>Tải nhanh Bộ kịch bản Postman (Postman Collection):</h5>
+                    <p class="mb-12">
+                        Để giúp việc kiểm thử nhanh gọn và tự động nhất (không cần sao chép Token thủ công), bạn có thể tải bộ cấu hình Postman tích hợp sẵn kịch bản tự động lưu Token:
+                    </p>
+                    <a href="mini_shopee_postman_collection.json" download="mini_shopee_postman_collection.json" class="btn-portal">
+                        Tải Xuống Postman Collection JSON &darr;
+                    </a>
+                    <ul class="mt-16" style="margin-bottom: 0;">
+                        <li><strong>Cơ chế tự động:</strong> Khi bạn gọi API <strong>User Login</strong> hoặc <strong>Admin Login</strong>, script sẽ tự động bóc tách JWT từ phản hồi và lưu vào biến <code>jwt_token</code>.</li>
+                        <li><strong>Kế thừa:</strong> Tất cả các API còn lại trong bộ (Đặt hàng, Xem lịch sử, CRUD...) đã được cấu hình kế thừa Bearer Token từ biến này để chạy ngay mà không cần cấu hình thủ công.</li>
+                    </ul>
+                </div>
+
                 <h3 class="mt-24 mb-12">Tài khoản mẫu được tạo sẵn (Default Accounts)</h3>
                 <table>
                     <thead>
@@ -263,6 +277,22 @@
             <ul>
                 <li><strong>Trùng tên:</strong> Gửi lại body trên lần nữa. Hệ thống trả về <strong>400 Bad Request</strong> thông báo: <em>"Username is already taken"</em>.</li>
                 <li><strong>Sai mật khẩu:</strong> Đăng nhập với mật khẩu không đúng. Hệ thống trả về <strong>401 Unauthorized</strong> với tin nhắn: <em>"Invalid username or password"</em>.</li>
+            </ul>
+
+            <h4 class="mt-16">Kịch bản 2.3: Xem thông tin Profile người dùng (Authenticated API)</h4>
+            <p class="mb-12">Đăng nhập tài khoản bất kỳ (Ví dụ: <code>user</code>), sử dụng Token gán vào Authorization Bearer để gửi yêu cầu lấy profile:</p>
+            <ul>
+                <li><strong>Method:</strong> <span class="method method-get">GET</span></li>
+                <li><strong>URL:</strong> <code>http://localhost:8080/api/users/profile</code></li>
+                <li><strong>Kết quả mong đợi (200 OK):</strong> Trả về thông tin cá nhân kèm số dư ví thời gian thực:
+                    <pre><code>{
+    "id": 1,
+    "username": "user",
+    "email": "user@gmail.com",
+    "role": "ROLE_USER",
+    "balance": 1000.00
+}</code></pre>
+                </li>
             </ul>
 
             <div class="alert">

@@ -30,6 +30,7 @@
                         <li><a href="#requirements" class="sidebar-sub-link">Chuẩn bị</a></li>
                         <li><a href="#steps" class="sidebar-sub-link">Các bước chạy</a></li>
                         <li><a href="#compose-config" class="sidebar-sub-link">Cấu hình Docker</a></li>
+                        <li><a href="#rabbitmq-dashboard" class="sidebar-sub-link">Giám sát RabbitMQ</a></li>
                         <li><a href="#credentials" class="sidebar-sub-link">Thông số kết nối</a></li>
                         <li><a href="#shutdown" class="sidebar-sub-link">Dừng hệ thống</a></li>
                     </ul>
@@ -96,8 +97,8 @@
 title Mini Shopee - Quick Start Tool
 color 0B
 echo [1/4] Dang don dep cac container cu de tranh xung dot...
-docker stop shopee_mini_db shopee_mini_app >nul 2>&1
-docker rm shopee_mini_db shopee_mini_app >nul 2>&1
+docker stop shopee_mini_db shopee_mini_app shopee_mini_redis shopee_mini_rabbitmq >nul 2>&1
+docker rm shopee_mini_db shopee_mini_app shopee_mini_redis shopee_mini_rabbitmq >nul 2>&1
 echo [2/4] Dang tu dong khoi chay ung dung...
 docker compose up -d
 if %ERRORLEVEL% NEQ 0 (
@@ -123,8 +124,8 @@ pause >nul</code></pre>
                     </p>
                     <pre><code>#!/bin/bash
 echo "[1/4] Dang don dep cac container cu de tranh xung dot..."
-docker stop shopee_mini_db shopee_mini_app >/dev/null 2>&1
-docker rm shopee_mini_db shopee_mini_app >/dev/null 2>&1
+docker stop shopee_mini_db shopee_mini_app shopee_mini_redis shopee_mini_rabbitmq >/dev/null 2>&1
+docker rm shopee_mini_db shopee_mini_app shopee_mini_redis shopee_mini_rabbitmq >/dev/null 2>&1
 echo "[2/4] Dang tu dong khoi chay ung dung..."
 if command -v docker-compose &> /dev/null; then
     docker-compose up -d
@@ -158,7 +159,7 @@ fi</code></pre>
                 <span class="badge badge-danger">Docker Compose File</span>
                 <h2>3. Nội dung cấu hình mẫu (docker-compose.yml)</h2>
                 <p class="mb-16">
-                    Dưới đây là tệp tin cấu hình tiêu chuẩn đã thiết lập sẵn môi trường cơ sở dữ liệu và ứng dụng:
+                    Dưới đây là tệp tin cấu hình tiêu chuẩn đã thiết lập sẵn môi trường bao gồm PostgreSQL, Redis, RabbitMQ và ứng dụng:
                 </p>
                 <pre><code>version: '3.8'
 services:
@@ -181,6 +182,35 @@ services:
     networks:
       - shopee-net
 
+  redis:
+    image: redis:7-alpine
+    container_name: shopee_mini_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - shopee-net
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: shopee_mini_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitdata:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopee-net
+
   spring-boot-app:
     image: hunglk/mini-shopee-app:latest
     container_name: shopee_mini_app
@@ -190,8 +220,16 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/shopee_mini
       SPRING_DATASOURCE_USERNAME: sa_user
       SPRING_DATASOURCE_PASSWORD: sa_password
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
     depends_on:
       postgres-db:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - shopee-net
@@ -201,16 +239,68 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata:</code></pre>
+  pgdata:
+  redisdata:
+  rabbitdata:</code></pre>
                 <div class="alert mt-16">
-                    <strong>Lưu ý:</strong> Cấu hình trên đã đặt sẵn image chính xác trên Docker Hub của bạn là <code>hunglk/mini-shopee-app:latest</code>.
+                    <strong>Lưu ý:</strong> Cấu hình trên đã đặt sẵn image chính xác trên Docker Hub của bạn là <code>hunglk/mini-shopee-app:latest</code> và tự động đồng bộ hóa các tài nguyên Redis và RabbitMQ.
                 </div>
+            </section>
+
+            <!-- RabbitMQ Dashboard Card -->
+            <section id="rabbitmq-dashboard" class="card">
+                <span class="badge badge-info">RabbitMQ Dashboard</span>
+                <h2>4. Giám sát hàng đợi với RabbitMQ Management Dashboard</h2>
+                <p class="mb-16">
+                    Để dễ dàng theo dõi trực quan và giám sát các hoạt động của hàng đợi bất đồng bộ (Message Queue) khi thực hiện kiểm thử đặt hàng cực hạn, RabbitMQ Management Dashboard đã được tích hợp và kích hoạt sẵn thông qua Docker trên cổng 15672.
+                </p>
+                <div class="alert alert-success">
+                    <h5>Tính năng nổi bật của Dashboard:</h5>
+                    <ul>
+                        <li><strong>Giám sát Queue thực tế:</strong> Xem hàng đợi <code class="text-highlight">shopee.order.queue</code> hoạt động trong thời gian thực.</li>
+                        <li><strong>Biểu đồ lưu lượng:</strong> Hiển thị đồ thị trực quan về tốc độ đẩy tin nhắn vào (Publish) và tốc độ tiêu thụ tin nhắn của hệ thống (Deliver/Acknowledge).</li>
+                        <li><strong>Độ trễ thấp:</strong> Theo dõi các chỉ số về số lượng tin nhắn đang chờ xử lý (Ready) và tin nhắn đang được xử lý chưa hoàn tất (Unacked).</li>
+                        <li><strong>Xem nội dung tin nhắn:</strong> Cho phép Tester xem nội dung chi tiết payload JSON của các đơn hàng đang xếp hàng chờ.</li>
+                    </ul>
+                </div>
+
+                <h3 class="mt-24 mb-12">Thông tin truy cập RabbitMQ Management Dashboard</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thông số</th>
+                            <th>Giá trị kết nối</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Địa chỉ truy cập (URL)</strong></td>
+                            <td><a href="http://localhost:15672" target="_blank" class="text-highlight">http://localhost:15672</a></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tài khoản (Username)</strong></td>
+                            <td><code>guest</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mật khẩu (Password)</strong></td>
+                            <td><code>guest</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cổng AMQP (Kết nối App)</strong></td>
+                            <td><code>5672</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tên hàng đợi kiểm thử</strong></td>
+                            <td><code>shopee.order.queue</code></td>
+                        </tr>
+                    </tbody>
+                </table>
             </section>
 
             <!-- Connection Specs Card -->
             <section id="credentials" class="card">
                 <span class="badge badge-info">Dữ liệu kết nối</span>
-                <h2>4. Tham số kết nối & Cơ sở dữ liệu mẫu</h2>
+                <h2>5. Tham số kết nối & Cơ sở dữ liệu mẫu</h2>
                 <p class="mb-16">
                     Khi hệ thống khởi chạy thành công, một bộ dữ liệu kiểm thử tiêu chuẩn sẽ tự động được ghi (seed) vào cơ sở dữ liệu:
                 </p>
@@ -259,7 +349,7 @@ volumes:
             <!-- Shutdown Card -->
             <section id="shutdown" class="card">
                 <span class="badge badge-info">Dọn dẹp</span>
-                <h2>5. Dừng hệ thống</h2>
+                <h2>6. Dừng hệ thống</h2>
                 <p class="mb-16">
                     Để dừng toàn bộ hệ thống và giải phóng bộ nhớ RAM cho máy tính của bạn một cách an toàn, hãy mở CMD tại thư mục làm việc và chạy lệnh:
                 </p>
