@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scalability Audit & Optimization - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation (Unified Single Source of Truth with Tree-view) -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Danh mục tài liệu</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link active">Đánh giá chịu tải DB</a>
+                    <!-- Nested Local Section Navigation Links -->
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#bottleneck-race-condition" class="sidebar-sub-link">1. Tranh Chấp Kho</a></li>
+                        <li><a href="#bottleneck-table-scan" class="sidebar-sub-link">2. Quét Bảng Tìm Kiếm</a></li>
+                        <li><a href="#bottleneck-foreign-keys" class="sidebar-sub-link">3. Thiếu Khóa Ngoại</a></li>
+                        <li><a href="#bottleneck-connection-pool" class="sidebar-sub-link">4. Nghẽn Hikari Pool</a></li>
+                        <li><a href="#bottleneck-pagination" class="sidebar-sub-link">5. Phân Trang Offset</a></li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Kiến trúc & Tối ưu hóa</span>
+                <h1>Báo cáo Đánh giá Khả năng Chịu tải <br><span class="gradient-text">(Scalability Audit Report)</span></h1>
+                <p>Phân tích các điểm nghẽn hệ thống khi mở rộng quy mô lên hàng triệu người dùng, hàng triệu sản phẩm và đề xuất các giải pháp kỹ thuật tối ưu hóa chi tiết.</p>
+            </section>
+
+            <!-- General Overview Alert -->
+            <div class="alert">
+                <h5>Lưu ý từ Kiến trúc sư Hệ thống:</h5>
+                Hệ thống hiện tại chạy rất tốt và ổn định ở quy mô nhỏ đến trung bình (dưới 100.000 bản ghi). Tuy nhiên, khi quy mô tăng trưởng vượt mức triệu bản ghi và có hàng ngàn yêu cầu giao dịch đồng thời tại cùng một thời điểm, các điểm nghẽn dưới đây sẽ xuất hiện và có thể gây treo hệ thống nếu không được tối ưu hóa.
+            </div>
+
+            <!-- Section 1: Race Condition -->
+            <section id="bottleneck-race-condition" class="card">
+                <span class="badge badge-danger">Nghẽn cấp độ 1: Chí mạng</span>
+                <h2>1. Tranh chấp Tồn kho khi Đặt hàng Đồng thời (Race Condition)</h2>
+                <p class="mb-20">
+                    <strong>Vấn đề hiện tại:</strong> Trong hàm xử lý đặt hàng ở <code>OrderService</code>, hệ thống đang đọc số tồn kho của sản phẩm lên bộ nhớ Java, so sánh điều kiện, sau đó trừ đi và lưu lại. Khi có hàng ngàn người dùng đặt mua một mặt hàng hot tại cùng một tích tắc, hiện tượng tranh chấp dữ liệu (Lost Update) sẽ xảy ra, dẫn đến việc sản phẩm bị **bán lố tồn kho (Over-selling)**.
+                </p>
+                
+                <div class="alert alert-error">
+                    <h5>Kịch bản lỗi:</h5>
+                    Sản phẩm A còn tồn kho 5 chiếc. Luồng A và luồng B đồng thời kiểm tra thấy tồn kho là 5 và đều chấp nhận cho mua (A mua 3 chiếc, B mua 3 chiếc). Cả hai luồng cùng cập nhật tồn kho về 2 (thay vì báo lỗi hết hàng). Tổng cộng bán ra 6 chiếc nhưng kho thực tế chỉ có 5.
+                </div>
+
+                <h3 class="mt-24 mb-12">Giải pháp: Áp dụng Khóa Bi quan (Pessimistic Locking)</h3>
+                <p class="mb-16">
+                    Khóa trực tiếp dòng dữ liệu của sản phẩm và ví tiền người dùng bằng truy vấn <code>SELECT ... FOR UPDATE</code> tại thời điểm giao dịch bắt đầu. Các yêu cầu giao dịch tiếp theo cho cùng sản phẩm đó sẽ phải xếp hàng chờ cho đến khi giao dịch hiện tại hoàn tất (Commit hoặc Rollback).
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>ProductRepository.java</span>
+                        <span>Java / Spring Data JPA</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Repository</span>
+<span class="code-keyword">public interface</span> <span class="code-class">ProductRepository</span> <span class="code-keyword">extends</span> <span class="code-class">JpaRepository</span>&lt;<span class="code-class">Product</span>, <span class="code-class">Long</span>&gt; {
+
+    <span class="code-comment">// Khóa dòng sản phẩm khi đọc để ngăn các luồng khác can thiệp cập nhật</span>
+    <span class="code-annotation">@Lock</span>(<span class="code-class">LockModeType</span>.PESSIMISTIC_WRITE)
+    <span class="code-annotation">@Query</span>(<span class="code-string">"SELECT p FROM Product p WHERE p.id = :id"</span>)
+    <span class="code-class">Optional</span>&lt;<span class="code-class">Product</span>&gt; findByIdForUpdate(<span class="code-annotation">@Param</span>(<span class="code-string">"id"</span>) <span class="code-class">Long</span> id);
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Section 2: Full Table Scan -->
+            <section id="bottleneck-table-scan" class="card">
+                <span class="badge badge-danger">Nghẽn cấp độ 2: Nghiêm trọng</span>
+                <h2>2. Quét Toàn bộ Bảng khi Tìm kiếm Sản phẩm (Full Table Scan)</h2>
+                <p class="mb-20">
+                    <strong>Vấn đề hiện tại:</strong> API tìm kiếm sản phẩm theo tên đang sử dụng biểu thức <code>LIKE %keyword%</code> ở JPA. Lệnh này được dịch sang SQL dạng <code>LOWER(name) LIKE LOWER('%keyword%')</code>. Chỉ mục B-Tree truyền thống hoàn toàn bị vô hiệu hóa khi có ký tự đại diện (%) đứng đầu từ khóa tìm kiếm.
+                </p>
+                
+                <div class="alert">
+                    <h5>Hậu quả khi quy mô lớn:</h5>
+                    Với 5.000.000 sản phẩm, mỗi lượt tìm kiếm bắt buộc PostgreSQL phải quét tuần tự qua từng dòng trên đĩa cứng (Full Table Scan). Chỉ với 100 lượt tìm kiếm đồng thời, CPU của database server sẽ lập tức bị quá tải 100%, gây nghẽn cổ chai toàn bộ ứng dụng.
+                </div>
+
+                <h3 class="mt-24 mb-12">Giải pháp: Tạo Trigram Index hoặc Sử dụng Công cụ Tìm kiếm Ngoài</h3>
+                <p class="mb-16">
+                    Sử dụng GIN Index kết hợp với extension <code>pg_trgm</code> (Trigram) của PostgreSQL giúp tối ưu hóa tìm kiếm <code>LIKE %keyword%</code> siêu tốc ở quy mô hàng triệu dòng mà không cần quét toàn bộ bảng.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>schema.sql</span>
+                        <span>PostgreSQL DDL</span>
+                    </div>
+                    <pre><code><span class="code-comment">-- Kích hoạt extension hỗ trợ so khớp chuỗi con</span>
+<span class="code-keyword">CREATE EXTENSION IF NOT EXISTS</span> pg_trgm;
+
+<span class="code-comment">-- Tạo chỉ mục GIN trên cột tên sản phẩm</span>
+<span class="code-keyword">CREATE INDEX IF NOT EXISTS</span> idx_products_name_trgm 
+<span class="code-keyword">ON</span> products <span class="code-keyword">USING</span> gin (name gin_trgm_ops);</code></pre>
+                </div>
+            </section>
+
+            <!-- Grid 3 & 4 -->
+            <div class="grid-2">
+                <!-- Section 3: Foreign Key Index -->
+                <section id="bottleneck-foreign-keys" class="card">
+                    <span class="badge badge-success">Tối ưu hiệu năng</span>
+                    <h3>3. Thiếu Chỉ mục trên Khóa Ngoại</h3>
+                    <p class="mb-16">
+                        Mặc định, cơ sở dữ liệu PostgreSQL **không** tự động tạo chỉ mục (index) cho các khóa ngoại. Hiện tại bảng <code>orders</code> có khóa ngoại <code>user_id</code>. Khi lịch sử đơn hàng của một người dùng được truy vấn, database phải duyệt qua hàng triệu đơn hàng của toàn hệ thống để tìm kiếm.
+                    </p>
+                    <h4 class="mb-12">Giải pháp: Khai báo Index trong JPA</h4>
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span>Order.java</span>
+                        </div>
+                        <pre><code><span class="code-annotation">@Entity</span>
+<span class="code-annotation">@Table</span>(name = <span class="code-string">"orders"</span>, indexes = {
+    <span class="code-annotation">@Index</span>(name = <span class="code-string">"idx_orders_user_id"</span>, 
+           columnList = <span class="code-string">"user_id"</span>)
+})
+<span class="code-keyword">public class</span> <span class="code-class">Order</span> { ... }</code></pre>
+                    </div>
+                </section>
+
+                <!-- Section 4: Connection Pool -->
+                <section id="bottleneck-connection-pool" class="card">
+                    <span class="badge badge-success">Tối ưu hiệu năng</span>
+                    <h3>4. Nghẽn Connection Pool DB</h3>
+                    <p class="mb-16">
+                        Cấu hình mặc định giới hạn kết nối đồng thời của HikariCP thường là 10. Khi hàng triệu user truy cập đồng thời, các kết nối vào cơ sở dữ liệu sẽ bị cạn kiệt lập tức, khiến máy chủ web trả về lỗi hàng loạt cho người dùng (Connection Timeout).
+                    </p>
+                    <h4 class="mb-12">Giải pháp: Tối ưu Connection Pool</h4>
+                    <div class="code-container">
+                        <div class="code-header">
+                            <span>application.yml</span>
+                        </div>
+                        <pre><code><span class="code-keyword">spring</span>:
+  <span class="code-keyword">datasource</span>:
+    <span class="code-keyword">hikari</span>:
+      <span class="code-keyword">maximum-pool-size</span>: 50
+      <span class="code-keyword">minimum-idle</span>: 10
+      <span class="code-keyword">connection-timeout</span>: 20000
+      <span class="code-keyword">idle-timeout</span>: 30000</code></pre>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Section 5: Pagination -->
+            <section id="bottleneck-pagination" class="card">
+                <span class="badge badge-info">Kiến trúc nâng cao</span>
+                <h2>5. Phân Trang Kiểu Offset bị Chậm Dần khi Dữ Liệu Lớn (Offset Pagination)</h2>
+                <p class="mb-20">
+                    <strong>Vấn đề hiện tại:</strong> Hệ thống sử dụng phân trang Offset mặc định thông qua <code>PageRequest.of(page, size)</code>. Cú pháp SQL sinh ra có dạng <code>LIMIT size OFFSET offset</code>. Khi quy mô sản phẩm lên hàng triệu, việc duyệt sang các trang xa phía sau sẽ cực kỳ chậm.
+                </p>
+                
+                <div class="alert alert-success">
+                    <h5>Cơ chế lỗi của OFFSET:</h5>
+                    Để lấy 10 phần tử ở trang thứ 10.000 (tương đương `OFFSET 100000`), database bắt buộc phải quét đĩa cứng và phân tích 100.000 phần tử đầu tiên trước đó, sau đó vứt chúng đi và chỉ lấy ra 10 phần tử cuối cùng. Số trang càng tăng, truy vấn càng chậm dần.
+                </div>
+
+                <h3 class="mt-24 mb-12">Giải pháp: Áp dụng Keyset Pagination (Cursor Pagination)</h3>
+                <p class="mb-16">
+                    Không sử dụng <code>OFFSET</code>. Thay vào đó, API phân trang sẽ nhận thêm tham số <code>lastId</code> (ID sản phẩm cuối cùng của trang trước) và truy vấn trực tiếp bằng chỉ mục khóa chính để lấy các sản phẩm tiếp theo.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>JPQL Query Example</span>
+                        <span>Tốc độ ổn định O(1) không phụ thuộc số trang</span>
+                    </div>
+                    <pre><code><span class="code-comment">// Lấy các sản phẩm tiếp theo có ID lớn hơn sản phẩm cuối của trang trước</span>
+<span class="code-annotation">@Query</span>(<span class="code-string">"SELECT p FROM Product p WHERE p.id &gt; :lastId ORDER BY p.id ASC"</span>)
+<span class="code-class">List</span>&lt;<span class="code-class">Product</span>&gt; findNextProducts(<span class="code-annotation">@Param</span>(<span class="code-string">"lastId"</span>) <span class="code-class">Long</span> lastId, <span class="code-class">Pageable</span> pageable);</code></pre>
+                </div>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>

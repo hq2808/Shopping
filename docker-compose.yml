@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: shopee_mini_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sa_user
+      POSTGRES_PASSWORD: sa_password
+      POSTGRES_DB: shopee_mini
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sa_user -d shopee_mini"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopee-net
+
+  spring-boot-app:
+    build: .
+    container_name: shopee_mini_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/shopee_mini
+      SPRING_DATASOURCE_USERNAME: sa_user
+      SPRING_DATASOURCE_PASSWORD: sa_password
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - shopee-net
+
+networks:
+  shopee-net:
+    driver: bridge
+
+volumes:
+  pgdata:

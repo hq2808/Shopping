@@ -1,0 +1,25 @@
+spring:
+  application:
+    name: shopee
+  
+  datasource:
+    url: jdbc:postgresql://localhost:5432/shopee_mini
+    username: sa_user
+    password: sa_password
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  jwt:
+    # 256-bit base64 encoded secret key (min 256 bits for HMAC-SHA256)
+    # This is a sample key. Do not use in production.
+    secret: dGhpc2lzYW1pbmlzaG9wZWVqd3RzZWNyZXRrZXltdXN0YmVhdGxlYXN0MjU2Yml0c2xvbmc=
+    expiration-ms: 86400000 # 24 hours

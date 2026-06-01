@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Shopee - Documentation Portal Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation (Unified Single Source of Truth) -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Danh mục tài liệu</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link active">Trang chủ cổng tài liệu</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Technical Documentation Portal</span>
+                <h1>Cổng Tài Liệu Kỹ Thuật <br><span class="gradient-text">Mini Shopee Backend Suite</span></h1>
+                <p>Chào mừng bạn đến với Cổng tài liệu và đánh giá kiến trúc chịu tải của dự án Đặt Hàng (Mini Shopee). Vui lòng chọn cổng thông tin phù hợp với vai trò của bạn dưới đây.</p>
+            </section>
+
+            <!-- Guide 1: Testing Guide -->
+            <section class="card">
+                <span class="badge badge-success">Dành cho QA / Tester</span>
+                <h2>1. Hướng dẫn Kịch bản Kiểm thử Tính năng (Postman Guide)</h2>
+                <p>
+                    Tài liệu biên soạn chi tiết các kịch bản kiểm thử API thủ công thông qua Postman, hướng dẫn thiết lập môi trường, danh sách dữ liệu mẫu và các bước xác thực:
+                </p>
+                <ul>
+                    <li>CRUD và kiểm tra validation biên lỗi đầu vào của các sản phẩm.</li>
+                    <li>Đăng ký và xác thực an toàn bằng JWT Bearer Token (kiểm tra phân tích claims).</li>
+                    <li>Kiểm tra phân quyền nghiêm ngặt theo vai trò hệ thống (ROLE_USER, ROLE_ADMIN).</li>
+                    <li>Kịch bản kiểm thử tính toàn vẹn dữ liệu giao dịch đặt hàng (@Transactional Rollback).</li>
+                </ul>
+                <a href="testing_guide.html" class="btn-portal">Truy cập Hướng dẫn Kiểm thử &rarr;</a>
+            </section>
+
+            <!-- Guide 2: Database Load Audit -->
+            <section class="card">
+                <span class="badge badge-danger">Dành cho Backend Developer</span>
+                <h2>2. Đánh giá Khả năng Chịu tải DB (Scalability Database Audit)</h2>
+                <p>
+                    Báo cáo đánh giá chi tiết về các lỗi nghẽn cổ chai vật lý tại cơ sở dữ liệu PostgreSQL khi đối mặt với hàng triệu sản phẩm và người dùng đồng thời:
+                </p>
+                <ul>
+                    <li>Nguy cơ tranh chấp ghi (Race Condition) và bán lố tồn kho (Over-selling).</li>
+                    <li>Hiện tượng quá tải CPU do quét toàn bộ bảng (Full Table Scan) khi tìm kiếm sản phẩm.</li>
+                    <li>Cải tiến an toàn và tốc độ sử dụng Khóa Bi quan (Pessimistic Write Lock) trong Spring JPA.</li>
+                    <li>Cấu hình tối ưu hóa Connection Pool HikariCP chuyên nghiệp cho dự án triệu tải.</li>
+                </ul>
+                <a href="scalability_audit.html" class="btn-portal">Truy cập Báo cáo Chịu tải DB &rarr;</a>
+            </section>
+
+            <!-- Guide 3: Extreme Concurrency Solution -->
+            <section class="card">
+                <span class="badge badge-info">Dành cho System Architect</span>
+                <h2>3. Giải pháp Kiến trúc Giảm chấn Chịu tải cực hạn (High-Concurrency)</h2>
+                <p>
+                    Tài liệu giải pháp phân tích chuyên sâu về kiến trúc chịu tải triệu yêu cầu giao dịch/giây, đưa cơ sở dữ liệu PostgreSQL về vùng an toàn tuyệt đối:
+                </p>
+                <ul>
+                    <li>Nguyên lý khấu trừ tồn kho nguyên tử tốc độ cao trong bộ nhớ đệm RAM bằng Redis và Lua Script.</li>
+                    <li>Kiến trúc ghi bất đồng bộ (Write-Behind) đẩy đơn hàng vào Message Queue (Kafka/RabbitMQ).</li>
+                    <li>Sơ đồ và phân tích so sánh chi tiết hiệu năng giữa các giải pháp khóa truyền thống và kiến trúc đệm MQ.</li>
+                </ul>
+                <a href="concurrency_solution.html" class="btn-portal">Truy cập Giải pháp Chịu tải cực hạn &rarr;</a>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>
