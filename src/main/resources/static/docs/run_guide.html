@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng dẫn khởi chạy - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Danh mục tài liệu</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link active">Hướng dẫn khởi chạy</a>
+                    <!-- Nested Local Section Navigation Links -->
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#requirements" class="sidebar-sub-link">Chuẩn bị</a></li>
+                        <li><a href="#steps" class="sidebar-sub-link">Các bước chạy</a></li>
+                        <li><a href="#compose-config" class="sidebar-sub-link">Cấu hình Docker</a></li>
+                        <li><a href="#credentials" class="sidebar-sub-link">Thông số kết nối</a></li>
+                        <li><a href="#shutdown" class="sidebar-sub-link">Dừng hệ thống</a></li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-success">QA / Tester Deployment</span>
+                <h1>Hướng Dẫn Khởi Chạy Hệ Thống <br><span class="gradient-text">(Quick Start Guide)</span></h1>
+                <p>Tài liệu hướng dẫn chi tiết dành cho QA/Tester để thiết lập, tải ảnh docker từ xa và kích hoạt toàn bộ cụm ứng dụng kiểm thử trong 2 phút.</p>
+            </section>
+
+            <!-- Requirements Card -->
+            <section id="requirements" class="card">
+                <span class="badge badge-info">Yêu cầu</span>
+                <h2>1. Chuẩn bị hệ thống</h2>
+                <p class="mb-16">
+                    Hệ thống đã được đóng gói và tối ưu hóa hoàn toàn dưới dạng container Docker. Tester hoặc bất kỳ thành viên nào trong nhóm không cần phải cài đặt Java JDK, Maven, hoặc cơ sở dữ liệu PostgreSQL trực tiếp lên máy.
+                </p>
+                <div class="alert alert-success">
+                    <h5>Yêu cầu duy nhất:</h5>
+                    <ul>
+                        <li>Máy tính của bạn cần cài đặt ứng dụng **Docker Desktop** (Tải về miễn phí tại trang chủ: <a href="https://www.docker.com/products/docker-desktop/" target="_blank" class="text-highlight">Docker Desktop</a>).</li>
+                        <li>Đảm bảo rằng phần mềm Docker Desktop đã được mở và đang chạy bình thường trên máy tính của bạn trước khi thực hiện các bước sau.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Steps Card -->
+            <section id="steps" class="card">
+                <span class="badge badge-info">Quy trình</span>
+                <h2>2. Các bước khởi chạy chi tiết</h2>
+                <div class="steps-flow">
+                    <h4 class="mt-16 text-highlight">Bước 2.1: Tạo thư mục làm việc</h4>
+                    <p class="mb-12">
+                        Tạo một thư mục mới hoàn toàn trên máy tính của bạn để chứa tệp tin cấu hình (Ví dụ: <code>C:\MiniShopee</code> hoặc thư mục tương tự).
+                    </p>
+
+                    <h4 class="mt-20 text-highlight">Bước 2.2: Tạo tệp tin cấu hình docker-compose</h4>
+                    <p class="mb-12">
+                        Tạo một tệp tin trống mới tên là <code>docker-compose.yml</code> bên trong thư mục vừa tạo. Mở tệp tin bằng Notepad hoặc bất kỳ trình soạn thảo văn bản nào để dán cấu hình.
+                    </p>
+
+                    <h4 class="mt-20 text-highlight">Bước 2.3: Tạo tệp kích hoạt nhanh tự động (Khuyên dùng - Auto Start)</h4>
+                    
+                    <h5 class="mt-12 text-highlight">LỰA CHỌN A: Dành cho Windows (Chạy bằng một cú click chuột)</h5>
+                    <p class="mb-12">
+                        Tạo thêm một tệp tin mới tên là <code>run.bat</code> nằm ngay bên cạnh tệp <code>docker-compose.yml</code>. Mở tệp bằng Notepad, dán toàn bộ đoạn mã tự động sau vào và lưu lại:
+                    </p>
+                    <pre><code>@echo off
+title Mini Shopee - Quick Start Tool
+color 0B
+echo [1/4] Dang don dep cac container cu de tranh xung dot...
+docker stop shopee_mini_db shopee_mini_app >nul 2>&1
+docker rm shopee_mini_db shopee_mini_app >nul 2>&1
+echo [2/4] Dang tu dong khoi chay ung dung...
+docker compose up -d
+if %ERRORLEVEL% NEQ 0 (
+    color 0C
+    echo [LOI] Vui long mo phan mem "Docker Desktop" truoc khi chay!
+    pause
+    exit /b
+)
+echo [3/4] Dang cho ung dung khoi dong (5 giay)...
+timeout /t 5 /nobreak >nul
+echo [4/4] Dang mo trinh duyet...
+start http://localhost:8080
+color 0A
+echo KICH HOAT THANH CONG!
+pause >nul</code></pre>
+                    <p class="mt-12 mb-16">
+                        Bạn chỉ cần **kích đúp chuột (double-click) vào tệp <code>run.bat</code>** để kích hoạt tự động toàn bộ hệ thống!
+                    </p>
+
+                    <h5 class="mt-20 text-highlight">LỰA CHỌN B: Dành cho Ubuntu / Linux (Chạy bằng một dòng lệnh Bash)</h5>
+                    <p class="mb-12">
+                        Tạo thêm một tệp tin mới tên là <code>run.sh</code> nằm ngay bên cạnh tệp <code>docker-compose.yml</code>. Mở tệp <code>run.sh</code> lên bằng trình soạn thảo văn bản và dán toàn bộ mã Bash sau vào rồi lưu lại:
+                    </p>
+                    <pre><code>#!/bin/bash
+echo "[1/4] Dang don dep cac container cu de tranh xung dot..."
+docker stop shopee_mini_db shopee_mini_app >/dev/null 2>&1
+docker rm shopee_mini_db shopee_mini_app >/dev/null 2>&1
+echo "[2/4] Dang tu dong khoi chay ung dung..."
+if command -v docker-compose &> /dev/null; then
+    docker-compose up -d
+else
+    docker compose up -d
+fi
+if [ $? -ne 0 ]; then
+    echo "[LOI] Vui long dam bao rang Docker Service dang hoat dong!"
+    exit 1
+fi
+echo "[3/4] Dang cho ung dung khoi dong (5 giay)..."
+sleep 5
+echo "[4/4] Dang mo cong tai lieu kiem thu..."
+if command -v xdg-open &> /dev/null; then
+    xdg-open http://localhost:8080
+else
+    echo "Mo trinh duyet va truy cap: http://localhost:8080"
+fi</code></pre>
+                    <p class="mt-12 mb-16">
+                        Mở Terminal tại thư mục này, thực hiện cấp quyền thực thi và chạy file Bash bằng lệnh duy nhất:
+                    </p>
+                    <pre><code>chmod +x run.sh && ./run.sh</code></pre>
+                    <p class="mt-12 mb-16">
+                        Hệ thống sẽ tự động dọn dẹp các container bị trùng tên (tránh xung đột), khởi chạy Database, kích hoạt Server và tự động mở trình duyệt web dẫn thẳng vào cổng tài liệu sau 5 giây.
+                    </p>
+                </div>
+            </section>
+
+            <!-- Compose Config Card -->
+            <section id="compose-config" class="card">
+                <span class="badge badge-danger">Docker Compose File</span>
+                <h2>3. Nội dung cấu hình mẫu (docker-compose.yml)</h2>
+                <p class="mb-16">
+                    Dưới đây là tệp tin cấu hình tiêu chuẩn đã thiết lập sẵn môi trường cơ sở dữ liệu và ứng dụng:
+                </p>
+                <pre><code>version: '3.8'
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: shopee_mini_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sa_user
+      POSTGRES_PASSWORD: sa_password
+      POSTGRES_DB: shopee_mini
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sa_user -d shopee_mini"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - shopee-net
+
+  spring-boot-app:
+    image: hunglk/mini-shopee-app:latest
+    container_name: shopee_mini_app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/shopee_mini
+      SPRING_DATASOURCE_USERNAME: sa_user
+      SPRING_DATASOURCE_PASSWORD: sa_password
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    networks:
+      - shopee-net
+
+networks:
+  shopee-net:
+    driver: bridge
+
+volumes:
+  pgdata:</code></pre>
+                <div class="alert mt-16">
+                    <strong>Lưu ý:</strong> Cấu hình trên đã đặt sẵn image chính xác trên Docker Hub của bạn là <code>hunglk/mini-shopee-app:latest</code>.
+                </div>
+            </section>
+
+            <!-- Connection Specs Card -->
+            <section id="credentials" class="card">
+                <span class="badge badge-info">Dữ liệu kết nối</span>
+                <h2>4. Tham số kết nối & Cơ sở dữ liệu mẫu</h2>
+                <p class="mb-16">
+                    Khi hệ thống khởi chạy thành công, một bộ dữ liệu kiểm thử tiêu chuẩn sẽ tự động được ghi (seed) vào cơ sở dữ liệu:
+                </p>
+                <ul>
+                    <li><strong>Tài khoản USER kiểm thử:</strong> Username <code>user</code> | Password <code>password</code> (Số dư ví: <code>1000.00 USD</code>).</li>
+                    <li><strong>Tài khoản ADMIN kiểm thử:</strong> Username <code>admin</code> | Password <code>adminpassword</code> (Số dư ví: <code>0.00 USD</code>).</li>
+                </ul>
+
+                <h3 class="mt-24 mb-12">Thông số kết nối database cục bộ cho DBeaver/Navicat</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Thông số</th>
+                            <th>Giá trị kết nối</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Database Type</strong></td>
+                            <td>PostgreSQL</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Host / Server</strong></td>
+                            <td><code>localhost</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Port</strong></td>
+                            <td><code>5432</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Database Name</strong></td>
+                            <td><code>shopee_mini</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Username</strong></td>
+                            <td><code>sa_user</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Password</strong></td>
+                            <td><code>sa_password</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Shutdown Card -->
+            <section id="shutdown" class="card">
+                <span class="badge badge-info">Dọn dẹp</span>
+                <h2>5. Dừng hệ thống</h2>
+                <p class="mb-16">
+                    Để dừng toàn bộ hệ thống và giải phóng bộ nhớ RAM cho máy tính của bạn một cách an toàn, hãy mở CMD tại thư mục làm việc và chạy lệnh:
+                </p>
+                <pre><code>docker compose down</code></pre>
+                <p class="mt-12">
+                    Lệnh này sẽ tắt các container một cách an toàn mà vẫn giữ nguyên dữ liệu kiểm thử đã lưu trong Database của bạn cho các lần chạy tiếp theo.
+                </p>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>
