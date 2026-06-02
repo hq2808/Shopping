@@ -74,13 +74,17 @@ body {
     text-transform: uppercase;
     color: var(--text-muted);
     letter-spacing: 0.1em;
-    margin-bottom: 16px;
-    padding-left: 16px;
+    margin-bottom: 12px;
+    padding-left: 8px;
+}
+
+.sidebar-title:not(:first-child) {
+    margin-top: 24px;
 }
 
 .sidebar-menu {
     list-style: none;
-    margin: 0;
+    margin: 0 0 0 12px;
     padding: 0;
 }
 
@@ -332,6 +336,18 @@ h4 {
     background: rgba(34, 211, 238, 0.1);
     color: var(--color-secondary);
     border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+.badge-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--color-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.badge-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 /* --- API HTTP Method Labels --- */

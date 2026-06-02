@@ -18,17 +18,34 @@
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation (Unified Single Source of Truth) -->
         <aside class="sidebar">
-            <div class="sidebar-title">Danh mục tài liệu</div>
+            <div class="sidebar-title">Tổng quan</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a href="index.html" class="sidebar-link active">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
                 </li>
                 <li class="sidebar-item">
                     <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
                 </li>
                 <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
                     <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
                 </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
                 </li>
@@ -63,10 +80,59 @@
                 <a href="run_guide.html" class="btn-portal">Truy cập Hướng dẫn Khởi chạy &rarr;</a>
             </section>
 
-            <!-- Guide 1: Testing Guide -->
+            <!-- Guide 1: SA Tester Guide -->
+            <section class="card">
+                <span class="badge badge-danger">Dành cho SA / Performance QA</span>
+                <h2>1. Kiểm thử Kiến trúc & Độ Bền Bỉ (SA & Performance Test Guide)</h2>
+                <p>
+                    Tài liệu chuyên sâu cung cấp đặc tả sơ đồ liên kết mạng, cấu hình retry RabbitMQ, thuật toán Redis Lua, cấu hình HikariCP, và các kịch bản kiểm thử tranh chấp (Race Conditions), thảm họa hạ tầng (Chaos Engineering):
+                </p>
+                <ul>
+                    <li>Kiểm thử tranh chấp mua hàng đồng bộ qua DB (Pessimistic Lock) và bất đồng bộ (Redis RAM).</li>
+                    <li>Xác thực cơ chế xử lý trùng lặp tin nhắn hàng đợi (Idempotency) và độ trễ hàng đợi (Lag).</li>
+                    <li>Mô phỏng thảm họa hạ tầng (sập DB PostgreSQL, crash cache Redis RAM) và tự phục hồi.</li>
+                    <li>Sử dụng wrk/JMeter tạo tải cực hạn và chạy câu lệnh SQL giám sát nghẽn database lock.</li>
+                    <li><strong>Lộ trình phát triển chuyên sâu</strong> từ Manual/API Tester lên System Architect QA.</li>
+                </ul>
+                <a href="sa_test_guide.html" class="btn-portal">Truy cập Cẩm nang SA Tester &rarr;</a>
+            </section>
+
+            <!-- Project Spec Guide -->
             <section class="card">
                 <span class="badge badge-success">Dành cho QA / Tester</span>
-                <h2>1. Hướng dẫn Kịch bản Kiểm thử Tính năng (Postman Guide)</h2>
+                <h2>2. Tài liệu Đặc tả Dự án (Project Specifications)</h2>
+                <p>
+                    Đặc tả kỹ thuật của hệ thống cung cấp sơ đồ luồng dữ liệu, thông số thiết kế cơ sở dữ liệu PostgreSQL và các quy tắc nghiệp vụ quan trọng:
+                </p>
+                <ul>
+                    <li>Kiến trúc xử lý đồng bộ và luồng bất đồng bộ tải cực hạn.</li>
+                    <li>Cấu trúc thiết kế chi tiết 4 bảng dữ liệu cốt lõi (User, Product, Order, OrderItem).</li>
+                    <li>Các ràng buộc nghiệp vụ bắt buộc như Validation đầu vào, Atomicity Rollback.</li>
+                    <li>Danh sách phân quyền chi tiết cho toàn bộ các API endpoints trong hệ thống.</li>
+                </ul>
+                <a href="project_spec.html" class="btn-portal">Truy cập Đặc tả Kỹ thuật &rarr;</a>
+            </section>
+
+            <!-- Test Cases Matrix Guide -->
+            <section class="card">
+                <span class="badge badge-success">Dành cho QA / Tester</span>
+                <h2>3. Danh sách Test Cases (Test Cases Matrix)</h2>
+                <p>
+                    Ma trận tổng hợp tất cả các ca kiểm thử của hệ thống dưới dạng bảng quy chuẩn, phục vụ cho việc lập tài liệu kiểm thử chính thức:
+                </p>
+                <ul>
+                    <li>Nhóm kiểm thử xác thực, đăng ký, đăng nhập và lấy thông tin tài khoản.</li>
+                    <li>Nhóm kiểm thử CRUD Sản phẩm (Thành công, Biên lỗi nhập liệu, Ràng buộc xóa DB).</li>
+                    <li>Nhóm kiểm thử giao dịch mua hàng Đồng bộ và Bất đồng bộ (Redis RAM + RabbitMQ).</li>
+                    <li>Nhóm kiểm thử phân quyền bảo mật (RBAC - User vs Admin vs Anonymous).</li>
+                </ul>
+                <a href="test_cases.html" class="btn-portal">Truy cập Danh sách Test Cases &rarr;</a>
+            </section>
+
+            <!-- Guide 3: Testing Guide -->
+            <section class="card">
+                <span class="badge badge-success">Dành cho QA / Tester</span>
+                <h2>4. Hướng dẫn Kịch bản Kiểm thử Tính năng (Postman Guide)</h2>
                 <p>
                     Tài liệu biên soạn chi tiết các kịch bản kiểm thử API thủ công thông qua Postman, hướng dẫn thiết lập môi trường, danh sách dữ liệu mẫu và các bước xác thực:
                 </p>
@@ -79,10 +145,10 @@
                 <a href="testing_guide.html" class="btn-portal">Truy cập Hướng dẫn Kiểm thử &rarr;</a>
             </section>
 
-            <!-- Guide 2: Database Load Audit -->
+            <!-- Guide 5: Database Load Audit -->
             <section class="card">
                 <span class="badge badge-danger">Dành cho Backend Developer</span>
-                <h2>2. Đánh giá Khả năng Chịu tải DB (Scalability Database Audit)</h2>
+                <h2>5. Đánh giá Khả năng Chịu tải DB (Scalability Database Audit)</h2>
                 <p>
                     Báo cáo đánh giá chi tiết về các lỗi nghẽn cổ chai vật lý tại cơ sở dữ liệu PostgreSQL khi đối mặt với hàng triệu sản phẩm và người dùng đồng thời:
                 </p>
@@ -95,10 +161,10 @@
                 <a href="scalability_audit.html" class="btn-portal">Truy cập Báo cáo Chịu tải DB &rarr;</a>
             </section>
 
-            <!-- Guide 3: Extreme Concurrency Solution -->
+            <!-- Guide 6: Extreme Concurrency Solution -->
             <section class="card">
                 <span class="badge badge-info">Dành cho System Architect</span>
-                <h2>3. Giải pháp Kiến trúc Giảm chấn Chịu tải cực hạn (High-Concurrency)</h2>
+                <h2>6. Giải pháp Kiến trúc Giảm chấn Chịu tải cực hạn (High-Concurrency)</h2>
                 <p>
                     Tài liệu giải pháp phân tích chuyên sâu về kiến trúc chịu tải triệu yêu cầu giao dịch/giây, đưa cơ sở dữ liệu PostgreSQL về vùng an toàn tuyệt đối:
                 </p>

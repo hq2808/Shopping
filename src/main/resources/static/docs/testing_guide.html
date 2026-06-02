@@ -18,13 +18,26 @@
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation (Unified Single Source of Truth with Tree-view) -->
         <aside class="sidebar">
-            <div class="sidebar-title">Danh mục tài liệu</div>
+            <div class="sidebar-title">Tổng quan</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
                 </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                </li>
                 <li class="sidebar-item">
                     <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
                 </li>
                 <li class="sidebar-item">
                     <a href="testing_guide.html" class="sidebar-link active">Hướng dẫn kiểm thử</a>
@@ -35,8 +48,13 @@
                         <li><a href="#suite-2" class="sidebar-sub-link">2. JWT Security</a></li>
                         <li><a href="#suite-3" class="sidebar-sub-link">3. Phân Quyền</a></li>
                         <li><a href="#suite-4" class="sidebar-sub-link">4. Giao Dịch Đặt Hàng</a></li>
+                        <li><a href="#suite-5" class="sidebar-sub-link">5. Đặt Hàng Bất Đồng Bộ</a></li>
                     </ul>
                 </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
                 <li class="sidebar-item">
                     <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
                 </li>
@@ -213,7 +231,7 @@
                 <ul>
                     <li><strong>Method:</strong> <span class="method method-get">GET</span></li>
                     <li><strong>URL:</strong> <code>http://localhost:8080/api/products</code></li>
-                    <li><strong>Kết quả mong đợi:</strong> Trả về mã HTTP <strong>200 OK</strong> kèm JSON danh sách sản phẩm phân trang.</li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>200 OK</strong> kèm JSON danh sách sản phẩm phân trang.</li>
                 </ul>
 
                 <h4 class="mt-16">Kịch bản 1.2: Lấy chi tiết sản phẩm và Xem sản phẩm lỗi</h4>
@@ -234,17 +252,84 @@
     "stock": -5
 }</code></pre>
                     </li>
-                    <li><strong>Kết quả mong đợi (400 Bad Request):</strong>
+                    <li><strong>Kết quả API mong đợi (400 Bad Request):</strong> Lỗi validation trường `name`, `price`, `stock`.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Chạy câu lệnh SQL để đảm bảo sản phẩm lỗi không hề được lưu xuống DB:
+                        <pre><code>SELECT * FROM products WHERE price < 0 OR stock < 0 OR name = '';</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Không trả về bất kỳ dòng dữ liệu nào (0 rows).
+                    </li>
+                </ul>
+
+                <h4 class="mt-20">Kịch bản 1.4: Thêm sản phẩm thành công (Admin)</h4>
+                <p class="mb-12">Gửi yêu cầu thêm sản phẩm MacBook Pro hợp lệ:</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-post">POST</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/products</code></li>
+                    <li><strong>Body (JSON):</strong>
                         <pre><code>{
-    "status": 400,
-    "error": "Bad Request",
-    "message": "Validation failed",
-    "details": {
-        "name": "Product name is required",
-        "price": "Price must be greater than or equal to 0",
-        "stock": "Stock must be greater than or equal to 0"
-    }
+    "name": "MacBook Pro M3",
+    "description": "Apple MacBook Pro M3 14 inch",
+    "price": 2000.00,
+    "stock": 5
 }</code></pre>
+                    </li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>201 Created</strong> kèm JSON thông tin sản phẩm mới vừa được sinh ID.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Chạy truy vấn SQL kiểm chứng ghi nhận chính xác dữ liệu sản phẩm mới:
+                        <pre><code>SELECT id, name, price, stock FROM products WHERE name = 'MacBook Pro M3';</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Trả về đúng 1 bản ghi với đơn giá <code>2000.00</code> và tồn kho <code>5</code>.
+                    </li>
+                </ul>
+
+                <h4 class="mt-20">Kịch bản 1.5: Cập nhật sản phẩm thành công (Admin)</h4>
+                <p class="mb-12">Gửi yêu cầu chỉnh sửa sản phẩm vừa thêm ở Kịch bản 1.4 (giả sử ID = 4):</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-put">PUT</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/products/4</code></li>
+                    <li><strong>Body (JSON):</strong>
+                        <pre><code>{
+    "name": "MacBook Pro M3 Max",
+    "description": "Apple MacBook Pro M3 Max 16 inch",
+    "price": 3500.00,
+    "stock": 3
+}</code></pre>
+                    </li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>200 OK</strong> kèm JSON thông tin sản phẩm đã chỉnh sửa.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Chạy truy vấn SQL kiểm tra cập nhật DB:
+                        <pre><code>SELECT name, price, stock FROM products WHERE id = 4;</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Bản ghi được cập nhật sang tên mới <code>MacBook Pro M3 Max</code>, đơn giá <code>3500.00</code> và kho <code>3</code>.
+                    </li>
+                </ul>
+
+                <h4 class="mt-20">Kịch bản 1.6: Xóa sản phẩm chưa có đơn hàng thành công (Admin)</h4>
+                <p class="mb-12">Thực hiện xóa sản phẩm MacBook Pro M3 Max (ID = 4) chưa phát sinh đơn hàng nào:</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-delete">DELETE</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/products/4</code></li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>204 No Content</strong> (Xóa thành công không có nội dung trả về).</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Truy vấn xem sản phẩm còn trong DB hay không:
+                        <pre><code>SELECT count(*) FROM products WHERE id = 4;</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Trả về <code>0</code> (Đã bị xóa sạch).
+                    </li>
+                </ul>
+
+                <h4 class="mt-20">Kịch bản 1.7: Xóa sản phẩm ĐÃ CÓ đơn hàng (Admin - Thất bại do ràng buộc DB)</h4>
+                <p class="mb-12">Thử xóa sản phẩm iPhone 15 Pro (ID = 1) đã từng được đặt mua trong hệ thống:</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-delete">DELETE</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/products/1</code></li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>500 Internal Server Error</strong> do xung đột khóa ngoại từ cơ sở dữ liệu PostgreSQL.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Đảm bảo PostgreSQL từ chối xóa để giữ vững toàn vẹn tham chiếu lịch sử mua hàng:
+                        <pre><code>SELECT count(*) FROM products WHERE id = 1;</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Trả về <code>1</code>. Sản phẩm vẫn tồn tại bình thường và không bị ảnh hưởng.
                     </li>
                 </ul>
             </section>
@@ -269,82 +354,108 @@
     "role": "ROLE_USER",
     "initialBalance": 2000.00
 }</code></pre>
-                </li>
-                <li><strong>Kết quả mong đợi (201 Created):</strong> Trả về thông tin User. Mật khẩu <code>password</code> được lưu trữ dưới dạng mã hóa BCrypt băm an toàn trong PostgreSQL.</li>
-            </ul>
+                    </li>
+                    <li><strong>Kết quả API mong đợi (201 Created):</strong> Trả về thông tin User mới thành công.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Kiểm tra độ an toàn mật khẩu và số dư ví trong DB:
+                        <pre><code>SELECT username, password, email, role, balance FROM users WHERE username = 'tester_wife';</code></pre>
+                        <strong>Kết quả mong đợi:</strong>
+                        <ul>
+                            <li>Cột <code>password</code> phải hiển thị chuỗi băm bảo mật BCrypt (bắt đầu bằng ký tự <code>$2a$</code>), **tuyệt đối không được hiển thị chữ gốc <code>mypassword</code>**.</li>
+                            <li>Cột <code>balance</code> hiển thị đúng số dư ví <code>2000.00</code>.</li>
+                        </ul>
+                    </li>
+                </ul>
 
-            <h4 class="mt-16">Kịch bản 2.2: Đăng ký trùng tên và Đăng nhập sai mật khẩu</h4>
-            <ul>
-                <li><strong>Trùng tên:</strong> Gửi lại body trên lần nữa. Hệ thống trả về <strong>400 Bad Request</strong> thông báo: <em>"Username is already taken"</em>.</li>
-                <li><strong>Sai mật khẩu:</strong> Đăng nhập với mật khẩu không đúng. Hệ thống trả về <strong>401 Unauthorized</strong> với tin nhắn: <em>"Invalid username or password"</em>.</li>
-            </ul>
+                <h4 class="mt-20">Kịch bản 2.2: Đăng ký trùng tên tài khoản</h4>
+                <ul>
+                    <li>Gửi lại body đăng ký của `tester_wife` một lần nữa.</li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>400 Bad Request</strong> thông báo: <em>"Username is already taken"</em>.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Kiểm tra trùng lặp khóa duy nhất trong DB:
+                        <pre><code>SELECT count(*) FROM users WHERE username = 'tester_wife';</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Trả về đúng giá trị là <code>1</code>. DB chặn không cho tạo trùng lặp dữ liệu.
+                    </li>
+                </ul>
 
-            <h4 class="mt-16">Kịch bản 2.3: Xem thông tin Profile người dùng (Authenticated API)</h4>
-            <p class="mb-12">Đăng nhập tài khoản bất kỳ (Ví dụ: <code>user</code>), sử dụng Token gán vào Authorization Bearer để gửi yêu cầu lấy profile:</p>
-            <ul>
-                <li><strong>Method:</strong> <span class="method method-get">GET</span></li>
-                <li><strong>URL:</strong> <code>http://localhost:8080/api/users/profile</code></li>
-                <li><strong>Kết quả mong đợi (200 OK):</strong> Trả về thông tin cá nhân kèm số dư ví thời gian thực:
-                    <pre><code>{
-    "id": 1,
-    "username": "user",
-    "email": "user@gmail.com",
-    "role": "ROLE_USER",
-    "balance": 1000.00
-}</code></pre>
-                </li>
-            </ul>
+                <h4 class="mt-20">Kịch bản 2.3: Xem thông tin Profile người dùng (Authenticated API)</h4>
+                <p class="mb-12">Đăng nhập tài khoản bất kỳ (Ví dụ: <code>user</code>), sử dụng Token gán vào Authorization Bearer để gửi yêu cầu lấy profile:</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-get">GET</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/users/profile</code></li>
+                    <li><strong>Kết quả API mong đợi (200 OK):</strong> Trả về thông tin cá nhân kèm số dư ví thời gian thực.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Đối soát tiền ví hiển thị ở API với ví lưu trữ thực tế trong DB:
+                        <pre><code>SELECT balance FROM users WHERE username = 'user';</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Số dư trả về khớp hoàn toàn với số dư hiển thị trên JSON Profile API.
+                    </li>
+                </ul>
 
-            <div class="alert">
-                <h5>Mẹo phân tích Token JWT:</h5>
-                Sau khi đăng nhập thành công qua <code>POST /api/auth/login</code>, Tester copy chuỗi <strong>token</strong> nhận được đem dán vào trang web <a href="https://jwt.io/" target="_blank" class="text-highlight">jwt.io</a> để phân tích xem có đúng thông tin <code>role</code> và <code>sub</code> (tên đăng nhập) không.
-            </div>
-        </section>
+                <div class="alert">
+                    <h5>Mẹo phân tích Token JWT:</h5>
+                    Sau khi đăng nhập thành công qua <code>POST /api/auth/login</code>, Tester copy chuỗi <strong>token</strong> nhận được đem dán vào trang web <a href="https://jwt.io/" target="_blank" class="text-highlight">jwt.io</a> để phân tích xem có đúng thông tin <code>role</code> và <code>sub</code> (tên đăng nhập) không.
+                </div>
+            </section>
 
-        <!-- Suite 3 -->
-        <section id="suite-3" class="card">
-            <span class="badge badge-info">Kịch bản kiểm thử 3</span>
-            <h2>Phân Quyền Theo Vai Trò (Role-Based Access Control)</h2>
-            <p class="mb-20">
-                Nhóm kịch bản xác minh hệ thống ngăn chặn hành vi xâm nhập trái phép hoặc sai vai trò truy cập API.
-            </p>
+            <!-- Suite 3 -->
+            <section id="suite-3" class="card">
+                <span class="badge badge-info">Kịch bản kiểm thử 3</span>
+                <h2>Phân Quyền Theo Vai Trò (Role-Based Access Control)</h2>
+                <p class="mb-20">
+                    Nhóm kịch bản xác minh hệ thống ngăn chặn hành vi xâm nhập trái phép hoặc sai vai trò truy cập API.
+                </p>
 
-            <h4 class="mt-16">Kịch bản 3.1: Gọi API được bảo vệ không truyền Authorization Header</h4>
-            <ul>
-                <li><strong>API:</strong> <code>GET http://localhost:8080/api/orders</code> (Lấy lịch sử đơn hàng của tài khoản).</li>
-                <li><strong>Kết quả mong đợi (403 Forbidden hoặc 401 Unauthorized):</strong> Bị chặn ngay từ tầng lọc bảo mật Spring Security do thiếu token hợp lệ.</li>
-            </ul>
+                <h4 class="mt-16">Kịch bản 3.1: Gọi API được bảo vệ không truyền Authorization Header</h4>
+                <ul>
+                    <li><strong>API:</strong> <code>GET http://localhost:8080/api/orders</code></li>
+                    <li><strong>Kết quả API mong đợi:</strong> Bị chặn ở tầng lọc bảo mật, trả về HTTP 403 hoặc 401.</li>
+                </ul>
 
-            <h4 class="mt-16">Kịch bản 3.2: Dùng tài khoản USER gọi API của ADMIN (IDIOT Test)</h4>
-            <ul>
-                <li><strong>Bước 1:</strong> Đăng nhập tài khoản <code>user</code> để lấy Token ROLE_USER.</li>
-                <li><strong>Bước 2:</strong> Dán Token vào cấu hình Bearer Token.</li>
-                <li><strong>Bước 3:</strong> Gửi request xóa sản phẩm: <span class="method method-delete">DELETE</span> <code>http://localhost:8080/api/products/1</code>.</li>
-                <li><strong>Kết quả mong đợi (403 Forbidden):</strong> Trả về thông báo từ chối truy cập chuẩn JSON:
-                    <pre><code>{
-    "status": 403,
-    "error": "Forbidden",
-    "message": "Access denied: you do not have permission to access this resource"
-}</code></pre>
-                </li>
-            </ul>
-        </section>
+                <h4 class="mt-16">Kịch bản 3.2: Dùng tài khoản USER gọi API của ADMIN để xóa sản phẩm (IDIOT Test)</h4>
+                <ul>
+                    <li><strong>Bước 1:</strong> Đăng nhập tài khoản <code>user</code> lấy token ROLE_USER.</li>
+                    <li><strong>Bước 2:</strong> Dán token vào Authorization, gửi yêu cầu xóa sản phẩm: <span class="method method-delete">DELETE</span> <code>http://localhost:8080/api/products/1</code>.</li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>403 Forbidden</strong> báo truy cập bị từ chối.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Kiểm tra xem sản phẩm ID = 1 có bị xóa khỏi DB hay không:
+                        <pre><code>SELECT count(*) FROM products WHERE id = 1;</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Trả về giá trị là <code>1</code>. Sản phẩm vẫn nguyên vẹn trong DB, chứng minh phân quyền chặn thành công ở tầng ứng dụng và DB.
+                    </li>
+                </ul>
 
-        <!-- Suite 4 -->
-        <section id="suite-4" class="card">
-            <span class="badge badge-info">Kịch bản kiểm thử 4</span>
-            <h2>Quy Trình Đặt Hàng & Giao Dịch (@Transactional Rollback)</h2>
-            <p class="mb-20">
-                Nhóm kịch bản quan trọng nhất kiểm chứng tính chính xác của ví tiền, kho bãi và tính toàn vẹn dữ liệu trong cơ sở dữ liệu.
-            </p>
+                <h4 class="mt-20">Kịch bản 3.3: Dùng tài khoản ADMIN gọi API đặt hàng của USER</h4>
+                <ul>
+                    <li><strong>Bước 1:</strong> Đăng nhập tài khoản <code>admin</code> lấy token ROLE_ADMIN.</li>
+                    <li><strong>Bước 2:</strong> Gửi yêu cầu đặt hàng: <span class="method method-post">POST</span> <code>http://localhost:8080/api/orders</code>.</li>
+                    <li><strong>Kết quả API mong đợi:</strong> HTTP <strong>403 Forbidden</strong> báo truy cập bị từ chối, do tài khoản Admin không có quyền đặt hàng.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Đảm bảo không có đơn hàng nào được sinh ra cho Admin trong DB:
+                        <pre><code>SELECT count(*) FROM orders WHERE user_id = (SELECT id FROM users WHERE username = 'admin');</code></pre>
+                        <strong>Kết quả mong đợi:</strong> Trả về <code>0</code>.
+                    </li>
+                </ul>
+            </section>
 
-            <h4 class="mt-16">Kịch bản 4.1: Đặt đơn hàng thành công và Trừ tiền ví</h4>
-            <p class="mb-12">Đăng nhập tài khoản <code>user</code> (Ví có 1000.00 USD) và đặt mua 1 chiếc iPad Air (ID: 2, Giá 600.00 USD):</p>
-            <ul>
-                <li><strong>Method:</strong> <span class="method method-post">POST</span></li>
-                <li><strong>URL:</strong> <code>http://localhost:8080/api/orders</code></li>
-                <li><strong>Body (JSON):</strong>
-                    <pre><code>{
+            <!-- Suite 4 -->
+            <section id="suite-4" class="card">
+                <span class="badge badge-info">Kịch bản kiểm thử 4</span>
+                <h2>Quy Trình Đặt Hàng & Giao Dịch (@Transactional Rollback)</h2>
+                <p class="mb-20">
+                    Nhóm kịch bản quan trọng nhất kiểm chứng tính chính xác của ví tiền, kho bãi và tính toàn vẹn dữ liệu trong cơ sở dữ liệu.
+                </p>
+
+                <h4 class="mt-16">Kịch bản 4.1: Đặt đơn hàng thành công và Trừ tiền ví (Giao dịch Đồng bộ)</h4>
+                <p class="mb-12">Đăng nhập tài khoản <code>user</code> (Ví có 1000.00 USD) và đặt mua 1 chiếc iPad Air (ID: 2, Giá 600.00 USD):</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-post">POST</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/orders</code></li>
+                    <li><strong>Body (JSON):</strong>
+                        <pre><code>{
     "items": [
         {
             "productId": 2,
@@ -352,31 +463,66 @@
         }
     ]
 }</code></pre>
-                </li>
-                <li><strong>Kết quả mong đợi (201 Created):</strong>
-                    * Trả về thông tin hóa đơn với trạng thái <code>PAID</code>.
-                    * Ví tiền còn lại <code>remainingBalance</code> chính xác bằng <code>400.00 USD</code>.
-                    * Gửi truy vấn <code>GET /api/products/2</code>, tồn kho sản phẩm giảm từ <code>5</code> xuống <code>4</code>.
-                </li>
-            </ul>
+                    </li>
+                    <li><strong>Kết quả API mong đợi (201 Created):</strong>
+                        * Trả về thông tin hóa đơn với trạng thái <code>PAID</code>.
+                        * Ví tiền còn lại <code>remainingBalance</code> chính xác bằng <code>400.00 USD</code>.
+                    </li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Chạy đồng thời các câu lệnh SQL sau để kiểm chứng tính toàn vẹn dữ liệu:
+                        <pre><code>-- 1. Kiểm tra ví tiền của khách hàng bị trừ chính xác 600.00 USD
+SELECT balance FROM users WHERE username = 'user'; -- Mong đợi: 400.00
 
-            <h4 class="mt-24">Kịch bản 4.2: Đặt đơn hàng vượt số dư ví (Ví còn 400.00, mua iPhone 1200.00)</h4>
-            <ul>
-                <li>Gửi yêu cầu mua iPhone 15 Pro (ID: 1, Số lượng: 1).</li>
-                <li><strong>Kết quả mong đợi (400 Bad Request):</strong> Trả về thông tin: <em>"Insufficient balance. Order total: 1200.00, your balance: 400.00"</em>.</li>
-            </ul>
+-- 2. Kiểm tra tồn kho iPad Air giảm từ 5 xuống 4 chiếc
+SELECT stock FROM products WHERE id = 2; -- Mong đợi: 4
 
-            <h4 class="mt-24">Kịch bản 4.3: Đặt đơn hàng vượt quá tồn kho (Kho còn 4, mua 5)</h4>
-            <ul>
-                <li>Gửi yêu cầu mua sản phẩm iPad Air (ID: 2) với số lượng là 5.</li>
-                <li><strong>Kết quả mong đợi (400 Bad Request):</strong> Trả về thông tin: <em>"Product 'iPad Air' is out of stock. Available stock: 4, requested: 5"</em>.</li>
-            </ul>
+-- 3. Kiểm tra hóa đơn tổng được lưu chính xác trong bảng orders
+SELECT id, total_amount, status FROM orders WHERE user_id = (SELECT id FROM users WHERE username = 'user') ORDER BY id DESC LIMIT 1;
+-- Mong đợi: total_amount = 600.00, status = 'PAID'
 
-            <h4 class="mt-28 text-warning">Kịch bản 4.4: Kiểm thử rollback dữ liệu giao dịch cực hạn</h4>
-            <p class="mb-12">Đăng nhập tài khoản <code>tester_wife</code> (Ví có 2000.00 USD). Đơn hàng gồm 2 sản phẩm: Sản phẩm 3 hợp lệ (mua 2 AirPods Pro) và Sản phẩm 2 lỗi kho (mua 5 iPad Air trong khi kho chỉ còn 4 chiếc):</p>
-            <ul>
-                <li><strong>Body (JSON):</strong>
-                    <pre><code>{
+-- 4. Kiểm tra dòng chi tiết đơn hàng lưu chính xác trong bảng order_items
+SELECT product_id, quantity, price FROM order_items WHERE order_id = (SELECT id FROM orders WHERE user_id = (SELECT id FROM users WHERE username = 'user') ORDER BY id DESC LIMIT 1);
+-- Mong đợi: product_id = 2, quantity = 1, price = 600.00</code></pre>
+                    </li>
+                </ul>
+
+                <h4 class="mt-24">Kịch bản 4.2: Đặt đơn hàng vượt số dư ví (Giao dịch thất bại)</h4>
+                <ul>
+                    <li>Khách hàng `user` (ví còn 400.00) gửi yêu cầu mua iPhone 15 Pro (ID: 1, Giá 1200.00 USD).</li>
+                    <li><strong>Kết quả API mong đợi (400 Bad Request):</strong> <em>"Insufficient balance. Order total: 1200.00, your balance: 400.00"</em>.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Xác minh ví tiền và kho hàng không hề bị trừ lệch:
+                        <pre><code>-- 1. Ví tiền của user phải giữ nguyên là 400.00 USD (không bị trừ)
+SELECT balance FROM users WHERE username = 'user'; -- Mong đợi: 400.00
+
+-- 2. Tồn kho iPhone 15 Pro giữ nguyên là 10 chiếc (không bị giảm)
+SELECT stock FROM products WHERE id = 1; -- Mong đợi: 10
+
+-- 3. Không có đơn hàng mới nào được sinh ra trong DB
+SELECT count(*) FROM orders WHERE total_amount = 1200.00 AND user_id = (SELECT id FROM users WHERE username = 'user');
+-- Mong đợi: 0</code></pre>
+                    </li>
+                </ul>
+
+                <h4 class="mt-24">Kịch bản 4.3: Đặt đơn hàng vượt quá tồn kho</h4>
+                <ul>
+                    <li>Gửi yêu cầu mua sản phẩm iPad Air (ID: 2) với số lượng là 5 (trong khi kho chỉ còn 4 chiếc).</li>
+                    <li><strong>Kết quả API mong đợi (400 Bad Request):</strong> <em>"Product 'iPad Air' is out of stock..."</em>.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification):</strong>
+                        <br>Đảm bảo kho và tiền không thay đổi:
+                        <pre><code>SELECT stock FROM products WHERE id = 2; -- Mong đợi: 4
+SELECT balance FROM users WHERE username = 'user'; -- Mong đợi: 400.00</code></pre>
+                    </li>
+                </ul>
+
+                <h4 class="mt-28 text-warning">Kịch bản 4.4: Kiểm thử rollback dữ liệu giao dịch cực hạn (Atomicity)</h4>
+                <p class="mb-12">Đăng nhập tài khoản <code>tester_wife</code> (Ví có 2000.00 USD). Đặt đơn hàng gồm 2 sản phẩm: 2 chiếc AirPods Pro (ID: 3, Giá 250.00, kho còn 20) và 5 chiếc iPad Air (ID: 2, Giá 600.00, kho chỉ còn 4 chiếc -> Bị lỗi kho):</p>
+                <ul>
+                    <li><strong>Body (JSON):</strong>
+                        <pre><code>{
     "items": [
         {
             "productId": 3,
@@ -388,13 +534,103 @@
         }
     ]
 }</code></pre>
-                </li>
-                <li><strong>Bước 1:</strong> Bắn API đặt đơn hàng này. Kết quả mong đợi là hệ thống trả về lỗi <code>400 Bad Request</code> báo sản phẩm 2 (iPad Air) hết hàng.</li>
-                <li><strong>Bước 2 (Xác minh tính nguyên tử):</strong> Gọi API công khai <code>GET http://localhost:8080/api/products/3</code>.
-                    <br><span class="badge badge-success">KẾT QUẢ ĐẠT YÊU CẦU</span> Tồn kho của sản phẩm 3 (AirPods Pro) <strong>phải giữ nguyên là 20</strong>, hoàn toàn không bị giảm đi 2 chiếc! Điều này chứng minh toàn bộ các cập nhật của các mặt hàng trước đó đã được rollback thành công hoàn tất. Số dư ví người dùng vẫn giữ nguyên là 2000.00 USD.
-                </li>
-            </ul>
-        </section>
+                    </li>
+                    <li><strong>Bước 1:</strong> Gửi request đặt hàng. Kết quả mong đợi là hệ thống trả về lỗi <code>400 Bad Request</code> báo iPad Air hết hàng.</li>
+                    <li><strong>Bước 2 (Xác minh tính nguyên tử trong CSDL):</strong> Chạy các câu lệnh SQL đối soát:
+                        <pre><code>-- 1. Tồn kho của sản phẩm AirPods Pro (ID = 3) phải giữ nguyên là 20 chiếc (không được giảm đi 2)
+SELECT stock FROM products WHERE id = 3; -- Mong đợi: 20
+
+-- 2. Tồn kho của sản phẩm iPad Air (ID = 2) phải giữ nguyên là 4 chiếc
+SELECT stock FROM products WHERE id = 2; -- Mong đợi: 4
+
+-- 3. Số dư ví người dùng vẫn nguyên vẹn là 2000.00 USD
+SELECT balance FROM users WHERE username = 'tester_wife'; -- Mong đợi: 2000.00
+
+-- 4. Không có bất kỳ hóa đơn nào được tạo trong DB
+SELECT count(*) FROM orders WHERE user_id = (SELECT id FROM users WHERE username = 'tester_wife'); -- Mong đợi: 0</code></pre>
+                        <span class="badge badge-success">KẾT QUẢ ĐẠT YÊU CẦU</span> Toàn bộ giao dịch đã được rollback thành công hoàn tất trong DB, chứng minh tính nguyên tử của `@Transactional`.
+                    </li>
+            </section>
+
+            <!-- Suite 5 -->
+            <section id="suite-5" class="card">
+                <span class="badge badge-info">Kịch bản kiểm thử 5</span>
+                <h2>Quy Trình Đặt Hàng Bất Đồng Bộ (Asynchronous Order - Redis + RabbitMQ)</h2>
+                <p class="mb-20">
+                    Nhóm kịch bản kiểm chứng tính chính xác của ví tiền, kho bãi khi chạy qua luồng giảm chấn chịu tải cao sử dụng Redis Lua Script và RabbitMQ Message Queue.
+                </p>
+
+                <h4 class="mt-16">Kịch bản 5.1: Đặt hàng bất đồng bộ thành công</h4>
+                <p class="mb-12">Đăng nhập tài khoản <code>user</code> (Ví đang có 400.00 USD sau khi kết thúc kịch bản 4.1) và đặt mua 1 chiếc AirPods Pro (ID: 3, Giá 250.00 USD, kho đang còn 20 chiếc):</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-post">POST</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/orders/async</code></li>
+                    <li><strong>Body (JSON):</strong>
+                        <pre><code>{
+    "items": [
+        {
+            "productId": 3,
+            "quantity": 1
+        }
+    ]
+}</code></pre>
+                    </li>
+                    <li><strong>Kết quả API mong đợi (202 Accepted):</strong>
+                        * Trả về HTTP Status <strong>202 Accepted</strong>.
+                        * JSON chứa thông tin hóa đơn với <code>orderId = null</code> (do đơn hàng chưa ghi vào DB) và trạng thái đơn hàng là <code>PENDING</code>.
+                        * Số dư ví còn lại <code>remainingBalance</code> hiển thị là <code>150.00 USD</code>.
+                    </li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Bộ nhớ đệm (Redis Verification - Kiểm tra ngay lập tức):</strong>
+                        <br>Do luồng API trừ tiền và kho ngay trên Redis RAM, hãy kết nối Redis Client (hoặc qua CLI) kiểm tra các khóa sau:
+                        <pre><code>-- 1. Ví tiền trên Redis của user phải bị trừ ngay 250.00 USD còn 150.00 USD
+GET user:balance:user -- Mong đợi: "150.00"
+
+-- 2. Tồn kho AirPods Pro trên Redis phải giảm ngay từ 20 xuống 19 chiếc
+GET product:stock:3 -- Mong đợi: "19"</code></pre>
+                    </li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Cơ sở Dữ liệu (DB Verification - Chờ từ 1-2 giây để MQ tiêu thụ):</strong>
+                        <br>Sau khi RabbitMQ Consumer tiêu thụ gói tin và lưu xuống DB PostgreSQL thành công:
+                        <pre><code>-- 1. Ví tiền user trong DB được cập nhật khớp với Redis
+SELECT balance FROM users WHERE username = 'user'; -- Mong đợi: 150.00
+
+-- 2. Kho sản phẩm trong DB được cập nhật khớp với Redis
+SELECT stock FROM products WHERE id = 3; -- Mong đợi: 19
+
+-- 3. Hóa đơn được lưu trong DB với trace_id ngẫu nhiên được sinh ra
+SELECT total_amount, status, trace_id FROM orders WHERE user_id = (SELECT id FROM users WHERE username = 'user') ORDER BY id DESC LIMIT 1;
+-- Mong đợi: total_amount = 250.00, status = 'PAID', trace_id không null.</code></pre>
+                    </li>
+                </ul>
+
+                <h4 class="mt-24">Kịch bản 5.2: Đặt đơn hàng bất đồng bộ thất bại (Hết tiền ví trên Redis)</h4>
+                <p class="mb-12">Dùng tài khoản <code>user</code> (Ví còn 150.00 USD) và tiếp tục đặt mua iPad Air (ID: 2, Giá 600.00 USD):</p>
+                <ul>
+                    <li><strong>Method:</strong> <span class="method method-post">POST</span></li>
+                    <li><strong>URL:</strong> <code>http://localhost:8080/api/orders/async</code></li>
+                    <li><strong>Body (JSON):</strong>
+                        <pre><code>{
+    "items": [
+        {
+            "productId": 2,
+            "quantity": 1
+        }
+    ]
+}</code></pre>
+                    </li>
+                    <li><strong>Kết quả API mong đợi (400 Bad Request):</strong> Trả về lỗi <code>400 Bad Request</code> lập tức với tin nhắn: <em>"Insufficient wallet balance to place this order."</em>.</li>
+                    <li>
+                        <strong class="text-highlight">Xác thực Bộ nhớ đệm & DB (Redis & DB Verification):</strong>
+                        <br>Đảm bảo giao dịch bị chặn ngay trên Redis RAM và không bị trừ lệch dữ liệu:
+                        <pre><code>-- Kiểm tra ví trên Redis RAM
+GET user:balance:user -- Mong đợi: "150.00"
+
+-- Kiểm tra ví trên DB PostgreSQL
+SELECT balance FROM users WHERE username = 'user'; -- Mong đợi: 150.00</code></pre>
+                    </li>
+                </ul>
+            </section>
         
         <footer>
             <p>&copy; 2026 Mini Shopee</p>

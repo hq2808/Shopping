@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đặc tả dự án - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link active">Tài liệu đặc tả dự án</a>
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#system-overview" class="sidebar-sub-link">1. Tổng quan hệ thống</a></li>
+                        <li><a href="#data-architecture" class="sidebar-sub-link">2. Kiến trúc dữ liệu</a></li>
+                        <li><a href="#db-schema" class="sidebar-sub-link">3. Đặc tả CSDL</a></li>
+                        <li><a href="#business-rules" class="sidebar-sub-link">4. Quy tắc nghiệp vụ</a></li>
+                        <li><a href="#api-spec" class="sidebar-sub-link">5. Đặc tả API Endpoints</a></li>
+                        <li><a href="#payload-spec" class="sidebar-sub-link">6. Cấu trúc Payload mẫu</a></li>
+                        <li><a href="#error-spec" class="sidebar-sub-link">7. Phản hồi lỗi chuẩn</a></li>
+                        <li><a href="#seeded-data" class="sidebar-sub-link">8. Dữ liệu mẫu khởi tạo</a></li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Project Specifications</span>
+                <h1>Tài Liệu Đặc Tả Dự Án <br><span class="gradient-text">(Mini Shopee System Spec)</span></h1>
+                <p>Tài liệu cung cấp thông tin kỹ thuật chuyên sâu về luồng hoạt động, cấu trúc cơ sở dữ liệu và các quy tắc nghiệp vụ giúp tester xây dựng kịch bản kiểm thử toàn diện.</p>
+            </section>
+
+            <!-- System Overview -->
+            <section id="system-overview" class="card">
+                <span class="badge badge-success">1. Tổng Quan</span>
+                <h2>1. Tổng quan hệ thống</h2>
+                <p class="mb-16">
+                    <strong>Mini Shopee</strong> là một hệ thống backend thương mại điện tử tinh gọn, được phát triển phục vụ cho các bài toán kiểm thử validation dữ liệu đầu vào, kiểm thử bảo mật với JWT, kiểm thử tính toàn vẹn giao dịch và đánh giá giải pháp chịu tải cao.
+                </p>
+                <div class="alert alert-success" style="margin-top: 16px;">
+                    <h5>Các đặc trưng chính của hệ thống:</h5>
+                    <ul>
+                        <li><strong>Bảo mật dựa trên Token:</strong> Sử dụng chuẩn JWT (JSON Web Token) để xác thực và phân quyền theo vai trò (ROLE_USER, ROLE_ADMIN).</li>
+                        <li><strong>Đặt hàng truyền thống (Đồng bộ):</strong> Trừ kho và tiền trực tiếp trong một giao dịch cơ sở dữ liệu PostgreSQL có quản lý transaction.</li>
+                        <li><strong>Đặt hàng chịu tải (Bất đồng bộ):</strong> Sử dụng bộ nhớ đệm Redis để giữ chỗ (reserve) tài nguyên thông qua Lua Script nguyên tử, sau đó đẩy sự kiện đặt hàng vào RabbitMQ để xử lý bất đồng bộ, giúp hệ thống chịu được lượng request khổng lồ mà không sập DB.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Data Architecture -->
+            <section id="data-architecture" class="card">
+                <span class="badge badge-info">2. Kiến Trúc</span>
+                <h2>2. Kiến trúc luồng dữ liệu đặt hàng</h2>
+                
+                <h3 class="mt-20 mb-12">Luồng đặt hàng Đồng bộ (Standard Order Flow)</h3>
+                <p class="mb-12">
+                    Thích hợp cho tải lượng trung bình, ưu tiên tính nhất quán dữ liệu tức thời:
+                </p>
+                <ol>
+                    <li>Client gửi danh sách sản phẩm và số lượng mua qua API <code>POST /api/orders</code> kèm JWT.</li>
+                    <li>Hệ thống truy vấn DB PostgreSQL để kiểm tra tồn kho và đơn giá sản phẩm.</li>
+                    <li>Kiểm tra số dư tài khoản của User trong DB.</li>
+                    <li>Nếu đủ điều kiện: thực hiện trừ kho, trừ tiền trong DB và lưu hóa đơn (gói gọn trong `@Transactional` của Spring).</li>
+                    <li>Trả về phản hồi <code>201 Created</code> kèm hóa đơn đã thanh toán.</li>
+                </ol>
+
+                <h3 class="mt-24 mb-12">Luồng đặt hàng Bất đồng bộ (High-Concurrency Order Flow)</h3>
+                <p class="mb-12">
+                    Thích hợp cho các chiến dịch Sale lớn (Flash Sale), giảm tải trực tiếp cho DB:
+                </p>
+                <ol>
+                    <li>Client gửi danh sách sản phẩm qua API <code>POST /api/orders/async</code> kèm JWT.</li>
+                    <li>Backend lấy siêu dữ liệu (tên, giá) từ cache Redis (hoặc PostgreSQL nếu lỡ cache miss).</li>
+                    <li>Gọi <strong>Lua Script nguyên tử</strong> chạy trên RAM của Redis để kiểm tra đồng thời:
+                        <ul>
+                            <li>Số dư ví của User (Key Redis: <code>user:balance:{username}</code>) có đủ thanh toán tổng đơn hàng hay không.</li>
+                            <li>Tồn kho từng sản phẩm (Key Redis: <code>product:stock:{id}</code>) có đủ số lượng yêu cầu hay không.</li>
+                        </ul>
+                    </li>
+                    <li>Nếu Lua Script trả về thành công:
+                        <ul>
+                            <li>Kho và tiền của user trên Redis RAM sẽ được khấu trừ ngay lập tức.</li>
+                            <li>Một thông điệp chứa thông tin đặt hàng được đẩy vào RabbitMQ queue <code>shopee.order.queue</code>.</li>
+                            <li>Hệ thống lập tức trả về <code>202 Accepted</code> với trạng thái đơn hàng là <code>PENDING</code>.</li>
+                        </ul>
+                    </li>
+                    <li><strong>OrderConsumer</strong> chạy nền lắng nghe queue RabbitMQ, tuần tự lấy thông điệp ra ghi nhận xuống PostgreSQL DB thực tế. Trạng thái đơn hàng chuyển sang <code>PAID</code>.</li>
+                </ol>
+            </section>
+
+            <!-- DB Schema -->
+            <section id="db-schema" class="card">
+                <span class="badge badge-info">3. Database Schema</span>
+                <h2>3. Đặc tả cơ sở dữ liệu (PostgreSQL)</h2>
+                <p class="mb-16">
+                    Hệ thống lưu trữ dữ liệu dưới cấu trúc 4 bảng quan hệ chính:
+                </p>
+
+                <h3 class="mt-20 mb-12">Bảng <code>users</code> (Người dùng)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên trường</th>
+                            <th>Kiểu dữ liệu</th>
+                            <th>Ràng buộc</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td>BIGINT</td>
+                            <td>Primary Key, Auto-increment</td>
+                            <td>Mã định danh duy nhất của người dùng.</td>
+                        </tr>
+                        <tr>
+                            <td><code>username</code></td>
+                            <td>VARCHAR(255)</td>
+                            <td>Unique, Not Null</td>
+                            <td>Tên đăng nhập (độ dài 3-20 ký tự).</td>
+                        </tr>
+                        <tr>
+                            <td><code>password</code></td>
+                            <td>VARCHAR(255)</td>
+                            <td>Not Null</td>
+                            <td>Mật khẩu đã được băm bằng BCrypt.</td>
+                        </tr>
+                        <tr>
+                            <td><code>email</code></td>
+                            <td>VARCHAR(255)</td>
+                            <td>Unique, Not Null</td>
+                            <td>Địa chỉ email của người dùng.</td>
+                        </tr>
+                        <tr>
+                            <td><code>role</code></td>
+                            <td>VARCHAR(50)</td>
+                            <td>Not Null</td>
+                            <td>Vai trò: <code>ROLE_USER</code> hoặc <code>ROLE_ADMIN</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>balance</code></td>
+                            <td>NUMERIC(38,2)</td>
+                            <td>Not Null, >= 0</td>
+                            <td>Số dư ví tiền của người dùng.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-12">Bảng <code>products</code> (Sản phẩm)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên trường</th>
+                            <th>Kiểu dữ liệu</th>
+                            <th>Ràng buộc</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td>BIGINT</td>
+                            <td>Primary Key, Auto-increment</td>
+                            <td>Mã định danh sản phẩm.</td>
+                        </tr>
+                        <tr>
+                            <td><code>name</code></td>
+                            <td>VARCHAR(255)</td>
+                            <td>Not Null</td>
+                            <td>Tên hiển thị sản phẩm.</td>
+                        </tr>
+                        <tr>
+                            <td><code>description</code></td>
+                            <td>TEXT</td>
+                            <td>-</td>
+                            <td>Mô tả chi tiết sản phẩm.</td>
+                        </tr>
+                        <tr>
+                            <td><code>price</code></td>
+                            <td>NUMERIC(38,2)</td>
+                            <td>Not Null, >= 0</td>
+                            <td>Đơn giá sản phẩm.</td>
+                        </tr>
+                        <tr>
+                            <td><code>stock</code></td>
+                            <td>INTEGER</td>
+                            <td>Not Null, >= 0</td>
+                            <td>Số lượng sản phẩm còn lại trong kho.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-12">Bảng <code>orders</code> (Đơn đặt hàng)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên trường</th>
+                            <th>Kiểu dữ liệu</th>
+                            <th>Ràng buộc</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td>BIGINT</td>
+                            <td>Primary Key, Auto-increment</td>
+                            <td>Mã định danh đơn hàng.</td>
+                        </tr>
+                        <tr>
+                            <td><code>trace_id</code></td>
+                            <td>VARCHAR(255)</td>
+                            <td>Unique, Nullable</td>
+                            <td>Dùng để kiểm soát trùng lặp đơn hàng bất đồng bộ.</td>
+                        </tr>
+                        <tr>
+                            <td><code>user_id</code></td>
+                            <td>BIGINT</td>
+                            <td>Foreign Key (users)</td>
+                            <td>Liên kết đến khách hàng mua đơn này.</td>
+                        </tr>
+                        <tr>
+                            <td><code>total_amount</code></td>
+                            <td>NUMERIC(38,2)</td>
+                            <td>Not Null</td>
+                            <td>Tổng số tiền thanh toán của toàn đơn hàng.</td>
+                        </tr>
+                        <tr>
+                            <td><code>status</code></td>
+                            <td>VARCHAR(50)</td>
+                            <td>Not Null</td>
+                            <td>Trạng thái đơn: <code>PENDING</code>, <code>PAID</code>, <code>CANCELLED</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>created_at</code></td>
+                            <td>TIMESTAMP</td>
+                            <td>Not Null</td>
+                            <td>Thời gian khởi tạo đơn hàng.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-12">Bảng <code>order_items</code> (Chi tiết đơn hàng)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên trường</th>
+                            <th>Kiểu dữ liệu</th>
+                            <th>Ràng buộc</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>id</code></td>
+                            <td>BIGINT</td>
+                            <td>Primary Key, Auto-increment</td>
+                            <td>Mã định danh chi tiết dòng sản phẩm.</td>
+                        </tr>
+                        <tr>
+                            <td><code>order_id</code></td>
+                            <td>BIGINT</td>
+                            <td>Foreign Key (orders)</td>
+                            <td>Liên kết đến đơn hàng tổng.</td>
+                        </tr>
+                        <tr>
+                            <td><code>product_id</code></td>
+                            <td>BIGINT</td>
+                            <td>Foreign Key (products)</td>
+                            <td>Sản phẩm được mua.</td>
+                        </tr>
+                        <tr>
+                            <td><code>quantity</code></td>
+                            <td>INTEGER</td>
+                            <td>Not Null, >= 1</td>
+                            <td>Số lượng sản phẩm đặt mua.</td>
+                        </tr>
+                        <tr>
+                            <td><code>price</code></td>
+                            <td>NUMERIC(38,2)</td>
+                            <td>Not Null</td>
+                            <td>Giá chốt sản phẩm tại thời điểm đặt hàng.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Business Rules -->
+            <section id="business-rules" class="card">
+                <span class="badge badge-danger">4. Quy Tắc Nghiệp Vụ</span>
+                <h2>4. Quy tắc nghiệp vụ bắt buộc (Business Rules)</h2>
+                <p class="mb-16">
+                    Tester cần nắm chắc các quy tắc hoạt động logic của hệ thống để xây dựng đầy đủ các kịch bản kiểm thử biên (Edge Cases):
+                </p>
+                
+                <h3 class="mt-20 mb-12">4.1. Quy tắc về Giỏ hàng & Số lượng đặt hàng (Cart Constraints)</h3>
+                <ul>
+                    <li><strong>Giới hạn mặt hàng:</strong> Một đơn hàng chỉ được chứa tối đa <span class="text-error">50 dòng sản phẩm khác nhau</span> (`OrderItem`). Yêu cầu gửi danh sách rỗng hoặc vượt quá 50 sẽ nhận lỗi <code>400 Bad Request</code>.</li>
+                    <li><strong>Độ lớn số lượng tối thiểu:</strong> Số lượng (`quantity`) đặt mua của từng sản phẩm trong giỏ hàng bắt buộc phải lớn hơn hoặc bằng <span class="text-highlight">1</span>. Yêu cầu nhỏ hơn 1 hoặc null sẽ bị chặn bởi tầng validation.</li>
+                </ul>
+
+                <h3 class="mt-20 mb-12">4.2. Quy tắc trừ Kho & Ví tiền (Inventory & Balance Constraints)</h3>
+                <ul>
+                    <li><strong>Kiểm soát tồn kho:</strong> Số lượng đặt mua của bất kỳ sản phẩm nào phải nhỏ hơn hoặc bằng số lượng tồn kho hiện tại trong hệ thống.</li>
+                    <li><strong>Kiểm soát khả năng chi trả:</strong> Tổng giá trị thanh toán của đơn hàng (sau khi nhân số lượng với giá chốt của từng sản phẩm) không được vượt quá số dư ví (`balance`) hiện tại của người dùng.</li>
+                </ul>
+
+                <h3 class="mt-20 mb-12">4.3. Tính nguyên tử giao dịch (Atomicity & Rollback)</h3>
+                <ul>
+                    <li><strong>Nguyên tắc Rollback:</strong> Khi đặt đơn hàng gồm nhiều sản phẩm, nếu có bất cứ dòng sản phẩm nào bị lỗi (như hết hàng) hoặc người dùng không đủ tiền thanh toán vào phút chót, hệ thống bắt buộc phải **phục hồi toàn vẹn trạng thái cũ (Rollback)**: kho của tất cả sản phẩm khác và ví tiền người dùng không được phép thay đổi.</li>
+                </ul>
+
+                <h3 class="mt-20 mb-12">4.4. Quy tắc bảo vệ khi xóa sản phẩm (Product Deletion Safety)</h3>
+                <ul>
+                    <li><strong>Ràng buộc Khóa Ngoại:</strong> Do bảng chi tiết đơn hàng (<code>order_items</code>) liên kết trực tiếp tới sản phẩm (<code>products</code>), hệ thống áp dụng ràng buộc khóa ngoại chặt chẽ. **Không cho phép xóa các sản phẩm đã từng được đặt mua**. Nếu cố tình xóa, database PostgreSQL sẽ chặn lại và trả về lỗi xung đột khóa ngoại.</li>
+                </ul>
+
+                <div class="alert alert-error mt-24">
+                    <h5>⚠️ LƯU Ý LỖI NGHIỆP VỤ (VẤN ĐỀ ĐỒNG BỘ REDIS):</h5>
+                    <p class="mb-12">
+                        Trong mã nguồn hiện tại đang tồn tại một lỗ hổng đồng bộ (Synchronization Bug): Khi một user đăng ký tài khoản mới qua API <code>POST /api/auth/register</code>, dữ liệu được ghi xuống PostgreSQL thành công, nhưng <strong>số dư ví ban đầu không được tự động đồng bộ (sync) lên bộ nhớ đệm Redis</strong>.
+                    </p>
+                    <ul>
+                        <li><strong>Hậu quả:</strong> Nếu tài khoản mới tạo này thực hiện đặt hàng ngay qua luồng bất đồng bộ (<code>POST /api/orders/async</code>), Redis Lua Script sẽ không tìm thấy số dư ví của user và trả về lỗi <strong class="text-error">-2 (Insufficient balance)</strong> mặc dù tài khoản có tiền trong DB.</li>
+                        <li><strong>Cách khắc phục khi test:</strong> Tester nên sử dụng tài khoản seed sẵn (<code>user</code>) để kiểm thử đặt hàng bất đồng bộ, hoặc sử dụng API đặt hàng đồng bộ (<code>POST /api/orders</code>) đối với tài khoản mới tạo.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- API Spec -->
+            <section id="api-spec" class="card">
+                <span class="badge badge-info">5. API Spec</span>
+                <h2>5. Đặc tả các API Endpoints</h2>
+                <p class="mb-20">
+                    Bảng danh sách toàn bộ các API Endpoints hệ thống cung cấp:
+                </p>
+
+                <h3 class="mt-24 mb-12">Nhóm API Xác thực & Người dùng (Authentication & User Profile)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Quyền hạn</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><code>/api/auth/register</code></td>
+                            <td>Public</td>
+                            <td>Đăng ký tài khoản mới. Ràng buộc: Username từ 3-20 ký tự, Mật khẩu tối thiểu 6 ký tự.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><code>/api/auth/login</code></td>
+                            <td>Public</td>
+                            <td>Đăng nhập sinh Token JWT. Trả về Token kèm thông tin username và role.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><code>/api/users/profile</code></td>
+                            <td>USER / ADMIN</td>
+                            <td>Xem thông tin cá nhân hiện tại bao gồm số dư ví <code>balance</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-12">Nhóm API Quản lý sản phẩm (Products)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Quyền hạn</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><code>/api/products</code></td>
+                            <td>Public</td>
+                            <td>Lấy danh sách sản phẩm phân trang (mặc định page=0, size=10). Hỗ trợ tìm kiếm theo tham số <code>name</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><code>/api/products/{id}</code></td>
+                            <td>Public</td>
+                            <td>Lấy chi tiết sản phẩm theo mã ID. Trả về <code>404 Not Found</code> nếu không tồn tại.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><code>/api/products</code></td>
+                            <td>ADMIN</td>
+                            <td>Tạo sản phẩm mới. Yêu cầu giá và kho >= 0.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-put">PUT</span></td>
+                            <td><code>/api/products/{id}</code></td>
+                            <td>ADMIN</td>
+                            <td>Cập nhật thông tin sản phẩm. Trả về thông tin sản phẩm sau khi sửa.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-delete">DELETE</span></td>
+                            <td><code>/api/products/{id}</code></td>
+                            <td>ADMIN</td>
+                            <td>Xóa sản phẩm khỏi hệ thống. Trả về <code>244 No Content</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-12">Nhóm API Đặt hàng (Orders)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Quyền hạn</th>
+                            <th>Mô tả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><code>/api/orders</code></td>
+                            <td>USER</td>
+                            <td>Đặt hàng đồng bộ. Trả về <code>201 Created</code> và trừ DB trực tiếp.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-post">POST</span></td>
+                            <td><code>/api/orders/async</code></td>
+                            <td>USER</td>
+                            <td>Đặt hàng bất đồng bộ tốc độ cao. Trả về <code>202 Accepted</code> và đẩy queue RabbitMQ.</td>
+                        </tr>
+                        <tr>
+                            <td><span class="method method-get">GET</span></td>
+                            <td><code>/api/orders</code></td>
+                            <td>USER / ADMIN</td>
+                            <td>Xem lịch sử đặt hàng của tài khoản hiện tại.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Payload Specification -->
+            <section id="payload-spec" class="card">
+                <span class="badge badge-info">6. Payload Spec</span>
+                <h2>6. Cấu trúc Request/Response Payload mẫu</h2>
+                <p class="mb-16">
+                    Chi tiết định dạng JSON của các yêu cầu và phản hồi cho các luồng nghiệp vụ cốt lõi:
+                </p>
+
+                <h4 class="mt-16 text-highlight">Đăng ký tài khoản (POST /api/auth/register)</h4>
+                <div class="grid-2" style="margin: 12px 0;">
+                    <div>
+                        <h5>Request Body</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "username": "tester_wife",
+    "password": "mypassword",
+    "email": "wife@tester.com",
+    "role": "ROLE_USER",
+    "initialBalance": 2000.00
+}</code></pre>
+                    </div>
+                    <div>
+                        <h5>Response Body (201 Created)</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "id": 3,
+    "username": "tester_wife",
+    "email": "wife@tester.com",
+    "role": "ROLE_USER",
+    "balance": 2000.00
+}</code></pre>
+                    </div>
+                </div>
+
+                <h4 class="mt-24 text-highlight">Đăng nhập tài khoản (POST /api/auth/login)</h4>
+                <div class="grid-2" style="margin: 12px 0;">
+                    <div>
+                        <h5>Request Body</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "username": "user",
+    "password": "password"
+}</code></pre>
+                    </div>
+                    <div>
+                        <h5>Response Body (200 OK)</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "token": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOi...",
+    "username": "user",
+    "role": "ROLE_USER"
+}</code></pre>
+                    </div>
+                </div>
+
+                <h4 class="mt-24 text-highlight">Đặt hàng Đồng bộ (POST /api/orders)</h4>
+                <div class="grid-2" style="margin: 12px 0;">
+                    <div>
+                        <h5>Request Body</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "items": [
+        {
+            "productId": 2,
+            "quantity": 1
+        }
+    ]
+}</code></pre>
+                    </div>
+                    <div>
+                        <h5>Response Body (201 Created)</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "orderId": 1,
+    "username": "user",
+    "totalAmount": 600.00,
+    "status": "PAID",
+    "createdAt": "2026-06-02T10:45:00",
+    "items": [
+        {
+            "productId": 2,
+            "productName": "iPad Air",
+            "quantity": 1,
+            "price": 600.00,
+            "subtotal": 600.00
+        }
+    ],
+    "remainingBalance": 400.00
+}</code></pre>
+                    </div>
+                </div>
+
+                <h4 class="mt-24 text-highlight">Đặt hàng Bất đồng bộ (POST /api/orders/async)</h4>
+                <div class="grid-2" style="margin: 12px 0;">
+                    <div>
+                        <h5>Request Body</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "items": [
+        {
+            "productId": 3,
+            "quantity": 2
+        }
+    ]
+}</code></pre>
+                    </div>
+                    <div>
+                        <h5>Response Body (202 Accepted)</h5>
+                        <pre style="border-radius: 8px;"><code>{
+    "orderId": null,
+    "username": "user",
+    "totalAmount": 500.00,
+    "status": "PENDING",
+    "createdAt": "2026-06-02T10:46:00",
+    "items": [
+        {
+            "productId": 3,
+            "productName": "AirPods Pro",
+            "quantity": 2,
+            "price": 250.00,
+            "subtotal": 500.00
+        }
+    ],
+    "remainingBalance": 500.00
+}</code></pre>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Response Specification -->
+            <section id="error-spec" class="card">
+                <span class="badge badge-danger">7. Error Spec</span>
+                <h2>7. Định dạng phản hồi lỗi chuẩn (Global Error Responses)</h2>
+                <p class="mb-16">
+                    Khi hệ thống gặp lỗi nghiệp vụ, bảo mật hoặc validation đầu vào, mã nguồn sẽ bắt lỗi tại <code>GlobalExceptionHandler</code> và trả về JSON theo chuẩn định dạng nhất quán dưới đây:
+                </p>
+
+                <h4 class="mt-20">Lỗi Validation dữ liệu đầu vào (Ví dụ: Thiếu tên sản phẩm hoặc giá trị âm)</h4>
+                <pre><code>{
+    "timestamp": "2026-06-02T10:46:12.345",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Validation failed",
+    "details": {
+        "name": "Product name is required",
+        "price": "Price must be greater than or equal to 0"
+    }
+}</code></pre>
+
+                <h4 class="mt-24">Lỗi Nghiệp vụ (Ví dụ: Không đủ tiền trong ví để thanh toán)</h4>
+                <pre><code>{
+    "timestamp": "2026-06-02T10:46:30.123",
+    "status": 400,
+    "error": "Bad Request",
+    "message": "Insufficient balance. Order total: 1200.00, your balance: 400.00"
+}</code></pre>
+
+                <h4 class="mt-24">Lỗi Phân Quyền (Ví dụ: Tài khoản USER gọi API ADMIN)</h4>
+                <pre><code>{
+    "timestamp": "2026-06-02T10:46:45.987",
+    "status": 403,
+    "error": "Forbidden",
+    "message": "Access denied: you do not have permission to access this resource"
+}</code></pre>
+            </section>
+
+            <!-- Seeded Test Data -->
+            <section id="seeded-data" class="card">
+                <span class="badge badge-success">8. Seeded Data</span>
+                <h2>8. Dữ liệu thử nghiệm mặc định (Seeded Test Data)</h2>
+                <p class="mb-16">
+                    Hệ thống tự động chèn sẵn dữ liệu này tại luồng khởi tạo (Seed Luồng) giúp tester có thể thực hiện kiểm chứng ngay mà không cần tạo mới:
+                </p>
+
+                <h3 class="mt-20 mb-12">Tài khoản mặc định (Default Accounts)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Password (Plaintext)</th>
+                            <th>Role</th>
+                            <th>Số dư ban đầu</th>
+                            <th>Mục đích sử dụng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>user</code></td>
+                            <td><code>password</code></td>
+                            <td><span class="badge badge-info">ROLE_USER</span></td>
+                            <td>1000.00 USD</td>
+                            <td>Kiểm thử mua hàng đồng bộ/bất đồng bộ, xem lịch sử đơn, kiểm tra lỗi hết tiền.</td>
+                        </tr>
+                        <tr>
+                            <td><code>admin</code></td>
+                            <td><code>adminpassword</code></td>
+                            <td><span class="badge badge-danger">ROLE_ADMIN</span></td>
+                            <td>0.00 USD</td>
+                            <td>Kiểm thử tạo sản phẩm, sửa sản phẩm, xóa sản phẩm, và thử nghiệm phân quyền bị chặn.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-12">Sản phẩm mặc định (Default Products)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Mô tả chi tiết</th>
+                            <th>Đơn giá</th>
+                            <th>Tồn kho khởi tạo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>iPhone 15 Pro</td>
+                            <td>Apple iPhone 15 Pro 256GB Titanium</td>
+                            <td class="text-highlight">1200.00 USD</td>
+                            <td>10 chiếc</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>iPad Air</td>
+                            <td>Apple iPad Air 5th Gen M1 Wi-Fi</td>
+                            <td class="text-highlight">600.00 USD</td>
+                            <td>5 chiếc</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>AirPods Pro</td>
+                            <td>Apple AirPods Pro 2nd Gen USB-C</td>
+                            <td class="text-highlight">250.00 USD</td>
+                            <td>20 chiếc</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>
