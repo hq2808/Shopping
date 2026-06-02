@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SA Tester Guide - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link active">Kiểm thử kiến trúc SA</a>
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#sa-mindset" class="sidebar-sub-link">1. Tư duy SA Tester</a></li>
+                        <li><a href="#sa-spec" class="sidebar-sub-link">2. Tài liệu Đặc tả SA</a></li>
+                        <li><a href="#sa-testcases" class="sidebar-sub-link">3. Hệ thống Test Cases</a></li>
+                        <li><a href="#sa-execution" class="sidebar-sub-link">4. Quy trình Thực hành</a></li>
+                        <li><a href="#sa-roadmap" class="sidebar-sub-link">5. Lộ trình SA Tester</a></li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-danger">System Architect QA Suite</span>
+                <h1>Kiểm Thử Kiến Trúc & Độ Bền Bỉ <br><span class="gradient-text">(SA & Performance Test Guide)</span></h1>
+                <p>Tài liệu chuyên sâu dành riêng cho SA Tester (System Architect / Performance & Security QA) để kiểm chứng điểm nghẽn vật lý, mô phỏng thảm họa cơ sở hạ tầng, xác thực an toàn khóa đồng thời và bảo mật hệ thống.</p>
+            </section>
+
+            <!-- 1. SA Mindset -->
+            <section id="sa-mindset" class="card">
+                <span class="badge badge-danger">1. Tư duy SA Tester</span>
+                <h2>1. Sự khác biệt trong tư duy kiểm thử của SA Tester thực thụ</h2>
+                <p class="mb-20">
+                    Đối với một SA Tester (System Architect & Performance QA), hệ thống phần mềm không phải là một "hộp đen" nhận API rồi trả kết quả tĩnh. SA Tester nhìn nhận hệ thống dưới góc độ **luồng tải vật lý, dung lượng phần cứng, cơ chế đồng bộ RAM/Disk, trạng thái lỗi cơ sở hạ tầng (Failure States), và các rủi ro về concurrency (đồng thời chéo)**.
+                </p>
+
+                <h3 class="mt-24 mb-12">Bảng so sánh vai trò: Từ Manual QA đến SA Tester</h3>
+                <div class="table-responsive mb-24">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Tiêu chí so sánh</th>
+                                <th>Manual Tester</th>
+                                <th>Automation Tester</th>
+                                <th>SA Tester (Performance & Reliability QA)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Phạm vi kiểm thử</strong></td>
+                                <td>Chức năng nghiệp vụ (Functional), Giao diện người dùng (UI).</td>
+                                <td>Tự động hóa luồng chức năng (Regression, API functional paths).</td>
+                                <td>Hiệu năng, độ chịu tải cực hạn, tính toàn vẹn dữ liệu giao dịch, bảo mật và chaos.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Góc nhìn hệ thống</strong></td>
+                                <td>Hộp đen (Black-box), thao tác như người dùng cuối.</td>
+                                <td>Hộp đen/Hộp xám, viết mã giả lập hành vi gọi API/UI.</td>
+                                <td>Hộp trắng (White-box), đọc code nghiệp vụ, phân tích sơ đồ mạng, kiểm tra cấu hình tài nguyên phần cứng.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Xử lý lỗi (Errors)</strong></td>
+                                <td>Chụp ảnh màn hình, log lỗi API tĩnh (ví dụ: 500 Internal Server Error).</td>
+                                <td>Báo cáo script test fail, kiểm tra response payload bị lệch.</td>
+                                <td>Chỉ ra chính xác điểm nghẽn vật lý (Deadlock DB, Connection Leak, RAM Swapping, JVM GC Pause, Thread Exhaustion).</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Mô phỏng sự cố</strong></td>
+                                <td>Hầu như không thực hiện.</td>
+                                <td>Kiểm thử lỗi logic API (Negative cases).</td>
+                                <td>Trực tiếp phá hủy hạ tầng (Chaos: pause DB, crash cache Redis, kill network link) để đo lường tự phục hồi.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="mt-24 mb-16">Năng lực và Kỹ năng cốt lõi của một SA Tester thực thụ</h3>
+                
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); margin-bottom: 16px;">
+                    <h5>1. Thấu hiểu Kiến trúc Hệ thống & Sơ đồ liên kết (Topology & Distributed Design)</h5>
+                    <p class="mt-4">SA Tester phải hiểu rõ luồng truyền tải dữ liệu đi qua các thành phần: API Gateway/Reverse Proxy, Application Nodes, Message Queue Broker, Distributed Cache, và Relational Databases. Họ có khả năng đọc hiểu cấu hình phân bổ mạng (VPC, Ports, Subnets) để xác định các rủi ro nghẽn cổ chai ngay từ bản thiết kế sơ đồ liên kết mạng.</p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-secondary); margin-bottom: 16px;">
+                    <h5>2. Quản trị Tài nguyên OS & JVM Internals (Resource & Memory Profiling)</h5>
+                    <p class="mt-4">SA Tester có thể đo đạc tài nguyên hệ điều hành (CPU context switching, RAM swapping, Disk write latency, Network TIME_WAIT sockets). Đối với ứng dụng Java/Spring, họ hiểu rõ cơ chế dọn rác (Garbage Collection - GC), có khả năng phân tích JVM Heap dump để tìm rò rỉ bộ nhớ (Memory Leak) và phân tích Thread dump để gỡ rối các luồng bị kẹt (Thread Locks/Deadlocks).</p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-warning); margin-bottom: 16px;">
+                    <h5>3. Phân tích Database & Concurrency Control (Database Internals)</h5>
+                    <p class="mt-4">Không dừng lại ở việc viết câu lệnh SQL lấy dữ liệu. SA Tester phải đọc và phân tích được Query Execution Plan (EXPLAIN ANALYZE) để tối ưu index, giám sát rò rỉ kết nối (Connection Leak) trong Connection Pool (HikariCP), đo lường thời gian chiếm giữ khóa dữ liệu và tìm ra các điểm nghẽn tranh chấp khóa chéo (Lock Contention).</p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-error); margin-bottom: 16px;">
+                    <h5>4. Chaos Engineering & Khả năng chịu lỗi (Infrastructure Resilience)</h5>
+                    <p class="mt-4">SA Tester chủ động áp dụng các nguyên lý Chaos Engineering: đưa các lỗi thực tế vào hạ tầng (ngắt kết nối mạng, giới hạn băng thông, tắt container đột ngột) để kiểm chứng khả năng tự phục hồi (Self-Healing) của các chốt chặn giảm chấn (Circuit Breaker, Rate Limiter, Retry Policies, DLQ Queue).</p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-success); margin-bottom: 20px;">
+                    <h5>5. Đánh giá Bảo mật Hệ thống cấp độ Kiến trúc (Security Integrity)</h5>
+                    <p class="mt-4">Hiểu sâu về các lỗ hổng bảo mật cấp độ thiết kế hệ thống như giả mạo JWT claims, bypass rate-limit bằng proxy xoay vòng IP, lỗi tranh chấp thứ tự (Race Conditions) trong giao dịch ví điện tử, và các lỗ hổng OWASP Top 10 nâng cao.</p>
+                </div>
+
+                <h3 class="mt-20 mb-12">Mục tiêu kiểm thử tối thượng của SA Tester:</h3>
+                <ul>
+                    <li><strong>Không Over-selling (Bán quá tồn kho):</strong> Đảm bảo cho dù có hàng vạn request đồng thời chọc vào mua cùng một sản phẩm hot trong 1 mili-giây, số lượng bán ra không bao giờ được phép vượt quá tồn kho thực tế.</li>
+                    <li><strong>Không Data Loss (Mất dữ liệu):</strong> Khi các hàng đợi bị đầy, cơ sở dữ liệu bị sập nguồn giữa giao dịch, hệ thống phải tự động phục hồi và không làm thất thoát bất kỳ giao dịch hay tiền bạc nào của người dùng.</li>
+                    <li><strong>Không System Hang (Treo hệ thống):</strong> Ngăn ngừa hiện tượng deadlock ở cơ sở dữ liệu và cạn kiệt connection pool của server, giữ cho hệ thống luôn phản hồi nhanh dưới tải lượng lớn.</li>
+                    <li><strong>An toàn tuyệt đối (Security Integrity):</strong> Xác thực Token JWT, kiểm tra phân quyền đầu cuối (RBAC) và ngăn chặn việc giả mạo tham số ví hoặc tồn kho.</li>
+                </ul>
+            </section>
+
+            <!-- 2. SA Spec Guide -->
+            <section id="sa-spec" class="card">
+                <span class="badge badge-info">2. Tài liệu Đặc tả (Spec) dành riêng cho SA Tester</span>
+                <h2>2. Tài liệu Đặc tả Kiến trúc hệ thống</h2>
+                <p class="mb-16">
+                    Để thiết kế các kịch bản kiểm thử chịu tải và phá hủy, SA Tester cần nắm rõ các thông số kiến trúc dưới đây:
+                </p>
+
+                <h3 class="mt-24 mb-12">2.1. Sơ đồ cấu trúc liên kết mạng & Thành phần (Topology Spec)</h3>
+                <p class="mb-12">Hệ thống Mini Shopee chạy trong mạng phân vùng cô lập bằng Docker Compose, mô phỏng môi trường Cloud VPC thực tế:</p>
+                <div class="table-responsive mb-16">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Thành phần</th>
+                                <th>Port mặc định</th>
+                                <th>Chức năng hệ thống</th>
+                                <th>Cơ chế bảo mật đầu cuối</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Spring Boot API Node</strong></td>
+                                <td><code>8080</code></td>
+                                <td>Xử lý nghiệp vụ chính, xác thực Token JWT và điều hướng giao dịch.</td>
+                                <td>Cấu hình lọc Security Filter, giải mã Claims bằng chữ ký bí mật HMAC-SHA256.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Redis RAM Instance</strong></td>
+                                <td><code>6379</code></td>
+                                <td>Lưu trữ Cache và kiểm tra tồn kho & số dư ví tốc độ cao (In-memory).</td>
+                                <td>Isolated Network, chỉ chấp nhận kết nối nội bộ từ Spring Boot API Node.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>RabbitMQ Message Broker</strong></td>
+                                <td><code>5672</code> (AMQP)<br><code>15672</code> (Web)</td>
+                                <td>Hàng đợi đệm nhận gói tin đặt hàng bất đồng bộ và chuyển giao cho Consumer.</td>
+                                <td>Đăng nhập bằng tài khoản admin/guest bảo mật, quản lý hàng đợi cô lập qua Virtual Host.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>PostgreSQL Database</strong></td>
+                                <td><code>5432</code></td>
+                                <td>Lưu trữ dữ liệu vĩnh viễn (Source of Truth) cho Users, Products, Orders, OrderItems.</td>
+                                <td>Bảo vệ bằng mật khẩu mạnh, cơ chế ràng buộc khóa ngoại (Foreign Keys) cứng trên Disk.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3 class="mt-24 mb-12">2.2. Đặc tả luồng xử lý bất đồng bộ & Cam kết dữ liệu (AMQP Spec)</h3>
+                <ul>
+                    <li><strong>Cơ chế Acknowledge (ACK):</strong> Hệ thống sử dụng **Spring AMQP Container-Managed ACK** (AcknowledgeMode.AUTO). Tin nhắn chỉ được tự động gửi tín hiệu ACK về Broker sau khi phương thức <code>OrderConsumer.receiveOrder()</code> kết thúc thành công mà không ném ra bất kỳ Exception nào. Nếu xảy ra Exception, tin nhắn không bị mất mà được giữ lại trong Queue.</li>
+                    <li><strong>Chính sách thử lại (Retry Policy):</strong>
+                        <ul>
+                            <li><code>spring.rabbitmq.listener.simple.retry.enabled=true</code></li>
+                            <li>Số lần thử lại tối đa (max-attempts): **3 lần**.</li>
+                            <li>Khoảng thời gian giãn cách ban đầu (initial-interval): **2000ms** (2 giây).</li>
+                            <li>Hệ số nhân giãn cách (multiplier): **2.0** (Thử lại sau 2s, 4s, 8s).</li>
+                        </ul>
+                    </li>
+                    <li><strong>Dead Letter Queue (DLQ) Configuration:</strong> Khi Consumer xử lý lỗi vượt quá 3 lần, thông điệp sẽ được tự động định tuyến qua Exchange <code>shopee.order.dlx</code> với Routing Key <code>shopee.order.dlq.routing</code> để đẩy vào hàng đợi lỗi <code>shopee.order.dlq</code> nhằm giám sát và xử lý thủ công (tránh thất thoát đơn hàng).</li>
+                </ul>
+
+                <h3 class="mt-24 mb-12">2.3. Thuật toán Lua Script chạy trên Redis (In-Memory Logic Spec)</h3>
+                <p class="mb-12">Để trừ kho và ví nguyên tử (Atomic) mà không bị xung đột luồng trên RAM, API server gọi mã Lua Script chạy đơn luồng trên Redis:</p>
+                <pre><code>-- KEYS[1]: product stock key (e.g. 'product:stock:2')
+-- KEYS[2]: user balance key (e.g. 'user:balance:user')
+-- ARGV[1]: quantity requested
+-- ARGV[2]: price per item
+
+local stock_key = KEYS[1]
+local balance_key = KEYS[2]
+local quantity = tonumber(ARGV[1])
+local price = tonumber(ARGV[2])
+local total_amount = price * quantity
+
+-- 1. Kiểm tra tồn kho
+local current_stock = tonumber(redis.call('get', stock_key) or "0")
+if current_stock < quantity then
+    return -1 -- Trả về mã lỗi hết hàng
+end
+
+-- 2. Kiểm tra số dư ví tài khoản
+local current_balance = tonumber(redis.call('get', balance_key) or "0")
+if current_balance < total_amount then
+    return -2 -- Trả về mã lỗi không đủ tiền
+end
+
+-- 3. Thực hiện trừ đồng thời (Atomic Deduction)
+redis.call('decrby', stock_key, quantity)
+redis.call('decrby', balance_key, total_amount)
+return 1 -- Thành công</code></pre>
+                <p class="mt-12"><strong>Cấu trúc kiểu dữ liệu Redis RAM:</strong></p>
+                <ul>
+                    <li><code>product:stock:&lt;id&gt;</code>: Kiểu dữ liệu <strong>String</strong> (kiểu số nguyên biểu diễn số lượng tồn kho).</li>
+                    <li><code>user:balance:&lt;username&gt;</code>: Kiểu dữ liệu <strong>String</strong> (kiểu số thực biểu diễn số dư ví).</li>
+                </ul>
+
+                <h3 class="mt-24 mb-12">2.4. Cấu hình Quản lý Kết nối DB & Cơ chế khóa (Database & Connection Spec)</h3>
+                <ul>
+                    <li><strong>HikariCP Pool Configuration:</strong>
+                        <ul>
+                            <li><code>maximum-pool-size: 10</code> (Hạn mức 10 kết nối đồng thời tối đa cho mỗi instance ứng dụng).</li>
+                            <li><code>connection-timeout: 30000ms</code> (Quá 30 giây không lấy được connection sẽ báo lỗi timeout).</li>
+                            <li><code>idle-timeout: 600000ms</code> (Thời gian tối đa giữ kết nối nhàn rỗi).</li>
+                        </ul>
+                    </li>
+                    <li><strong>Cơ chế khóa dữ liệu (Locks):</strong>
+                        <ul>
+                            <li><strong>Khóa bi quan (Pessimistic Write Lock):</strong> Dùng cho luồng đặt hàng đồng bộ (Synchronous Order) tại API <code>POST /api/orders</code>. Hệ thống gọi phương thức truy vấn JPA chứa annotation <code>@Lock(LockModeType.PESSIMISTIC_WRITE)</code> để khóa dòng dữ liệu sản phẩm trong DB bằng SQL:
+                                <pre style="margin-top: 6px;"><code>SELECT * FROM products WHERE id = ? FOR UPDATE;</code></pre>
+                                Các giao dịch khác muốn sửa đổi sản phẩm này phải xếp hàng đợi đến khi giao dịch hiện tại Commit hoặc Rollback.
+                            </li>
+                            <li><strong>Khóa lạc quan (Optimistic Lock):</strong> Áp dụng cơ chế kiểm tra phiên bản dữ liệu bằng cột <code>@Version version</code> trên Entity để phát hiện xung đột ghi chéo nếu không sử dụng khóa bi quan.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h3 class="mt-24 mb-12">2.5. Đặc tả bảo mật JWT (Security Spec)</h3>
+                <ul>
+                    <li><strong>Thuật toán ký:</strong> HMAC-SHA256 với Secret Key cấu hình trong file <code>application.properties</code>.</li>
+                    <li><strong>Cấu trúc Token Claims:</strong>
+                        <pre><code>{
+  "sub": "user",                  -- Username của tài khoản
+  "roles": ["ROLE_USER"],         -- Quyền hạn hệ thống để phân quyền RBAC
+  "iat": 1780351200,              -- Thời điểm phát hành Token
+  "exp": 1780437600               -- Thời điểm hết hạn (24 giờ sau khi ký)
+}</code></pre>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- 3. SA-level Test Cases -->
+            <section id="sa-testcases" class="card">
+                <span class="badge badge-info">3. Hệ thống Test Cases cấp độ SA (SA-level Test Cases)</span>
+                <h2>3. Ma trận Kịch bản Kiểm thử Áp lực & Hạ tầng</h2>
+                <p class="mb-16">Dưới đây là bộ các kịch bản thử nghiệm áp lực đặc thù nhằm xác thực tính toàn vẹn hệ thống dưới góc độ kiến trúc:</p>
+
+                <!-- TC-01 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-error); margin-bottom: 24px;">
+                    <span class="badge badge-danger">SA-CONCUR-01</span>
+                    <h4 class="mt-8">Kiểm thử Tranh chấp mua hàng đồng thời qua DB (Pessimistic Lock Test)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Mô phỏng 10.000 request đồng thời mua cùng 1 sản phẩm cực hot có số lượng tồn kho giới hạn là 5 chiếc thông qua luồng đồng bộ <code>POST /api/orders</code>.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Thiết lập tồn kho sản phẩm ID = 1 về <code>5</code>.</li>
+                        <li>Dùng công cụ tạo tải (wrk hoặc JMeter) bắn 1.000 request đồng thời (Concurrency = 100) gọi API <code>POST /api/orders</code> mua sản phẩm ID = 1.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong> Chỉ có đúng 5 hóa đơn được ghi nhận thành công trong DB PostgreSQL. Tồn kho của sản phẩm ID = 1 giảm về chính xác bằng 0. Không có hiện tượng bán lố (overselling). Các request khác nhận phản hồi lỗi từ chối.</p>
+                </div>
+
+                <!-- TC-02 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-error); margin-bottom: 24px;">
+                    <span class="badge badge-danger">SA-CONCUR-02</span>
+                    <h4 class="mt-8">Kiểm thử Đặt hàng bất đồng bộ tải cực hạn (Redis Lua + RabbitMQ Queue)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Mô phỏng luồng Flash Sale đặt mua bất đồng bộ <code>POST /api/orders/async</code> dưới tải lượng cao.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Thiết lập tồn kho sản phẩm ID = 2 về <code>5</code> trên cả Redis RAM và PostgreSQL.</li>
+                        <li>Nạp tiền ví của người dùng mẫu <code>user</code> lên 1000.00 USD.</li>
+                        <li>Chạy công cụ bắn tải gửi 1.000 request đồng thời vào endpoint bất đồng bộ.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong>
+                        - Ngay tại RAM Redis, chỉ có đúng 5 request trừ kho thành công và nhận phản hồi <code>202 Accepted</code>. Các request sau bị chặn và báo lỗi 400 Bad Request lập tức.<br>
+                        - RabbitMQ tiếp nhận tuần tự 5 thông điệp đơn hàng và đẩy xuống Worker ghi vào PostgreSQL.<br>
+                        - Kết quả đối soát cuối cùng: PostgreSQL có chính xác 5 đơn hàng mới, tồn kho sản phẩm ID = 2 về 0, số dư ví người dùng giảm chính xác tương ứng giá tiền của 5 sản phẩm.
+                    </p>
+                </div>
+
+                <!-- TC-03 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-warning); margin-bottom: 24px;">
+                    <span class="badge badge-warning">SA-MQ-01</span>
+                    <h4 class="mt-8">Kiểm thử Nhận trùng lặp tin nhắn hàng đợi (Idempotency Test)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Mô phỏng lỗi mạng làm Broker RabbitMQ truyền lại tin nhắn cũ (Redelivered) khiến Consumer xử lý trùng.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Đăng nhập RabbitMQ Management Dashboard.</li>
+                        <li>Publish thủ công 2 thông điệp mua hàng có **cùng một Trace ID** vào hàng đợi <code>shopee.order.queue</code>.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong> Consumer chỉ xử lý thành công tin nhắn thứ nhất và ghi nhận vào DB. Khi nhận tin nhắn thứ 2 có cùng Trace ID, DB PostgreSQL phải kích hoạt cơ chế chống trùng lặp (Unique Constraint trên cột <code>trace_id</code> bảng <code>orders</code>), chặn đứng đơn hàng lặp, rollback giao dịch và không trừ tiền khách hàng lần 2.</p>
+                </div>
+
+                <!-- TC-04 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-warning); margin-bottom: 24px;">
+                    <span class="badge badge-warning">SA-MQ-02</span>
+                    <h4 class="mt-8">Kiểm thử Độ trễ hàng đợi và Quá tải xử lý (Lag & Backlog Test)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Kiểm chứng độ ổn định và tài nguyên hệ thống khi hàng chục ngàn tin nhắn bị tích tụ trong hàng đợi chưa kịp tiêu thụ.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Tạm dừng tiến trình Consumer (hoặc đóng băng API Server bằng Docker).</li>
+                        <li>Dùng script gửi liên tục 50.000 yêu cầu đặt hàng bất đồng bộ vào RabbitMQ để tạo ra hàng đợi ùn tắc lớn (Backlog).</li>
+                        <li>Kích hoạt lại Consumer để tiến hành tiêu thụ dồn dập.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong> Hệ thống API Server vẫn nhận đơn và trả về <code>202 Accepted</code> bình thường cho Client. Khi Consumer chạy lại, RabbitMQ tiêu thụ dồn dập với tốc độ tối đa của luồng CPU mà không làm crash DB PostgreSQL và không gây rò rỉ bộ nhớ RAM của server.</p>
+                </div>
+
+                <!-- TC-05 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-primary); margin-bottom: 24px;">
+                    <span class="badge badge-primary">SA-CHAOS-01</span>
+                    <h4 class="mt-8">Mô phỏng sập nguồn Cơ sở dữ liệu PostgreSQL (Database Disaster Simulation)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Kiểm chứng khả năng tự phục hồi của hệ thống bất đồng bộ khi PostgreSQL DB bị sập giữa chừng trong quá trình ghi đơn hàng.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Bắn tải tạo 2.000 đơn hàng bất đồng bộ thành công vào hệ thống.</li>
+                        <li>Đồng thời chạy lệnh đóng băng PostgreSQL DB Container: <code>docker pause shopee_mini_db</code>.</li>
+                        <li>Quan sát trạng thái tin nhắn trên RabbitMQ Dashboard.</li>
+                        <li>Mở băng cho PostgreSQL: <code>docker unpause shopee_mini_db</code>.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong> Khi DB bị sập, các tin nhắn trong RabbitMQ không bị mất mà chuyển sang trạng thái <code>Unacked</code> do Consumer không thể ghi DB và không trả về ACK. Khi DB hoạt động trở lại, Consumer tự động Reconnect, tiêu thụ lại các tin nhắn này và lưu toàn bộ đơn hàng xuống DB thành công, không làm mất bất kỳ giao dịch nào.</p>
+                </div>
+
+                <!-- TC-06 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-primary); margin-bottom: 24px;">
+                    <span class="badge badge-primary">SA-CHAOS-02</span>
+                    <h4 class="mt-8">Mô phỏng Crash bộ nhớ đệm Redis RAM (In-Memory Recovery Simulation)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Xác minh luồng tự động đồng bộ hóa và tái thiết lập bộ nhớ đệm (Warm-up Cache) từ PostgreSQL khi Redis bị sập đột ngột.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Chạy lệnh xóa sạch mọi key trong Redis RAM: <code>redis-cli FLUSHALL</code>.</li>
+                        <li>Gọi API lấy thông tin tồn kho hoặc thực hiện đặt hàng mới.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong> Hệ thống phát hiện Cache trống, tự động kích hoạt cơ chế đọc xuyên qua (Read-Through) để kéo dữ liệu tồn kho sản phẩm và ví người dùng từ PostgreSQL (nguồn dữ liệu gốc) nạp lại vào Redis RAM. Các API tiếp theo hoạt động bình thường mà không cần khởi động lại toàn bộ server.</p>
+                </div>
+
+                <!-- TC-07 -->
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.5); border-left-color: var(--color-warning); margin-bottom: 24px;">
+                    <span class="badge badge-warning">SA-DB-01</span>
+                    <h4 class="mt-8">Kiểm thử Rò rỉ Kết nối Database (Connection Pool Leak Test)</h4>
+                    <p class="mt-8"><strong>Mô tả:</strong> Đánh giá khả năng giải phóng Connection của HikariCP sau khi kết thúc các giao dịch tranh chấp.</p>
+                    <p class="mt-8"><strong>Các bước thực hiện:</strong></p>
+                    <ol style="margin-left: 20px;">
+                        <li>Gửi liên tục 5.000 request đồng thời đến API đặt hàng đồng bộ sử dụng Pessimistic Lock.</li>
+                        <li>Giám sát số lượng kết nối đang mở đến PostgreSQL trong suốt thời gian chạy tải.</li>
+                    </ol>
+                    <p class="mt-8"><strong>Mong đợi (Pass Criteria):</strong> Số lượng connection hoạt động không được vượt quá cấu hình tối đa (10 connections). Sau khi tải dừng, số lượng kết nối nhàn rỗi tự động được giải phóng về mức tối thiểu, không gây ra lỗi "HikariPool-1 - Connection is not available".</p>
+                </div>
+            </section>
+
+            <!-- 4. Execution Procedures -->
+            <section id="sa-execution" class="card">
+                <span class="badge badge-success">4. Quy trình Thực hành Kiểm thử dành cho SA Tester</span>
+                <h2>4. Hướng dẫn sử dụng Công cụ & Tập lệnh giám sát</h2>
+                <p class="mb-16">
+                    Để thực hiện các kịch bản kiểm thử trên, SA Tester cần chạy các công cụ tạo tải và tập lệnh giám sát trực tiếp trên hạ tầng:
+                </p>
+
+                <h3 class="mt-24 mb-12">4.1. Tạo tải cực hạn bằng công cụ wrk (Linux)</h3>
+                <p class="mb-12">
+                    Tạo file script lua tên là <code>benchmark_order.lua</code> trong thư mục chạy lệnh để đính kèm Token JWT và Body JSON:
+                </p>
+                <pre><code>-- benchmark_order.lua
+wrk.method = "POST"
+wrk.body   = '{"productId": 2, "quantity": 1}'
+wrk.headers["Content-Type"] = "application/json"
+wrk.headers["Authorization"] = "Bearer &lt;TOKEN_JWT_CỦA_USER&gt;"</code></pre>
+                <p class="mt-12 mb-12">Chạy lệnh wrk trên Terminal để tạo tải 400 kết nối đồng thời trong 30 giây:</p>
+                <pre><code>wrk -t12 -c400 -d30s -s benchmark_order.lua --latency http://localhost:8080/api/orders/async</code></pre>
+
+                <h3 class="mt-28 mb-12">4.2. Cấu hình tạo tải bằng Apache JMeter</h3>
+                <p class="mb-12">Nếu sử dụng JMeter để kiểm thử chịu tải nâng cao:</p>
+                <ol style="margin-left: 20px;" class="mb-16">
+                    <li>Thêm một <strong>Thread Group</strong>: Đặt Number of Threads (Users) = <code>1000</code>, Ramp-up period = <code>5</code> giây, Loop Count = <code>10</code>.</li>
+                    <li>Thêm <strong>HTTP Header Manager</strong>: Khai báo <code>Content-Type: application/json</code> và <code>Authorization: Bearer &lt;TOKEN_JWT&gt;</code>.</li>
+                    <li>Thêm <strong>HTTP Request</strong>: Method = <code>POST</code>, Server = <code>localhost</code>, Port = <code>8080</code>, Path = <code>/api/orders/async</code>. Gửi Body Data JSON: <code>{"productId":2, "quantity":1}</code>.</li>
+                    <li>Thêm listener <strong>Summary Report</strong> và <strong>View Results Tree</strong> để theo dõi tỷ lệ lỗi (Error %) và thời gian phản hồi (Latency).</li>
+                </ol>
+
+                <h3 class="mt-28 mb-12">4.3. Giám sát Database locks và Connection Pool trong PostgreSQL</h3>
+                <p class="mb-12">SA Tester mở kết nối PostgreSQL DB Client và chạy truy vấn sau để tìm kiếm các câu lệnh bị treo hoặc chặn chéo (Lock Contention):</p>
+                <pre><code>SELECT 
+    pid, 
+    usename, 
+    pg_blocking_pids(pid) as blocked_by, 
+    query, 
+    state, 
+    age(clock_timestamp(), query_start) as lock_duration
+FROM pg_stat_activity 
+WHERE cardinality(pg_blocking_pids(pid)) > 0;</code></pre>
+                <p class="mt-12">
+                    *Nếu truy vấn trả về kết quả có cột <code>blocked_by</code> chứa PID khác, điều đó chứng tỏ có giao dịch đang chiếm giữ khóa độc quyền (FOR UPDATE) quá lâu và chặn các tiến trình sau.*
+                </p>
+
+                <h3 class="mt-28 mb-12">4.4. Các lệnh Docker CLI mô phỏng thảm họa hạ tầng</h3>
+                <p class="mb-12">Sử dụng Docker để mô phỏng lỗi phần cứng cực kỳ dễ dàng:</p>
+                <ul>
+                    <li><strong>Giả lập CSDL PostgreSQL bị sập (Đóng băng tiến trình DB):</strong>
+                        <pre><code>docker pause shopee_mini_db</code></pre>
+                    </li>
+                    <li><strong>Giả lập CSDL PostgreSQL phục hồi (Rã đông tiến trình DB):</strong>
+                        <pre><code>docker unpause shopee_mini_db</code></pre>
+                    </li>
+                    <li><strong>Giả lập sập Redis và xóa sạch Cache RAM:</strong>
+                        <pre><code>docker exec -it shopee_mini_redis redis-cli FLUSHALL</code></pre>
+                    </li>
+                    <li><strong>Giám sát dòng chảy tin nhắn RabbitMQ:</strong> Mở trình duyệt truy cập <code>http://localhost:15672</code> (Tài khoản mặc định: <code>guest</code> / <code>guest</code>), điều hướng vào mục <strong>Queues</strong> và quan sát hai biểu đồ <strong>Publish rate</strong> (tốc độ nhận đơn từ API) và <strong>Deliver rate</strong> (tốc độ ghi đơn của Consumer).</li>
+                </ul>
+            </section>
+
+            <!-- 5. SA Tester Roadmap -->
+            <section id="sa-roadmap" class="card">
+                <span class="badge badge-success">5. Lộ trình SA Tester</span>
+                <h2>5. Lộ trình phát triển toàn diện (Roadmap) từ Manual Tester lên SA Tester thực thụ</h2>
+                <p class="mb-20">
+                    Chuyển đổi từ một Tester truyền thống sang một System Architect Tester là một hành trình nâng cấp tư duy từ **kiểm thử bề mặt (UI/Chức năng tĩnh)** sang **kiểm thử cấu trúc vật lý và độ bền bỉ phân tán**. Dưới đây là lộ trình 4 bước phát triển thực tế, được tinh giản để phù hợp với năng lực kiểm thử thực chiến:
+                </p>
+
+                <div class="steps-flow">
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); margin-bottom: 24px;">
+                        <div class="badge-group">
+                            <span class="badge badge-primary">BƯỚC 1</span>
+                            <span class="badge badge-warning">Thời gian: 3 - 6 tháng</span>
+                        </div>
+                        <h4 class="mt-8">Manual Tester (Cấp độ 0 - Nền tảng chức năng)</h4>
+                        <p class="mt-8"><strong>Trạng thái thực tế:</strong> Thực hiện viết và chạy test cases thủ công trên giao diện người dùng (UI), sử dụng Postman để gửi các request API tĩnh, kiểm tra DB bằng các câu lệnh SQL đơn giản (SELECT, INSERT, UPDATE).</p>
+                        <p class="mt-8"><strong>Kỹ năng cần học để bứt phá:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Tìm hiểu sâu về giao thức HTTP/HTTPS, cấu trúc JSON Payload của request và response.</li>
+                            <li>Học cách hoạt động của hệ thống Authentication cơ bản (đính kèm Bearer Token vào header).</li>
+                            <li>Hiểu cơ bản về luồng đi của gói tin: Gửi từ Client qua Gateway để tới Backend Server và Database.</li>
+                        </ul>
+                        <p class="mt-8" style="color: var(--color-secondary);"><strong>&rarr; Điểm mấu chốt chuyển mình (Pivot Point):</strong> Dừng tư duy "click & test". Hãy bắt đầu đặt câu hỏi: <em>"Khi tôi nhấn nút Mua Hàng, dòng dữ liệu chảy qua những thành phần phần cứng và dịch vụ mạng nào?"</em></p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-secondary); margin-bottom: 24px;">
+                        <div class="badge-group">
+                            <span class="badge badge-info">BƯỚC 2</span>
+                            <span class="badge badge-warning">Thời gian: 6 - 12 tháng</span>
+                        </div>
+                        <h4 class="mt-8">Full-Stack QA / Automation QA (Cấp độ 1 - Mid/Senior QA)</h4>
+                        <p class="mt-8"><strong>Xếp hạng năng lực:</strong> Đây chính là phân hạng của một Tester đa năng (Full-Stack QA). Bạn làm chủ hoàn toàn việc viết kịch bản test manual, test API, test DB và viết Script tự động hóa (Automation Testing) mà <strong>KHÔNG cần đọc hiểu mã nguồn Backend (Spring Boot/Java) và KHÔNG cần thiết lập hệ thống CI/CD</strong>.</p>
+                        <p class="mt-8"><strong>Công việc thực tế:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Viết mã kịch bản tự động hóa API và UI (Sử dụng RestAssured, Selenium, hoặc Playwright) dựa trên Spec API đã có.</li>
+                            <li>Viết các câu lệnh SQL JOIN phức tạp, subqueries để đối soát trực tiếp dữ liệu trong Database PostgreSQL/MySQL.</li>
+                            <li>Hiểu rõ cấu trúc thiết kế bảng (Schema) và các ràng buộc dữ liệu (Primary/Foreign Keys).</li>
+                        </ul>
+                        <p class="mt-8" style="color: var(--color-secondary);"><strong>&rarr; Điểm mấu chốt chuyển mình (Pivot Point):</strong> Làm chủ hoàn toàn kỹ thuật viết test script tự động hóa chức năng và sử dụng SQL nâng cao để đối soát dữ liệu cứng trên Disk.</p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-warning); margin-bottom: 24px;">
+                        <div class="badge-group">
+                            <span class="badge badge-warning" style="background: rgba(245, 158, 11, 0.2); color: #FFF; border-color: var(--color-warning);">BƯỚC 3</span>
+                            <span class="badge badge-warning">Thời gian: 12 - 18 tháng</span>
+                        </div>
+                        <h4 class="mt-8">Performance & Security QA (Cấp độ 2 - High-Level QA)</h4>
+                        <p class="mt-8"><strong>Trạng thái thực tế:</strong> Thiết lập các bài test chịu tải nâng cao sử dụng JMeter hoặc wrk dựa trên kịch bản tải có sẵn. Báo cáo các chỉ số RPS (Throughput), Latency, Error Rate. Quét lỗ hổng bảo mật ứng dụng cơ bản (OWASP Top 10) sử dụng các công cụ quét tự động.</p>
+                        <p class="mt-8"><strong>Kỹ năng cần học để bứt phá:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Học cách giám sát phần cứng server (CPU, RAM, Disk I/O) khi chạy tải.</li>
+                            <li>Hiểu rõ sơ đồ liên kết (Topology) của hệ thống: Luồng đặt hàng đồng bộ chọc DB và luồng bất đồng bộ đi qua Redis RAM + RabbitMQ.</li>
+                            <li>Chạy các câu lệnh Docker cơ bản để dừng/chạy container DB/Redis nhằm thực hiện test thảm họa (Chaos).</li>
+                        </ul>
+                        <p class="mt-8" style="color: var(--color-secondary);"><strong>&rarr; Điểm mấu chốt chuyển mình (Pivot Point):</strong> Nhìn nhận hệ thống dưới góc độ hiệu năng tổng thể và an toàn bảo mật cơ bản, định vị được vùng nghẽn cổ chai vật lý.</p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-error); margin-bottom: 20px;">
+                        <div class="badge-group">
+                            <span class="badge badge-danger">BƯỚC 4</span>
+                            <span class="badge badge-warning">Thời gian: Thực chiến liên tục</span>
+                        </div>
+                        <h4 class="mt-8">System Architect Tester / Reliability QA (Cấp độ 3 - Đỉnh cao SA Tester)</h4>
+                        <p class="mt-8"><strong>Trạng thái thực tế:</strong> Đóng vai trò cố vấn kiến trúc phân tán cho đội phát triển. Thiết lập các kịch bản phá hủy hạ tầng tự động (Chaos Engineering), đánh giá cơ chế tự phục hồi (Self-Healing) của dịch vụ, xác thực tuyệt đối an toàn khóa đồng thời tranh chấp (Pessimistic/Optimistic Locking) và chạy các câu lệnh SQL giám sát nghẽn database lock chéo.</p>
+                        <p class="mt-8"><strong>Công việc thực chiến:</strong></p>
+                        <ul style="margin-left: 20px;">
+                            <li>Chủ trì các buổi đánh giá kiến trúc chịu tải (Architecture Scalability Review) trước khi phát triển.</li>
+                            <li>Mô phỏng thảm họa hạ tầng: Làm tràn hàng đợi RabbitMQ, crash Redis RAM để kiểm chứng cơ chế chịu lỗi (Fault-Tolerance).</li>
+                            <li>Chạy các truy vấn SQL nâng cao giám sát PostgreSQL Lock Contention trong thời gian thực để tìm ra các giao dịch bị kẹt.</li>
+                        </ul>
+                        <p class="mt-8" style="color: var(--color-secondary);"><strong>&rarr; Đích đến cuối cùng:</strong> Trở thành "người bảo vệ" độ tin cậy của toàn bộ hệ thống. Đảm bảo phần mềm luôn sống sót, không mất mát dữ liệu và không treo nghẽn trước bất kỳ thảm họa tải lượng hay sự cố cơ sở hạ tầng nào.</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>

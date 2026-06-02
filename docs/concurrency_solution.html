@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extreme Concurrency Inventory Optimization - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link active">Giải pháp chịu tải cực hạn</a>
+                    <!-- Nested Local Section Navigation Links -->
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#locking-limitations" class="sidebar-sub-link">1. Hạn Chế Khóa DB</a></li>
+                        <li><a href="#sa-review" class="sidebar-sub-link">2. Đánh Giá SA (Bắt Buộc)</a></li>
+                        <li><a href="#redis-lua-solution" class="sidebar-sub-link">3. Giải Pháp Redis & Lua</a></li>
+                        <li><a href="#async-queue" class="sidebar-sub-link">4. Hàng Đợi MQ</a></li>
+                        <li><a href="#comparison" class="sidebar-sub-link">5. So Sánh Hiệu Năng</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-danger">High-Concurrency Architecture</span>
+                <h1>Giải Pháp Tranh Chấp Kho Cực Hạn <br><span class="gradient-text">(Extreme Concurrency Inventory Optimization)</span></h1>
+                <p>Phân tích lý do vì sao khóa cấp độ Database (Pessimistic/Optimistic) bất lực trước tải hàng triệu người dùng và xây dựng mô hình giảm chấn bằng Redis, Lua Script, và Message Queue.</p>
+            </section>
+
+            <!-- Architect Note -->
+            <div class="alert alert-error">
+                <h5>Nhận định Kỹ thuật Chính xác:</h5>
+                Ý kiến của bạn hoàn toàn chính xác! Cả Khóa lạc quan (Optimistic) và Khóa bi quan (Pessimistic) ở cấp độ Database đều có điểm yếu chí mạng khi chịu tải hàng triệu giao dịch đồng thời. Việc liên tục đè ép các kết nối và giao dịch ghi xuống PostgreSQL sẽ làm cạn kiệt CPU, RAM của máy chủ CSDL, gây nghẽn cổ chai nghiêm trọng (DB Bottleneck).
+            </div>
+
+            <!-- Section 1: Locking Limitations -->
+            <section id="locking-limitations" class="card">
+                <span class="badge badge-danger">Vấn đề cốt lõi</span>
+                <h2>1. Vì sao Khóa cấp độ Database (DB Locks) bất lực khi scale?</h2>
+                
+                <h3 class="mt-16 mb-12">Khóa Lạc Quan (Optimistic Locking)</h3>
+                <p class="mb-16">
+                    Hoạt động bằng cách so khớp số phiên bản (version). Khi tranh chấp cực kỳ cao (ví dụ 10.000 người dùng cùng tranh mua 10 chiếc sản phẩm giảm giá hot):
+                </p>
+                <ul>
+                    <li>Chỉ có <strong>duy nhất 1 giao dịch thành công</strong> cập nhật đúng phiên bản trong DB.</li>
+                    <li><strong>9.999 giao dịch còn lại sẽ bị thất bại</strong> (Optimistic Lock Exception) và bắt buộc phải thực hiện cơ chế thử lại (Retry).</li>
+                    <li>Việc thử lại liên tục sẽ tạo ra hiện tượng **khuếch đại số lần đọc/ghi xuống DB**, khiến database bị quá tải nhanh chóng và sập nguồn.</li>
+                </ul>
+
+                <h3 class="mt-24 mb-12">Khóa Bi Quan (Pessimistic Locking)</h3>
+                <p class="mb-16">
+                    Hoạt động bằng cách khóa cứng dòng dữ liệu sản phẩm trong DB bằng truy vấn <code>SELECT FOR UPDATE</code>:
+                </p>
+                <ul>
+                    <li>Mỗi giao dịch mua hàng sẽ chiếm giữ 1 kết nối cơ sở dữ liệu (Database Connection) và giữ khóa đó cho đến khi transaction commit.</li>
+                    <li>Hàng ngàn yêu cầu xếp hàng chờ sẽ làm nghẽn toàn bộ luồng xử lý của Connection Pool (như HikariCP), gây ra lỗi cạn kiệt kết nối <strong>Connection Timeout</strong> cho toàn bộ hệ thống.</li>
+                </ul>
+            </section>
+
+            <!-- Section 2: SA Review Report -->
+            <section id="sa-review" class="card">
+                <span class="badge badge-success">Architect Review Report</span>
+                <h2>2. Đánh giá Kiến trúc của System Architect (SA Review)</h2>
+                <p class="mb-16">
+                    Để đảm bảo hệ thống bất đồng bộ hoạt động **ổn định, không lỗi dữ liệu và đạt hiệu năng tối ưu**, System Architect đã kiểm chứng và phân tích các trường hợp biên nguy cơ (Edge Cases) cùng các giải pháp giảm chấn kỹ thuật như sau:
+                </p>
+
+                <div class="alert alert-success">
+                    <h5>Trường hợp biên 1: Lỗi ghi xuống DB (Database Write-Behind Failure)</h5>
+                    <ul>
+                        <li><strong>Nguy cơ:</strong> Ví tiền và Kho đã được trừ thành công trên Redis (RAM), nhưng khi đẩy tin nhắn đơn hàng vào RabbitMQ, DB bị ngắt kết nối đột ngột hoặc quá tải khiến không thể lưu hóa đơn vào PostgreSQL.</li>
+                        <li><strong>Giải pháp giảm chấn:</strong> 
+                            1. Bật cơ chế **Retry tự động** của RabbitMQ Consumer để thử lại khi DB phục hồi.
+                            2. Sử dụng cấu hình **Dead Letter Queue (DLQ)**. Nếu thử lại quá 3 lần vẫn lỗi, tin nhắn sẽ được đẩy vào DLQ để nhân viên quản trị can thiệp đối soát thủ công hoặc thực hiện giao dịch bù trừ (compensating transaction) để hoàn trả số lượng tồn kho và tiền trên Redis.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Trường hợp biên 2: Tin nhắn lặp lại (Message Idempotency / Duplicate Delivery)</h5>
+                    <ul>
+                        <li><strong>Nguy cơ:</strong> RabbitMQ có cơ chế cam kết gửi tin nhắn ít nhất một lần (At-least-once delivery). Trong sự cố mạng, một đơn hàng có thể bị đẩy vào queue 2 lần, dẫn đến việc trừ tiền và tạo đơn hàng lặp lại cho một giao dịch của khách hàng.</li>
+                        <li><strong>Giải pháp giảm chấn:</strong> 
+                            1. Khi Client thực hiện gửi request đặt hàng bất đồng bộ, Spring Boot sinh ra một mã định danh giao dịch duy nhất dạng UUID gọi là **Order Trace ID (hoặc Transaction ID)**.
+                            2. Trong PostgreSQL, bảng <code>orders</code> cấu hình cột <code>trace_id</code> là **Unique Constraint (Duy nhất)**. 
+                            3. Khi Consumer ghi nhận đơn hàng, nếu gặp tin nhắn trùng lặp, CSDL PostgreSQL sẽ chặn đứng và ném lỗi trùng lặp khóa duy nhất (Unique Constraint Violation), bảo vệ số dư tài khoản của khách hàng an toàn tuyệt đối.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Trường hợp biên 3: Đồng bộ dữ liệu ban đầu (Cold Startup Synchronization)</h5>
+                    <ul>
+                        <li><strong>Nguy cơ:</strong> Khi server khởi chạy hoặc xảy ra sự cố sập nguồn Redis, dữ liệu tồn kho trên RAM bị trống hoặc không đồng bộ với PostgreSQL.</li>
+                        <li><strong>Giải pháp giảm chấn:</strong> 
+                            Xây dựng một dịch vụ khởi chạy ngầm `RedisSyncService` lắng nghe sự kiện **ApplicationReadyEvent**. Khi máy chủ vừa khởi động lên, tiến trình sẽ đọc trực tiếp số lượng tồn kho và ví tiền từ PostgreSQL (nguồn chân lý tuyệt đối) và đồng bộ sạch sẽ vào Redis trước khi mở cổng tiếp nhận API.
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Trường hợp biên 4: Đơn hàng kích thước lớn (Giỏ hàng 1.000+ sản phẩm)</h5>
+                    <ul>
+                        <li><strong>Nguy cơ nghẽn cổ chai:</strong> Khi một người dùng đặt mua cùng lúc 1.000 mặt hàng khác nhau dưới tải hàng triệu người dùng đồng thời, hệ thống sẽ gặp phải **Cơn bão truy vấn SQL N+1** (chọc xuống DB 1.000 lần tuần tự), **nghẽn đơn luồng khóa Redis** (do duyệt vòng lặp Lua Script quá nhiều lệnh), và gây **cạn kiệt Connection Pool của Database**.</li>
+                        <li><strong>Giải pháp giảm chấn của SA:</strong> 
+                            1. **Chốt chặn nghiệp vụ giỏ hàng (Cart Limit):** Áp dụng giới hạn cứng tối đa **50 mặt hàng/đơn hàng** tại Controller.
+                            2. **Quét theo lô (Batch Fetching):** Gom tất cả ID sản phẩm và quét đúng **1 câu lệnh SQL duy nhất** bằng <code>findAllById</code> thay vì lặp SELECT 1.000 lần.
+                            3. **Tách biệt RAM thuần túy (In-Memory Isolation):** Đồng bộ giá sản phẩm lên Redis RAM, cho phép Lua Script xử lý tính toán và đặt chỗ 100% trên bộ nhớ RAM mà **không chạm vào PostgreSQL ở luồng xử lý API chính**.
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Section 3: Redis + Lua Solution -->
+            <section id="redis-lua-solution" class="card">
+                <span class="badge badge-info">Kiến trúc RAM nguyên tử</span>
+                <h2>3. Cấu trúc Khấu trừ Tồn kho & Ví tiền Nguyên tử (Redis + Lua Script)</h2>
+                <p class="mb-16">
+                    Để đảm bảo hai bước <strong>"Kiểm tra kho/ví"</strong> và <strong>"Khấu trừ kho/ví"</strong> diễn ra một cách nguyên tử (Atomic - không bị luồng khác xen vào giữa ở môi trường triệu người dùng), chúng ta sử dụng kịch bản **Lua Script** chạy đơn luồng trực tiếp bên trong Redis RAM.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>shopee_stock_reserve.lua</span>
+                        <span>Atomic Execution inside Redis</span>
+                    </div>
+                    <pre><code>-- KEYS[1]: Khóa số dư ví của user (Ví dụ: "user:balance:tester_wife")
+-- KEYS[2...n]: Khóa tồn kho của các sản phẩm (Ví dụ: "product:stock:1", "product:stock:2")
+-- ARGV[1]: Số lượng sản phẩm mua tương ứng (Ví dụ: "2", "1")
+-- ARGV[n]: Số tiền ví cần trừ (Tổng tiền đơn hàng)
+
+local user_balance_key = KEYS[1]
+local total_price = tonumber(ARGV[#ARGV]) -- Tham số cuối cùng là tổng giá trị đơn hàng
+
+-- 1. Kiem tra so du vi cua nguoi dung
+local current_balance = tonumber(redis.call('get', user_balance_key))
+if not current_balance or current_balance < total_price then
+    return -2 -- Loi: Khong du so du thanh toan
+end
+
+-- 2. Kiem tra ton kho cua tat ca cac san pham yeu cau
+local product_keys = {}
+local quantities = {}
+local num_products = #KEYS - 1
+
+for i = 1, num_products do
+    local p_key = KEYS[i + 1]
+    local req_qty = tonumber(ARGV[i])
+    local current_stock = tonumber(redis.call('get', p_key))
+    
+    if not current_stock or current_stock < req_qty then
+        return -1 -- Loi: San pham het hang hoac thieu kho
+    end
+    
+    product_keys[i] = p_key
+    quantities[i] = req_qty
+end
+
+-- 3. Hop le: Thuc hien khau tru dong thoi ca vi tien va kho tren RAM
+redis.call('decrby', user_balance_key, total_price)
+for i = 1, num_products do
+    redis.call('decrby', product_keys[i], quantities[i])
+end
+
+return 1 -- Thanh cong tuyet doi!</code></pre>
+                </div>
+                
+                <div class="alert alert-success mt-20">
+                    <h5>Ưu điểm bảo vệ DB:</h5>
+                    Nếu kho hoặc ví trên Redis đã hết, toàn bộ các yêu cầu của các user đến sau sẽ bị từ chối ngay lập tức tại tầng Redis (In-Memory). **Không có bất kỳ yêu cầu thất bại nào được phép chạm xuống PostgreSQL Database**, bảo vệ database an toàn tuyệt đối khỏi nguy cơ sập hệ thống.
+                </div>
+            </section>
+
+            <!-- Section 4: Async MQ -->
+            <section id="async-queue" class="card">
+                <span class="badge badge-info">Giảm chấn cơ sở dữ liệu</span>
+                <h2>4. Hàng đợi bất đồng bộ ghi chậm (Write-Behind via RabbitMQ)</h2>
+                <p class="mb-16">
+                    Sau khi Lua Script trên Redis trả về kết quả <strong class="text-highlight">1 (Thành công)</strong>, Spring Boot sẽ lập tức sinh ra một gói tin chứa thông tin giao dịch và đẩy vào hàng đợi **RabbitMQ**. 
+                </p>
+                <p class="mb-20">
+                    Hệ thống trả về trạng thái <strong class="text-highlight">PENDING (Đang xử lý)</strong> cho người dùng chỉ sau 2 mili-giây. Một tiến trình chạy ngầm (Consumer Worker) sẽ lấy đơn hàng ra khỏi hàng đợi và từ từ ghi xuống PostgreSQL một cách tuần tự ở tốc độ vừa phải.
+                </p>
+
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>OrderConsumer.java</span>
+                        <span>Spring RabbitMQ Consumer (Ghi dữ liệu tuần tự bền vững)</span>
+                    </div>
+                    <pre><code>@Component
+@RequiredArgsConstructor
+@Slf4j
+public class OrderConsumer {
+
+    private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+
+    @RabbitListener(queues = "shopee.order.queue")
+    @Transactional(rollbackFor = Exception.class)
+    public void processOrderCreation(OrderMessage message) {
+        log.info("Consumer received order message: {}", message.getTraceId());
+        
+        // Kiem tra tinh Idempotent tranh lap tin nhan bang Trace ID
+        if (orderRepository.existsByTraceId(message.getTraceId())) {
+            log.warn("Duplicate message detected: {}. Skipping.", message.getTraceId());
+            return;
+        }
+
+        // 1. Luu tru hoa don va chi tiet vao DB
+        Order order = Order.builder()
+                .traceId(message.getTraceId())
+                .user(userRepository.getReferenceById(message.getUserId()))
+                .totalAmount(message.getTotalAmount())
+                .status(OrderStatus.PAID)
+                .build();
+                
+        // 2. Dong bo khau tru vao DB dong thoi
+        // (Dam bao dong nhat du lieu giua Postgres va Redis RAM)
+        ...
+        orderRepository.save(order);
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Section 5: Comparison Table -->
+            <section id="comparison" class="card">
+                <span class="badge badge-success">So sánh các giải pháp kiến trúc</span>
+                <h2>5. Bảng so sánh hiệu năng các giải pháp quản lý tồn kho</h2>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tiêu chí đánh giá</th>
+                            <th>Khóa Lạc Quan (Optimistic)</th>
+                            <th>Khóa Bi Quan (Pessimistic)</th>
+                            <th>Redis + Lua + Message Queue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Khả năng đáp ứng tải (Throughput)</strong></td>
+                            <td>Trung bình thấp (Nghẽn do xung đột & retry nhiều)</td>
+                            <td>Thấp (Nghẽn do block luồng kết nối DB)</td>
+                            <td class="text-highlight">Cực kỳ cao (100.000+ request/giây trên RAM)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Độ trễ phản hồi (Latency)</strong></td>
+                            <td>Tăng dần khi xung đột tăng (do phải thử lại nhiều)</td>
+                            <td>Cao (Luồng phải xếp hàng đợi khóa DB giải phóng)</td>
+                            <td class="text-highlight">Cực kỳ thấp (2 - 5 mili-giây)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tải đè lên Database (Postgres)</strong></td>
+                            <td>Cực kỳ lớn (Đọc/ghi liên tục để xác thực version)</td>
+                            <td>Lớn (Gây tắc nghẽn connection pool)</td>
+                            <td class="text-highlight">Cực thấp (Database được giảm chấn hoàn toàn qua Queue)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Độ an toàn tồn kho (Over-selling)</strong></td>
+                            <td>An toàn (Nhưng gây trải nghiệm người dùng tệ khi lỗi nhiều)</td>
+                            <td>An toàn (Khóa vật lý cấp dòng)</td>
+                            <td class="text-highlight">An toàn tuyệt đối (Đảm bảo bởi tính đơn luồng của Redis)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Độ phức tạp hiện thực</strong></td>
+                            <td>Thấp (Chỉ cần thêm annotation @Version)</td>
+                            <td>Thấp (Dùng annotation @Lock của JPA)</td>
+                            <td class="text-error">Cao (Yêu cầu thiết lập thêm hạ tầng Redis, RabbitMQ)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>
