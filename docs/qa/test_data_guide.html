@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Data & Seed Data Guide – Mini Shopee Docs</title>
+    <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<header>
+    <div class="container nav-container">
+        <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+        <span class="header-tagline">Documentation Portal</span>
+    </div>
+</header>
+
+<div class="layout-wrapper">
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+            <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_data_guide.html" class="sidebar-link" class="sidebar-link active" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+    <!-- ═══════════════ MAIN CONTENT ═══════════════ -->
+    <main class="content-wrapper">
+
+        <!-- ── HERO ── -->
+        <section class="hero-section">
+            <div class="badge-group">
+                <span class="badge badge-info">Test Data Management</span>
+            </div>
+            <h1 class="gradient-text">Hướng dẫn quản lý Test Data &amp; Seed Data</h1>
+            <p>
+                Tài liệu này mô tả toàn bộ dữ liệu mẫu (seed data) được nạp sẵn vào hệ thống để phục vụ kiểm thử,
+                cách reset về trạng thái ban đầu sau mỗi test run, và cách chuẩn bị dữ liệu cho từng kịch bản
+                cụ thể. Mục tiêu là đảm bảo mọi lần chạy test đều <strong>nhất quán</strong> và <strong>lặp lại được</strong>
+                (consistent &amp; repeatable) mà không phụ thuộc vào trạng thái môi trường trước đó.
+            </p>
+        </section>
+
+        <!-- ── TABLE OF CONTENTS ── -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 style="margin-top:0;">📋 Mục lục</h3>
+            <ul style="margin:0; padding-left:1.4rem; line-height:2;">
+                <li><a href="#accounts">1. Tài khoản mặc định (Seed Users)</a></li>
+                <li><a href="#products">2. Sản phẩm mặc định (Seed Products)</a></li>
+                <li><a href="#reset">3. Reset dữ liệu về trạng thái ban đầu</a></li>
+                <li><a href="#scenarios">4. Dữ liệu test theo kịch bản</a></li>
+                <li><a href="#verify">5. Câu lệnh xác minh dữ liệu sau test</a></li>
+            </ul>
+        </div>
+
+        <!-- ════════════════════════════════════════════
+             SECTION 1 – SEED USERS
+             ════════════════════════════════════════════ -->
+        <section id="accounts">
+            <h2>1. Tài khoản mặc định <span class="badge badge-primary">Seed Users</span></h2>
+            <p>
+                Các tài khoản dưới đây được nạp tự động khi chạy script khởi tạo cơ sở dữ liệu
+                <code>init-test-db.sql</code>. Tester có thể sử dụng ngay mà không cần tạo thêm tài khoản.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Password</th>
+                            <th>Role</th>
+                            <th>Balance (ví)</th>
+                            <th>Mục đích sử dụng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>user</code></td>
+                            <td><code>password</code></td>
+                            <td><span class="badge badge-success">ROLE_USER</span></td>
+                            <td><strong>1,000,000đ</strong></td>
+                            <td>Tester chính – dùng để đặt hàng, mua sản phẩm thông thường</td>
+                        </tr>
+                        <tr>
+                            <td><code>admin</code></td>
+                            <td><code>password</code></td>
+                            <td><span class="badge badge-danger">ROLE_ADMIN</span></td>
+                            <td>N/A</td>
+                            <td>Kiểm thử phân quyền admin, quản lý sản phẩm &amp; đơn hàng</td>
+                        </tr>
+                        <tr>
+                            <td><code>user2</code></td>
+                            <td><code>password</code></td>
+                            <td><span class="badge badge-success">ROLE_USER</span></td>
+                            <td><strong>0đ</strong></td>
+                            <td>Kiểm thử trường hợp số dư ví bằng 0 – đặt hàng phải bị từ chối</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert" style="background: #fff8e1; border-left-color: #f59e0b;">
+                <strong>⚠️ Lưu ý:</strong>
+                Các tài khoản này chỉ tồn tại sau khi chạy <code>init-test-db.sql</code>.
+                Nếu bạn mới reset database hoặc chạy môi trường lần đầu, hãy chắc chắn script đã
+                được thực thi trước khi bắt đầu bất kỳ test case nào.
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             SECTION 2 – SEED PRODUCTS
+             ════════════════════════════════════════════ -->
+        <section id="products" style="margin-top: 2.5rem;">
+            <h2>2. Sản phẩm mặc định <span class="badge badge-primary">Seed Products</span></h2>
+            <p>
+                Bốn sản phẩm mẫu bao phủ các kịch bản phổ biến: sản phẩm giá cao, sản phẩm phổ thông,
+                sản phẩm ít hàng và phụ kiện nhiều hàng. Tồn kho được nạp theo giá trị mặc định bên dưới.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Tồn kho mặc định</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-info">1</span></td>
+                            <td><strong>iPhone 15 Pro</strong></td>
+                            <td>30,000,000đ</td>
+                            <td><span class="badge badge-success">100</span></td>
+                            <td>Sản phẩm giá cao – test thanh toán lớn</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">2</span></td>
+                            <td><strong>Samsung Galaxy S24</strong></td>
+                            <td>20,000,000đ</td>
+                            <td><span class="badge badge-success">50</span></td>
+                            <td>Sản phẩm phổ thông – dùng cho flow mua hàng cơ bản</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">3</span></td>
+                            <td><strong>MacBook Pro M3</strong></td>
+                            <td>50,000,000đ</td>
+                            <td><span class="badge badge-warning">10</span></td>
+                            <td>Sản phẩm giá cao, ít hàng – test tình huống gần hết tồn kho</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">4</span></td>
+                            <td><strong>AirPods Pro</strong></td>
+                            <td>6,000,000đ</td>
+                            <td><span class="badge badge-success">200</span></td>
+                            <td>Sản phẩm phụ kiện – tồn kho lớn, test mua số lượng nhiều</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             SECTION 3 – RESET DATA
+             ════════════════════════════════════════════ -->
+        <section id="reset" style="margin-top: 2.5rem;">
+            <h2>3. Reset dữ liệu về trạng thái ban đầu</h2>
+            <p>
+                Sau mỗi test run, dữ liệu (tồn kho, số dư ví, đơn hàng) sẽ thay đổi. Tester cần reset
+                về trạng thái ban đầu trước khi chạy bộ test tiếp theo. Dưới đây là các lệnh reset
+                cho từng thành phần hệ thống.
+            </p>
+
+            <!-- 3a: SQL reset -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top:0;">
+                    <span class="badge badge-primary">3a</span>
+                    Reset toàn bộ bằng SQL
+                </h3>
+                <p>Chạy trực tiếp trên MySQL/MariaDB (hoặc qua DBeaver / MySQL Workbench):</p>
+                <pre><code class="code">-- Reset tồn kho về giá trị ban đầu
+UPDATE products SET stock = 100 WHERE id = 1;
+UPDATE products SET stock = 50  WHERE id = 2;
+UPDATE products SET stock = 10  WHERE id = 3;
+UPDATE products SET stock = 200 WHERE id = 4;
+
+-- Reset số dư ví người dùng
+UPDATE users SET balance = 1000000 WHERE username = 'user';
+UPDATE users SET balance = 0       WHERE username = 'user2';
+
+-- Xóa toàn bộ đơn hàng test
+DELETE FROM order_items;
+DELETE FROM orders;</code></pre>
+            </div>
+
+            <!-- 3b: Redis reset -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top:0;">
+                    <span class="badge badge-danger">3b</span>
+                    Reset Redis Cache
+                </h3>
+                <p>Kết nối vào Redis container và ghi đè lại các key đang cache:</p>
+                <pre><code class="code"># Kết nối vào Redis container
+docker exec -it shopee_mini_redis redis-cli
+
+# Reset tồn kho từng sản phẩm
+SET product:stock:1 100
+SET product:stock:2 50
+SET product:stock:3 10
+SET product:stock:4 200
+
+# Reset số dư ví
+SET user:balance:user  1000000
+SET user:balance:user2 0
+
+# Hoặc xóa sạch toàn bộ cache (cẩn thận!)
+FLUSHALL</code></pre>
+                <div class="alert alert-warning">
+                    <strong>⚠️ Cảnh báo:</strong>
+                    <code>FLUSHALL</code> xóa sạch <strong>toàn bộ</strong> dữ liệu trong Redis.
+                    Ứng dụng sẽ tự tải lại dữ liệu từ DB khi nhận request tiếp theo, nhưng có thể gây
+                    spike tải bất ngờ lên database trong môi trường production. Chỉ dùng trong môi trường test.
+                </div>
+            </div>
+
+            <!-- 3c: RabbitMQ reset -->
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top:0;">
+                    <span class="badge badge-warning">3c</span>
+                    Reset RabbitMQ Queue
+                </h3>
+                <p>
+                    Xóa sạch tin nhắn tồn đọng trong queue để đảm bảo các message từ test run cũ
+                    không bị xử lý sang test run mới:
+                </p>
+                <pre><code class="code"># Xóa toàn bộ tin nhắn trong queue chính
+docker exec shopee_mini_rabbitmq rabbitmqctl purge_queue shopee.order.queue
+
+# Xóa toàn bộ tin nhắn trong Dead Letter Queue
+docker exec shopee_mini_rabbitmq rabbitmqctl purge_queue shopee.order.dlq</code></pre>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             SECTION 4 – TEST SCENARIOS
+             ════════════════════════════════════════════ -->
+        <section id="scenarios" style="margin-top: 2.5rem;">
+            <h2>4. Dữ liệu test theo kịch bản <span class="badge badge-info">Scenario Data</span></h2>
+            <p>
+                Mỗi kịch bản kiểm thử yêu cầu trạng thái dữ liệu đầu vào khác nhau. Bảng dưới đây
+                liệt kê điều kiện cần chuẩn bị trước khi chạy từng kịch bản.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Kịch bản</th>
+                            <th>Chuẩn bị dữ liệu trước khi test</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="badge badge-success">✅</span>
+                                <strong>Test mua hàng thành công</strong>
+                            </td>
+                            <td>
+                                <code>stock = 5</code> (ít nhất ≥ 1),
+                                <code>balance = 150,000đ</code> (đủ để mua);
+                                đảm bảo sản phẩm tồn tại và user đã đăng nhập
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-danger">🔥</span>
+                                <strong>Test overselling (tải đồng thời)</strong>
+                            </td>
+                            <td>
+                                Đặt <code>stock = 3</code>, sau đó bắn <strong>10+ request</strong> mua hàng
+                                đồng thời; kỳ vọng chỉ tối đa 3 đơn thành công, phần còn lại bị từ chối
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-warning">💸</span>
+                                <strong>Test hết tiền</strong>
+                            </td>
+                            <td>
+                                Dùng tài khoản <code>user2</code> (<code>balance = 0</code>) hoặc
+                                đặt <code>balance &lt; giá sản phẩm</code>; kỳ vọng nhận lỗi
+                                <em>"Insufficient balance"</em>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-danger">📦</span>
+                                <strong>Test hết hàng</strong>
+                            </td>
+                            <td>
+                                Đặt <code>stock = 0</code> cho sản phẩm muốn test (cả DB lẫn Redis cache);
+                                kỳ vọng nhận lỗi <em>"Out of stock"</em> ngay lập tức
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-info">🔁</span>
+                                <strong>Test idempotency</strong>
+                            </td>
+                            <td>
+                                Chuẩn bị 2 request POST đặt hàng mang <strong>cùng một <code>trace_id</code></strong>;
+                                kỳ vọng chỉ 1 đơn hàng được tạo, request thứ 2 trả về kết quả của request đầu
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-warning">💥</span>
+                                <strong>Test chaos – DB gặp sự cố</strong>
+                            </td>
+                            <td>
+                                Đảm bảo <code>stock</code> đủ hàng; sau khi gửi request đặt hàng,
+                                thực hiện <code>docker pause &lt;db_container&gt;</code> để giả lập DB sự cố giữa chừng;
+                                kiểm tra hệ thống retry và rollback đúng
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ════════════════════════════════════════════
+             SECTION 5 – VERIFY QUERIES
+             ════════════════════════════════════════════ -->
+        <section id="verify" style="margin-top: 2.5rem;">
+            <h2>5. Câu lệnh xác minh dữ liệu sau test <span class="badge badge-success">Verification</span></h2>
+            <p>
+                Sau khi chạy test, tester cần kiểm tra trạng thái hệ thống để xác nhận kết quả đúng với
+                kỳ vọng. Dưới đây là các query SQL thực dụng nhất để kiểm tra nhanh:
+            </p>
+
+            <div class="card">
+                <pre><code class="code">-- Xem tồn kho hiện tại tất cả sản phẩm
+SELECT id, name, stock FROM products ORDER BY id;
+
+-- Xem 10 đơn hàng mới nhất
+SELECT o.id, o.trace_id, o.status, o.created_at, u.username
+FROM orders o
+JOIN users u ON o.user_id = u.id
+ORDER BY o.created_at DESC
+LIMIT 10;
+
+-- Xem số dư ví hiện tại của tất cả người dùng
+SELECT username, balance FROM users ORDER BY username;
+
+-- Đếm đơn hàng theo trạng thái (status)
+SELECT status, COUNT(*) AS total
+FROM orders
+GROUP BY status;</code></pre>
+            </div>
+
+            <div class="alert alert-success" style="margin-top: 1.5rem;">
+                <strong>💡 Mẹo:</strong>
+                Chạy query <em>đếm đơn hàng theo status</em> trước và sau mỗi test case để nhanh chóng
+                phát hiện đơn hàng bị kẹt ở trạng thái <code>PENDING</code> hoặc tăng bất thường ở
+                <code>FAILED</code>. Kết hợp với log của RabbitMQ consumer để trace nguyên nhân gốc rễ.
+            </div>
+        </section>
+
+        <!-- ── FOOTER ── -->
+        <footer style="margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 0.875rem;">
+            <p>Mini Shopee Docs Portal &mdash; Tài liệu nội bộ dành cho QA / Tester. Cập nhật: 06/2026.</p>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

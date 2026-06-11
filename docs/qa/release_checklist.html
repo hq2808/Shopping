@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checklist kiểm thử trước khi Release – Mini Shopee Docs</title>
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+        /* ── Checklist-specific styles ── */
+        .checklist-section {
+            margin-bottom: 2.5rem;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+        }
+        .section-icon {
+            font-size: 1.6rem;
+            line-height: 1;
+        }
+        .checklist-group {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,.05);
+        }
+        .checklist-group-header {
+            padding: 0.7rem 1.25rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .checklist-group-header.auth   { background:#eff6ff; color:#1d4ed8; }
+        .checklist-group-header.prod   { background:#f0fdf4; color:#15803d; }
+        .checklist-group-header.sync   { background:#fdf4ff; color:#7e22ce; }
+        .checklist-group-header.async  { background:#fff7ed; color:#c2410c; }
+        .checklist-group-header.users  { background:#f0f9ff; color:#0369a1; }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.85rem;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 1px solid #f3f4f6;
+            font-size: 0.95rem;
+            transition: background .15s;
+        }
+        .checklist-item:last-child { border-bottom: none; }
+        .checklist-item:hover { background: #f9fafb; }
+
+        .check-box {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+        }
+        .check-box.done { background: #16a34a; border-color: #16a34a; }
+        .check-box.done::after { content: "✓"; color: #fff; font-size: 12px; font-weight: 700; }
+
+        .check-label { flex: 1; color: #374151; }
+        .check-label .check-result {
+            margin-left: .5rem;
+            font-size: 0.78rem;
+            padding: 1px 7px;
+            border-radius: 99px;
+            font-weight: 600;
+        }
+        .check-result.ok  { background:#dcfce7; color:#15803d; }
+        .check-result.err { background:#fee2e2; color:#b91c1c; }
+        .check-result.acc { background:#e0f2fe; color:#0369a1; }
+
+        .smoke-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-left: 4px solid #16a34a;
+            border-radius: 8px;
+            padding: 0.9rem 1.2rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.9rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+            transition: box-shadow .15s;
+        }
+        .smoke-card:hover { box-shadow: 0 3px 8px rgba(0,0,0,.08); }
+        .smoke-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 1px; }
+        .smoke-text { font-size: 0.95rem; color: #1f2937; flex: 1; }
+        .smoke-text strong { color: #15803d; }
+
+        .stop-alert {
+            background: #fff1f2;
+            border: 1.5px solid #fecdd3;
+            border-left: 5px solid #e11d48;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+            color: #9f1239;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        .stop-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+        /* Data integrity */
+        .query-block {
+            background: #0f172a;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,.18);
+        }
+        .query-header {
+            background: #1e293b;
+            padding: 0.55rem 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .query-label { color: #94a3b8; font-size: 0.82rem; font-weight: 600; letter-spacing:.05em; }
+        .query-expected { font-size: 0.78rem; padding: 2px 10px; border-radius: 99px; font-weight:700; }
+        .query-expected.zero { background: #dcfce7; color: #15803d; }
+        .query-expected.info { background: #dbeafe; color: #1d4ed8; }
+        .query-block pre {
+            margin: 0;
+            padding: 1.1rem 1.25rem;
+            color: #e2e8f0;
+            font-size: 0.875rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            background: transparent;
+            border: none;
+        }
+        .query-block pre .sql-comment  { color: #64748b; }
+        .query-block pre .sql-keyword  { color: #7dd3fc; font-weight: 600; }
+        .query-block pre .sql-function { color: #a78bfa; }
+        .query-block pre .sql-string   { color: #86efac; }
+        .query-block pre .sql-number   { color: #fbbf24; }
+
+        /* Security */
+        .security-item {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 0.9rem 1.2rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,.04);
+        }
+        .sec-icon { font-size: 1.25rem; flex-shrink: 0; margin-top: 2px; }
+        .sec-body { flex: 1; }
+        .sec-title { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+        .sec-detail { font-size: 0.85rem; color: #6b7280; margin-top: 0.2rem; }
+        .sec-tag {
+            font-size: 0.75rem;
+            padding: 2px 9px;
+            border-radius: 99px;
+            font-weight: 700;
+            background: #fee2e2;
+            color: #b91c1c;
+            margin-left: .5rem;
+        }
+
+        /* Sign-off table */
+        .signoff-table { width: 100%; border-collapse: collapse; }
+        .signoff-table th {
+            background: #1e3a5f;
+            color: #fff;
+            padding: 0.8rem 1rem;
+            text-align: left;
+            font-size: 0.87rem;
+            font-weight: 600;
+            letter-spacing: .02em;
+        }
+        .signoff-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.9rem;
+            color: #374151;
+        }
+        .signoff-table tr:last-child td { border-bottom: none; }
+        .signoff-table tr:hover td { background: #f9fafb; }
+        .signoff-table td.item-name { font-weight: 600; color: #1f2937; }
+        .signoff-table td.blank { color: #9ca3af; font-style: italic; }
+        .signoff-table tr.final-row td { background: #fef9c3; font-weight: 700; }
+
+        .progress-bar-wrap {
+            background: #f3f4f6;
+            border-radius: 99px;
+            height: 8px;
+            overflow: hidden;
+            margin-top: 0.4rem;
+        }
+        .progress-bar { height: 100%; border-radius: 99px; }
+        .pb-smoke    { background: #16a34a; width: 100%; }
+        .pb-func     { background: #2563eb; width: 100%; }
+        .pb-data     { background: #7c3aed; width: 100%; }
+        .pb-sec      { background: #ea580c; width: 100%; }
+        .pb-perf     { background: #0891b2; width: 100%; }
+
+        .time-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            background: #f3f4f6;
+            color: #6b7280;
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 99px;
+            margin-left: .6rem;
+        }
+        .section-divider {
+            border: none;
+            border-top: 2px dashed #e5e7eb;
+            margin: 2.5rem 0;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="container nav-container">
+        <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+        <span class="header-tagline">Documentation Portal</span>
+    </div>
+</header>
+
+<div class="layout-wrapper">
+
+    <!-- ══════════════ SIDEBAR ══════════════ -->
+            <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="release_checklist.html" class="sidebar-link" class="sidebar-link active" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+    <!-- ══════════════ MAIN CONTENT ══════════════ -->
+    <main class="content-wrapper">
+
+        <!-- ── HERO ── -->
+        <section class="hero-section">
+            <div class="badge-group" style="margin-bottom:1rem;">
+                <span class="badge badge-success">✅ QA Release Process</span>
+                <span class="badge badge-primary">Pre-Release Gate</span>
+                <span class="badge badge-info">~60 phút tổng</span>
+            </div>
+            <h1 class="gradient-text">Checklist kiểm thử trước khi Release</h1>
+            <p style="font-size:1.08rem;color:#4b5563;max-width:720px;margin-top:.75rem;line-height:1.8;">
+                Tài liệu này định nghĩa toàn bộ các hạng mục kiểm thử <strong>bắt buộc phải hoàn thành và đạt (PASS)</strong>
+                trước mỗi lần phát hành phiên bản mới của hệ thống Mini Shopee.
+                Mọi lần deploy lên môi trường <em>Staging</em> hoặc <em>Production</em> đều phải có sign-off của QA Lead
+                dựa trên checklist này.
+            </p>
+            <div class="alert alert-success" style="margin-top:1.25rem;max-width:700px;">
+                <strong>🎯 Mục tiêu:</strong> Đảm bảo không có regression, dữ liệu toàn vẹn, và hệ thống ổn định sau mỗi thay đổi.
+                Tổng thời gian thực hiện ước tính <strong>~60 phút</strong>.
+            </div>
+        </section>
+
+        <!-- ══ OVERVIEW CARDS ══ -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1rem;margin-bottom:2.5rem;">
+            <div class="card" style="text-align:center;padding:1.2rem 1rem;">
+                <div style="font-size:2rem;">🚀</div>
+                <div style="font-weight:700;color:#15803d;margin:.4rem 0 .2rem;">Smoke Test</div>
+                <div style="font-size:.82rem;color:#6b7280;">~5 phút</div>
+                <div class="progress-bar-wrap" style="margin-top:.6rem;">
+                    <div class="progress-bar pb-smoke"></div>
+                </div>
+            </div>
+            <div class="card" style="text-align:center;padding:1.2rem 1rem;">
+                <div style="font-size:2rem;">🔍</div>
+                <div style="font-weight:700;color:#2563eb;margin:.4rem 0 .2rem;">Functional</div>
+                <div style="font-size:.82rem;color:#6b7280;">~30 phút</div>
+                <div class="progress-bar-wrap" style="margin-top:.6rem;">
+                    <div class="progress-bar pb-func"></div>
+                </div>
+            </div>
+            <div class="card" style="text-align:center;padding:1.2rem 1rem;">
+                <div style="font-size:2rem;">🗄️</div>
+                <div style="font-weight:700;color:#7c3aed;margin:.4rem 0 .2rem;">Data Integrity</div>
+                <div style="font-size:.82rem;color:#6b7280;">~15 phút</div>
+                <div class="progress-bar-wrap" style="margin-top:.6rem;">
+                    <div class="progress-bar pb-data"></div>
+                </div>
+            </div>
+            <div class="card" style="text-align:center;padding:1.2rem 1rem;">
+                <div style="font-size:2rem;">🔒</div>
+                <div style="font-weight:700;color:#ea580c;margin:.4rem 0 .2rem;">Security</div>
+                <div style="font-size:.82rem;color:#6b7280;">~10 phút</div>
+                <div class="progress-bar-wrap" style="margin-top:.6rem;">
+                    <div class="progress-bar pb-sec"></div>
+                </div>
+            </div>
+            <div class="card" style="text-align:center;padding:1.2rem 1rem;">
+                <div style="font-size:2rem;">📋</div>
+                <div style="font-weight:700;color:#0891b2;margin:.4rem 0 .2rem;">Sign-off</div>
+                <div style="font-size:.82rem;color:#6b7280;">Cuối cùng</div>
+                <div class="progress-bar-wrap" style="margin-top:.6rem;">
+                    <div class="progress-bar pb-perf"></div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="section-divider" />
+
+        <!-- ══════════════════════════════════════════════
+             SECTION 1 – SMOKE TEST
+        ══════════════════════════════════════════════ -->
+        <section id="smoke" class="checklist-section">
+            <div class="section-header">
+                <span class="section-icon">🚀</span>
+                <h2 class="section-title">
+                    Smoke Test Checklist
+                    <span class="time-badge">⏱ ~5 phút</span>
+                </h2>
+            </div>
+            <p style="color:#4b5563;margin-bottom:1.25rem;font-size:.95rem;">
+                Đây là bộ kiểm tra tối thiểu để xác nhận hệ thống đang hoạt động.
+                <strong>Chạy đầu tiên</strong> — trước bất kỳ bước kiểm thử nào khác.
+                Nếu bất kỳ mục nào thất bại, dừng lại ngay và thông báo cho Dev.
+            </p>
+
+            <div class="smoke-card">
+                <span class="smoke-icon">✅</span>
+                <div class="smoke-text">
+                    <strong>App khởi động không có lỗi trong logs</strong><br/>
+                    <span style="color:#6b7280;font-size:.875rem;">Kiểm tra logs: <code class="code">port 8080</code> đang lắng nghe, không có
+                    <code class="code">ERROR</code> hay <code class="code">FATAL</code> trong 30 giây đầu tiên sau khi start.</span>
+                </div>
+                <span class="check-result ok">Port 8080 OK</span>
+            </div>
+
+            <div class="smoke-card">
+                <span class="smoke-icon">✅</span>
+                <div class="smoke-text">
+                    <strong>PostgreSQL kết nối thành công</strong><br/>
+                    <span style="color:#6b7280;font-size:.875rem;">Không xuất hiện
+                    <code class="code">Connection refused</code> hay <code class="code">HikariPool timeout</code> trong logs.
+                    Ít nhất một pool connection được thiết lập.</span>
+                </div>
+                <span class="check-result ok">DB Connected</span>
+            </div>
+
+            <div class="smoke-card">
+                <span class="smoke-icon">✅</span>
+                <div class="smoke-text">
+                    <strong>Redis kết nối thành công</strong><br/>
+                    <span style="color:#6b7280;font-size:.875rem;">Logs hiển thị
+                    <code class="code">Lettuce/Jedis connected to redis://localhost:6379</code>
+                    hoặc tương đương. Không có <code class="code">RedisConnectionException</code>.</span>
+                </div>
+                <span class="check-result ok">Redis OK</span>
+            </div>
+
+            <div class="smoke-card">
+                <span class="smoke-icon">✅</span>
+                <div class="smoke-text">
+                    <strong>RabbitMQ kết nối thành công</strong><br/>
+                    <span style="color:#6b7280;font-size:.875rem;">Spring AMQP log báo
+                    <code class="code">Successfully connected to</code> RabbitMQ.
+                    Management UI tại <code class="code">localhost:15672</code> hiển thị connection đang active.</span>
+                </div>
+                <span class="check-result ok">MQ Connected</span>
+            </div>
+
+            <div class="smoke-card">
+                <span class="smoke-icon">✅</span>
+                <div class="smoke-text">
+                    <strong>POST /api/auth/login trả về 200 OK và JWT token</strong><br/>
+                    <span style="color:#6b7280;font-size:.875rem;">Dùng credentials seed mặc định
+                    <code class="code">user01 / password123</code>.
+                    Response body phải chứa field <code class="code">token</code> dạng JWT (3 phần phân tách bởi dấu chấm).</span>
+                </div>
+                <span class="check-result ok">200 OK + JWT</span>
+            </div>
+
+            <div class="smoke-card">
+                <span class="smoke-icon">✅</span>
+                <div class="smoke-text">
+                    <strong>GET /api/products trả về danh sách sản phẩm</strong><br/>
+                    <span style="color:#6b7280;font-size:.875rem;">Response <code class="code">200 OK</code>,
+                    body là mảng JSON có ít nhất 1 phần tử. Thời gian phản hồi &lt; 2 giây.</span>
+                </div>
+                <span class="check-result ok">200 OK + Data</span>
+            </div>
+
+            <div class="stop-alert">
+                <span class="stop-icon">🛑</span>
+                <div>
+                    <strong>ĐIỀU KIỆN DỪNG:</strong> Nếu bất kỳ mục nào trong Smoke Test FAIL →
+                    <strong>STOP ngay lập tức</strong>, không tiếp tục các bước kiểm thử tiếp theo.
+                    Tạo bug report và thông báo cho Dev Lead / Release Manager để rollback hoặc fix trước khi tiến hành lại.
+                </div>
+            </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ══════════════════════════════════════════════
+             SECTION 2 – FUNCTIONAL REGRESSION
+        ══════════════════════════════════════════════ -->
+        <section id="functional" class="checklist-section">
+            <div class="section-header">
+                <span class="section-icon">🔍</span>
+                <h2 class="section-title">
+                    Functional Regression Checklist
+                    <span class="time-badge">⏱ ~30 phút</span>
+                </h2>
+            </div>
+            <p style="color:#4b5563;margin-bottom:1.25rem;font-size:.95rem;">
+                Kiểm thử toàn bộ chức năng nghiệp vụ theo từng module. Thực hiện theo thứ tự từ trên xuống dưới.
+                Ghi lại kết quả <strong>PASS / FAIL</strong> cho từng mục.
+            </p>
+
+            <!-- AUTH MODULE -->
+            <div class="checklist-group">
+                <div class="checklist-group-header auth">🔐 AUTH MODULE — Xác thực &amp; Phân quyền</div>
+
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Login thành công với user/password hợp lệ → nhận JWT
+                        <span class="check-result ok">200 OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Login thất bại với password sai → bị từ chối
+                        <span class="check-result err">401 Unauthorized</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Register tài khoản mới với email chưa tồn tại → thành công
+                        <span class="check-result ok">201 Created</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Gọi API có auth với token hết hạn → bị từ chối
+                        <span class="check-result err">401 Unauthorized</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Gọi API có auth không kèm token → bị từ chối
+                        <span class="check-result err">401 Unauthorized</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PRODUCTS MODULE -->
+            <div class="checklist-group">
+                <div class="checklist-group-header prod">📦 PRODUCTS MODULE — Quản lý sản phẩm</div>
+
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        <code class="code">GET /api/products</code> — Lấy danh sách sản phẩm, có dữ liệu
+                        <span class="check-result ok">200 OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        <code class="code">GET /api/products/{id}</code> — Lấy chi tiết sản phẩm tồn tại, đúng data
+                        <span class="check-result ok">200 OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        <code class="code">GET /api/products/99999</code> — Lấy sản phẩm không tồn tại → not found
+                        <span class="check-result err">404 Not Found</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORDERS SYNC MODULE -->
+            <div class="checklist-group">
+                <div class="checklist-group-header sync">⚡ ORDERS — SYNC MODULE — Đặt hàng đồng bộ</div>
+
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Đặt hàng thành công (đủ tồn kho, đủ số dư ví) → đơn hàng ghi vào DB
+                        <span class="check-result ok">200 OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Đặt hàng khi sản phẩm hết tồn kho → bị từ chối với message rõ ràng
+                        <span class="check-result err">400 Bad Request</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Đặt hàng khi số dư ví không đủ → bị từ chối với message rõ ràng
+                        <span class="check-result err">400 Bad Request</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Xác nhận tồn kho <code class="code">products.stock</code> giảm đúng số lượng sau khi đặt hàng thành công
+                        <span class="check-result ok">Stock OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Xác nhận số dư ví <code class="code">users.balance</code> giảm đúng giá trị đơn hàng sau khi đặt thành công
+                        <span class="check-result ok">Balance OK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ORDERS ASYNC MODULE -->
+            <div class="checklist-group">
+                <div class="checklist-group-header async">🐇 ORDERS — ASYNC MODULE — Đặt hàng bất đồng bộ</div>
+
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        <code class="code">POST /api/orders/async</code> — Gửi yêu cầu đặt hàng → chấp nhận ngay
+                        <span class="check-result acc">202 Accepted</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Kiểm tra RabbitMQ Management UI / logs: tin nhắn được <strong>publish</strong> thành công lên queue
+                        <span class="check-result ok">Published</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Consumer xử lý tin nhắn → đơn hàng xuất hiện trong DB (<code class="code">orders</code> table) trong vòng 5 giây
+                        <span class="check-result ok">DB OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Redis stock cache giảm đúng số lượng sau khi consumer xử lý xong
+                        <span class="check-result ok">Redis OK</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USERS MODULE -->
+            <div class="checklist-group">
+                <div class="checklist-group-header users">👤 USERS MODULE — Thông tin người dùng</div>
+
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        <code class="code">GET /api/users/profile</code> với token hợp lệ → trả về thông tin đúng của user
+                        <span class="check-result ok">200 OK</span>
+                    </div>
+                </div>
+                <div class="checklist-item">
+                    <div class="check-box done"></div>
+                    <div class="check-label">
+                        Profile của <strong>user A</strong> không thể xem bằng token của <strong>user B</strong> → bị từ chối
+                        <span class="check-result err">403 Forbidden</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ══════════════════════════════════════════════
+             SECTION 3 – DATA INTEGRITY
+        ══════════════════════════════════════════════ -->
+        <section id="data-integrity" class="checklist-section">
+            <div class="section-header">
+                <span class="section-icon">🗄️</span>
+                <h2 class="section-title">
+                    Data Integrity Checklist
+                    <span class="time-badge">⏱ ~15 phút</span>
+                </h2>
+            </div>
+            <p style="color:#4b5563;margin-bottom:1.25rem;font-size:.95rem;">
+                Chạy trực tiếp các câu query SQL dưới đây vào PostgreSQL sau khi hoàn thành Functional Test.
+                Đây là bước đối soát dữ liệu để đảm bảo tính toàn vẹn của hệ thống.
+                Kết nối DB: <code class="code">psql -h localhost -U postgres -d shopee_db</code>
+            </p>
+
+            <div class="alert" style="background:#fffbeb;border-color:#fde68a;color:#92400e;margin-bottom:1.5rem;">
+                <strong>⚠️ Lưu ý:</strong> Các query #2, #3, #4 <strong>BẮT BUỘC</strong> phải trả về
+                <code class="code">0 rows</code>. Nếu có kết quả → hệ thống có lỗi nghiêm trọng về toàn vẹn dữ liệu → STOP release.
+            </div>
+
+            <!-- Query 1 -->
+            <div class="query-block">
+                <div class="query-header">
+                    <span class="query-label">QUERY 1 — Tổng đơn hàng trong 1 giờ gần nhất</span>
+                    <span class="query-expected info">Expected: Số đếm ≥ 0</span>
+                </div>
+                <pre><span class="sql-comment">-- 1. Kiểm tra tổng đơn hàng khớp với giao dịch trong giờ vừa qua</span>
+<span class="sql-keyword">SELECT</span> <span class="sql-function">COUNT</span>(*) <span class="sql-keyword">AS</span> total_orders
+<span class="sql-keyword">FROM</span>   orders
+<span class="sql-keyword">WHERE</span>  created_at &gt; <span class="sql-function">NOW</span>() - <span class="sql-keyword">INTERVAL</span> <span class="sql-string">'1 hour'</span>;</pre>
+            </div>
+
+            <!-- Query 2 -->
+            <div class="query-block">
+                <div class="query-header">
+                    <span class="query-label">QUERY 2 — Tồn kho âm (CRITICAL)</span>
+                    <span class="query-expected zero">Expected: 0 rows</span>
+                </div>
+                <pre><span class="sql-comment">-- 2. Kiểm tra tồn kho không được phép âm (vi phạm business rule)</span>
+<span class="sql-keyword">SELECT</span> id, name, stock
+<span class="sql-keyword">FROM</span>   products
+<span class="sql-keyword">WHERE</span>  stock &lt; <span class="sql-number">0</span>;</pre>
+            </div>
+
+            <!-- Query 3 -->
+            <div class="query-block">
+                <div class="query-header">
+                    <span class="query-label">QUERY 3 — Trùng lặp trace_id (CRITICAL)</span>
+                    <span class="query-expected zero">Expected: 0 rows</span>
+                </div>
+                <pre><span class="sql-comment">-- 3. Kiểm tra không có trace_id trùng lặp (idempotency violation)</span>
+<span class="sql-keyword">SELECT</span>   trace_id,
+         <span class="sql-function">COUNT</span>(*) <span class="sql-keyword">AS</span> duplicate_count
+<span class="sql-keyword">FROM</span>     orders
+<span class="sql-keyword">GROUP BY</span> trace_id
+<span class="sql-keyword">HAVING</span>   <span class="sql-function">COUNT</span>(*) &gt; <span class="sql-number">1</span>;</pre>
+            </div>
+
+            <!-- Query 4 -->
+            <div class="query-block">
+                <div class="query-header">
+                    <span class="query-label">QUERY 4 — Số dư ví âm (CRITICAL)</span>
+                    <span class="query-expected zero">Expected: 0 rows</span>
+                </div>
+                <pre><span class="sql-comment">-- 4. Kiểm tra số dư ví không được phép âm (tài khoản không được thâm hụt)</span>
+<span class="sql-keyword">SELECT</span> username, balance
+<span class="sql-keyword">FROM</span>   users
+<span class="sql-keyword">WHERE</span>  balance &lt; <span class="sql-number">0</span>;</pre>
+            </div>
+
+            <div class="card" style="padding:1.1rem 1.25rem;border-left:4px solid #7c3aed;">
+                <strong style="color:#7c3aed;">📋 Hướng dẫn đối soát bổ sung:</strong>
+                <ul style="margin:.6rem 0 0 1.2rem;color:#374151;font-size:.9rem;line-height:1.8;">
+                    <li>So sánh <code class="code">SUM(orders.total_amount)</code> với <code class="code">SUM(transactions.amount)</code> nếu có bảng giao dịch riêng</li>
+                    <li>Kiểm tra <code class="code">orders.status</code> không có giá trị NULL hoặc trạng thái không hợp lệ</li>
+                    <li>Verify rằng mỗi order đều có <code class="code">user_id</code> trỏ về user tồn tại trong bảng <code class="code">users</code></li>
+                    <li>Kiểm tra Redis stock cache khớp với PostgreSQL <code class="code">products.stock</code></li>
+                </ul>
+            </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ══════════════════════════════════════════════
+             SECTION 4 – SECURITY CHECKLIST
+        ══════════════════════════════════════════════ -->
+        <section id="security" class="checklist-section">
+            <div class="section-header">
+                <span class="section-icon">🔒</span>
+                <h2 class="section-title">
+                    Security Checklist
+                    <span class="time-badge">⏱ ~10 phút</span>
+                </h2>
+            </div>
+            <p style="color:#4b5563;margin-bottom:1.25rem;font-size:.95rem;">
+                Kiểm thử bảo mật cơ bản — không thay thế cho penetration testing chuyên sâu,
+                nhưng phải pass 100% trước mọi lần release.
+            </p>
+
+            <div class="security-item">
+                <span class="sec-icon">🛡️</span>
+                <div class="sec-body">
+                    <div class="sec-title">JWT Role Isolation — User không access Admin resource
+                        <span class="sec-tag">RBAC</span>
+                    </div>
+                    <div class="sec-detail">
+                        Dùng JWT của user thường gọi endpoint admin (ví dụ: <code class="code">GET /api/admin/users</code>).
+                        Phải bị từ chối với <code class="code">403 Forbidden</code>.
+                        Không được nhận <code class="code">200 OK</code> dù token hợp lệ.
+                    </div>
+                </div>
+                <span class="check-result err" style="white-space:nowrap;">403 Forbidden</span>
+            </div>
+
+            <div class="security-item">
+                <span class="sec-icon">🔑</span>
+                <div class="sec-body">
+                    <div class="sec-title">JWT Tampering — Token giả mạo bị reject
+                        <span class="sec-tag">JWT</span>
+                    </div>
+                    <div class="sec-detail">
+                        Lấy JWT hợp lệ, sửa payload (ví dụ: đổi <code class="code">role: "USER"</code> thành
+                        <code class="code">role: "ADMIN"</code>), ký lại bằng secret giả.
+                        API phải từ chối với <code class="code">401 Unauthorized</code>.
+                    </div>
+                </div>
+                <span class="check-result err" style="white-space:nowrap;">401 Unauthorized</span>
+            </div>
+
+            <div class="security-item">
+                <span class="sec-icon">🏛️</span>
+                <div class="sec-body">
+                    <div class="sec-title">RBAC Enforcement — User thường không gọi được Admin endpoint
+                        <span class="sec-tag">RBAC</span>
+                    </div>
+                    <div class="sec-detail">
+                        Thử gọi các endpoint chỉ dành cho ADMIN role bằng token user thường.
+                        Kiểm tra tất cả các admin route đều được bảo vệ bởi <code class="code">@PreAuthorize("hasRole('ADMIN')")</code>
+                        hoặc tương đương.
+                    </div>
+                </div>
+                <span class="check-result err" style="white-space:nowrap;">403 Forbidden</span>
+            </div>
+
+            <div class="security-item">
+                <span class="sec-icon">💉</span>
+                <div class="sec-body">
+                    <div class="sec-title">SQL Injection Protection — Input độc hại bị reject
+                        <span class="sec-tag">Injection</span>
+                    </div>
+                    <div class="sec-detail">
+                        Gửi request với <code class="code">productId = "1; DROP TABLE products"</code>
+                        hoặc <code class="code">productId = "1' OR '1'='1"</code>.
+                        Phải nhận lỗi validation (400/404), không được thực thi SQL, không có dữ liệu bị xóa.
+                    </div>
+                </div>
+                <span class="check-result err" style="white-space:nowrap;">400 Bad Request</span>
+            </div>
+
+            <div class="security-item">
+                <span class="sec-icon">🔢</span>
+                <div class="sec-body">
+                    <div class="sec-title">Negative Amount Rejection — Số lượng âm bị từ chối
+                        <span class="sec-tag">Input Validation</span>
+                    </div>
+                    <div class="sec-detail">
+                        Đặt hàng với <code class="code">quantity: -1</code> hoặc <code class="code">quantity: 0</code>.
+                        API phải từ chối với lỗi validation rõ ràng — không được trừ stock, không được hoàn tiền âm vào ví.
+                    </div>
+                </div>
+                <span class="check-result err" style="white-space:nowrap;">400 Bad Request</span>
+            </div>
+
+            <div class="alert" style="background:#fff1f2;border-color:#fecdd3;color:#9f1239;margin-top:1.25rem;">
+                <strong>🚨 Lưu ý bảo mật:</strong> Nếu bất kỳ security check nào FAIL →
+                đây là <strong>blocker nghiêm trọng</strong>. Release phải bị dừng ngay lập tức và lỗ hổng phải được vá trước khi deploy.
+            </div>
+        </section>
+
+        <hr class="section-divider" />
+
+        <!-- ══════════════════════════════════════════════
+             SECTION 5 – RELEASE SIGN-OFF
+        ══════════════════════════════════════════════ -->
+        <section id="sign-off" class="checklist-section">
+            <div class="section-header">
+                <span class="section-icon">📋</span>
+                <h2 class="section-title">Release Sign-off</h2>
+            </div>
+            <p style="color:#4b5563;margin-bottom:1.25rem;font-size:.95rem;">
+                Bảng ký nhận kết quả kiểm thử cuối cùng. QA Lead phải điền đầy đủ và ký tên trước khi
+                gửi thông báo phê duyệt release cho Release Manager và Tech Lead.
+            </p>
+
+            <div class="table-responsive">
+                <table class="signoff-table">
+                    <thead>
+                        <tr>
+                            <th style="width:22%;">Hạng mục</th>
+                            <th style="width:20%;">Người thực hiện</th>
+                            <th style="width:13%;text-align:center;">Kết quả</th>
+                            <th style="width:16%;">Ngày / Giờ</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="item-name">🚀 Smoke Test</td>
+                            <td class="blank">_______________</td>
+                            <td style="text-align:center;">
+                                <span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:99px;font-size:.8rem;font-weight:700;">PASS / FAIL</span>
+                            </td>
+                            <td class="blank">__/__/____  __:__</td>
+                            <td class="blank">___________________</td>
+                        </tr>
+                        <tr>
+                            <td class="item-name">🔍 Functional Regression</td>
+                            <td class="blank">_______________</td>
+                            <td style="text-align:center;">
+                                <span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:99px;font-size:.8rem;font-weight:700;">PASS / FAIL</span>
+                            </td>
+                            <td class="blank">__/__/____  __:__</td>
+                            <td class="blank">___________________</td>
+                        </tr>
+                        <tr>
+                            <td class="item-name">🗄️ Data Integrity</td>
+                            <td class="blank">_______________</td>
+                            <td style="text-align:center;">
+                                <span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:99px;font-size:.8rem;font-weight:700;">PASS / FAIL</span>
+                            </td>
+                            <td class="blank">__/__/____  __:__</td>
+                            <td class="blank">___________________</td>
+                        </tr>
+                        <tr>
+                            <td class="item-name">🔒 Security Check</td>
+                            <td class="blank">_______________</td>
+                            <td style="text-align:center;">
+                                <span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:99px;font-size:.8rem;font-weight:700;">PASS / FAIL</span>
+                            </td>
+                            <td class="blank">__/__/____  __:__</td>
+                            <td class="blank">___________________</td>
+                        </tr>
+                        <tr>
+                            <td class="item-name">⚡ Performance Baseline</td>
+                            <td class="blank">_______________</td>
+                            <td style="text-align:center;">
+                                <span style="background:#d1fae5;color:#065f46;padding:3px 12px;border-radius:99px;font-size:.8rem;font-weight:700;">PASS / FAIL</span>
+                            </td>
+                            <td class="blank">__/__/____  __:__</td>
+                            <td class="blank">___________________</td>
+                        </tr>
+                        <tr class="final-row">
+                            <td class="item-name">✍️ Sign-off QA Lead</td>
+                            <td class="blank">_______________</td>
+                            <td style="text-align:center;">
+                                <span style="background:#fef08a;color:#713f12;padding:3px 12px;border-radius:99px;font-size:.8rem;font-weight:700;">PASS / FAIL</span>
+                            </td>
+                            <td class="blank">__/__/____  __:__</td>
+                            <td class="blank">___________________</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:1.5rem;">
+                <div class="card" style="padding:1.1rem 1.25rem;border-left:4px solid #16a34a;">
+                    <strong style="color:#15803d;display:block;margin-bottom:.5rem;">✅ Điều kiện PASS toàn bộ</strong>
+                    <ul style="margin:.3rem 0 0 1.1rem;color:#374151;font-size:.875rem;line-height:1.8;">
+                        <li>100% Smoke Test items PASS</li>
+                        <li>≥ 95% Functional items PASS (không có blocker)</li>
+                        <li>100% Data Integrity queries trả về 0 rows (queries 2, 3, 4)</li>
+                        <li>100% Security checks PASS</li>
+                        <li>Performance không tệ hơn baseline &gt; 20%</li>
+                    </ul>
+                </div>
+                <div class="card" style="padding:1.1rem 1.25rem;border-left:4px solid #dc2626;">
+                    <strong style="color:#dc2626;display:block;margin-bottom:.5rem;">🚫 Điều kiện FAIL / Block release</strong>
+                    <ul style="margin:.3rem 0 0 1.1rem;color:#374151;font-size:.875rem;line-height:1.8;">
+                        <li>Bất kỳ Smoke Test item nào FAIL</li>
+                        <li>Bất kỳ Security check nào FAIL</li>
+                        <li>Data Integrity query 2, 3, hoặc 4 có kết quả &gt; 0 rows</li>
+                        <li>Có bug P0 / Blocker chưa được fix</li>
+                        <li>Performance tệ hơn baseline &gt; 50%</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="alert alert-success" style="margin-top:1.5rem;">
+                <strong>📬 Sau khi hoàn thành:</strong> Gửi file checklist đã điền đầy đủ (chụp màn hình hoặc PDF)
+                vào Slack channel <code class="code">#qa-release-approvals</code> và mention Release Manager để phê duyệt deploy.
+            </div>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

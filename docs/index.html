@@ -17,46 +17,66 @@
 
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation (Unified Single Source of Truth) -->
+                <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-title">Tổng quan</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="index.html" class="sidebar-link active">Trang chủ cổng tài liệu</a>
+                    <a href="index.html" class="sidebar-link" class="sidebar-link active" id="nav-index">Trang chủ cổng tài liệu</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho QA / Tester</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                    <a href="qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                    <a href="qa/run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                    <a href="qa/project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                    <a href="qa/test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                    <a href="qa/testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="qa/postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="qa/automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho Dev / Architect</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                    <a href="dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                    <a href="dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="sync_interview.html" class="sidebar-link">Phỏng vấn Senior: Sync Data</a>
+                    <a href="dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="db_migration_interview.html" class="sidebar-link">Phỏng vấn Senior: Migrate DB</a>
+                    <a href="dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
                 </li>
             </ul>
         </aside>
@@ -83,7 +103,7 @@
                     <li>Các thông số kết nối Database Client (DBeaver, pgAdmin) để đối soát dữ liệu.</li>
                     <li>Hướng dẫn dọn dẹp và giải phóng tài nguyên sau khi hoàn thành kiểm thử.</li>
                 </ul>
-                <a href="run_guide.html" class="btn-portal">Truy cập Hướng dẫn Khởi chạy &rarr;</a>
+                <a href="qa/run_guide.html" class="btn-portal">Truy cập Hướng dẫn Khởi chạy &rarr;</a>
             </section>
 
             <!-- Guide 1: SA Tester Guide -->
@@ -100,7 +120,7 @@
                     <li>Sử dụng wrk/JMeter tạo tải cực hạn và chạy câu lệnh SQL giám sát nghẽn database lock.</li>
                     <li><strong>Lộ trình phát triển chuyên sâu</strong> từ Manual/API Tester lên System Architect QA.</li>
                 </ul>
-                <a href="sa_test_guide.html" class="btn-portal">Truy cập Cẩm nang SA Tester &rarr;</a>
+                <a href="qa/sa_test_guide.html" class="btn-portal">Truy cập Cẩm nang SA Tester &rarr;</a>
             </section>
 
             <!-- Project Spec Guide -->
@@ -116,7 +136,7 @@
                     <li>Các ràng buộc nghiệp vụ bắt buộc như Validation đầu vào, Atomicity Rollback.</li>
                     <li>Danh sách phân quyền chi tiết cho toàn bộ các API endpoints trong hệ thống.</li>
                 </ul>
-                <a href="project_spec.html" class="btn-portal">Truy cập Đặc tả Kỹ thuật &rarr;</a>
+                <a href="qa/project_spec.html" class="btn-portal">Truy cập Đặc tả Kỹ thuật &rarr;</a>
             </section>
 
             <!-- Test Cases Matrix Guide -->
@@ -132,7 +152,7 @@
                     <li>Nhóm kiểm thử giao dịch mua hàng Đồng bộ và Bất đồng bộ (Redis RAM + RabbitMQ).</li>
                     <li>Nhóm kiểm thử phân quyền bảo mật (RBAC - User vs Admin vs Anonymous).</li>
                 </ul>
-                <a href="test_cases.html" class="btn-portal">Truy cập Danh sách Test Cases &rarr;</a>
+                <a href="qa/test_cases.html" class="btn-portal">Truy cập Danh sách Test Cases &rarr;</a>
             </section>
 
             <!-- Guide 3: Testing Guide -->
@@ -148,7 +168,7 @@
                     <li>Kiểm tra phân quyền nghiêm ngặt theo vai trò hệ thống (ROLE_USER, ROLE_ADMIN).</li>
                     <li>Kịch bản kiểm thử tính toàn vẹn dữ liệu giao dịch đặt hàng (@Transactional Rollback).</li>
                 </ul>
-                <a href="testing_guide.html" class="btn-portal">Truy cập Hướng dẫn Kiểm thử &rarr;</a>
+                <a href="qa/testing_guide.html" class="btn-portal">Truy cập Hướng dẫn Kiểm thử &rarr;</a>
             </section>
 
             <!-- Guide 5: Database Load Audit -->
@@ -164,7 +184,7 @@
                     <li>Cải tiến an toàn và tốc độ sử dụng Khóa Bi quan (Pessimistic Write Lock) trong Spring JPA.</li>
                     <li>Cấu hình tối ưu hóa Connection Pool HikariCP chuyên nghiệp cho dự án triệu tải.</li>
                 </ul>
-                <a href="scalability_audit.html" class="btn-portal">Truy cập Báo cáo Chịu tải DB &rarr;</a>
+                <a href="dev/scalability_audit.html" class="btn-portal">Truy cập Báo cáo Chịu tải DB &rarr;</a>
             </section>
 
             <!-- Guide 6: Extreme Concurrency Solution -->
@@ -179,7 +199,7 @@
                     <li>Kiến trúc ghi bất đồng bộ (Write-Behind) đẩy đơn hàng vào Message Queue (Kafka/RabbitMQ).</li>
                     <li>Sơ đồ và phân tích so sánh chi tiết hiệu năng giữa các giải pháp khóa truyền thống và kiến trúc đệm MQ.</li>
                 </ul>
-                <a href="concurrency_solution.html" class="btn-portal">Truy cập Giải pháp Chịu tải cực hạn &rarr;</a>
+                <a href="dev/concurrency_solution.html" class="btn-portal">Truy cập Giải pháp Chịu tải cực hạn &rarr;</a>
             </section>
 
             <footer>

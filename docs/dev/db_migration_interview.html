@@ -4,68 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Senior Java Interview Guide: Mongo-to-PG Migration - Mini Shopee Docs Portal</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
     <header>
         <div class="container nav-container">
-            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
             <span class="header-tagline">Documentation Portal</span>
         </div>
     </header>
 
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-title">Tổng quan</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho QA / Tester</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho Dev / Architect</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                    <a href="scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                    <a href="concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="sync_interview.html" class="sidebar-link">Phỏng vấn Senior: Sync Data</a>
+                    <a href="sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="db_migration_interview.html" class="sidebar-link active">Phỏng vấn Senior: Migrate DB</a>
-                    <ul class="sidebar-sub-menu">
-                        <li><a href="#overview" class="sidebar-sub-link">Tổng quan đề bài</a></li>
-                        <li><a href="#star-answer" class="sidebar-sub-link">Mẫu trả lời STAR</a></li>
-                        <li><a href="#part1-dualwrite" class="sidebar-sub-link">1. Thiết kế Dual-Write</a></li>
-                        <li><a href="#part2-shadowread" class="sidebar-sub-link">2. Thiết kế Shadow-Read</a></li>
-                        <li><a href="#part3-dynamicflags" class="sidebar-sub-link">3. Flag so sánh động</a></li>
-                        <li><a href="#part4-batchmig" class="sidebar-sub-link">4. Di chuyển dữ liệu lớn</a></li>
-                        <li><a href="#part5-reconcile" class="sidebar-sub-link">5. Đối soát & Nhất quán</a></li>
-                    </ul>
+                    <a href="db_migration_interview.html" class="sidebar-link" class="sidebar-link active" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
                 </li>
             </ul>
         </aside>
@@ -76,7 +87,7 @@
             <section class="hero-section">
                 <span class="badge badge-info">Tuyển dụng & Chiến lược Migration</span>
                 <h1>Bộ Câu Hỏi Phỏng Vấn Senior Java <br><span class="gradient-text">Migrate Database từ MongoDB sang PostgreSQL</span></h1>
-                <p>Tài liệu phỏng vấn lập trình viên Senior Java / System Architect tập trung vào chiến lược di chuyển dữ liệu lớn không gián đoạn dịch vụ (Zero-Downtime Migration) cho phân hệ mối quan hệ người dùng <code>user_relation</code> của dự án <code>swag-server</code>.</p>
+                <p>Tài liệu phỏng vấn lập trình viên Senior Java / System Architect tập trung vào chiến lược di chuyển dữ liệu lớn không gián đoạn dịch vụ (Zero-Downtime Migration) cho phân hệ mối quan hệ người dùng <code>user_relation</code> của dự án <code>main-server</code>.</p>
             </section>
 
             <!-- Case Study Overview -->
@@ -87,7 +98,7 @@
                     Hệ thống mạng xã hội Live-streaming đang lưu trữ dữ liệu mối quan hệ giữa người dùng (Follow, Block, Friend) trong MongoDB. Do yêu cầu về ràng buộc dữ liệu toàn vẹn (Foreign Key) và tối ưu hóa các truy vấn kết hợp phức tạp (như Mutual Friends, Connection Degrees), chúng ta quyết định di chuyển dữ liệu này sang PostgreSQL.
                 </p>
                 <p class="mb-16">
-                    Hiện tại, dự án <code>swag-server</code> mới chỉ triển khai phần di chuyển cho module <strong>user_relation</strong>. Thử thách lớn nhất là phải di chuyển và chuyển đổi hệ thống lưu trữ dưới áp lực hàng triệu request đọc/ghi mỗi ngày mà **không được gây gián đoạn dịch vụ (Zero-downtime)** và **không làm mất mát dữ liệu**.
+                    Hiện tại, dự án <code>main-server</code> mới chỉ triển khai phần di chuyển cho module <strong>user_relation</strong>. Thử thách lớn nhất là phải di chuyển và chuyển đổi hệ thống lưu trữ dưới áp lực hàng triệu request đọc/ghi mỗi ngày mà **không được gây gián đoạn dịch vụ (Zero-downtime)** và **không làm mất mát dữ liệu**.
                 </p>
                 <div class="alert">
                     <h5>Chiến lược cốt lõi:</h5>
@@ -100,7 +111,7 @@
                 <span class="badge badge-warning">Kịch bản Phỏng Vấn Mẫu (STAR Template)</span>
                 <h2>Mẫu trả lời phỏng vấn: "Hãy chia sẻ kinh nghiệm di chuyển Database (Migration) lớn nhất em từng làm?"</h2>
                 <p class="mb-20">
-                    Kịch bản mẫu giúp ứng viên/người phỏng vấn cấu trúc câu trả lời chuyên nghiệp dựa trên module <code>user_relation</code> thực tế trong <code>swag-server</code>:
+                    Kịch bản mẫu giúp ứng viên/người phỏng vấn cấu trúc câu trả lời chuyên nghiệp dựa trên module <code>user_relation</code> thực tế trong <code>main-server</code>:
                 </p>
 
                 <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); color: var(--text-secondary);">
@@ -124,7 +135,7 @@
                     <ul style="margin-left: 20px;">
                         <li class="mb-8">
                             <strong>Bước 1 - Dual-Write (Ghi kép):</strong> 
-                            <em>"Em sửa code ở module <code>user_relation</code> trong <code>swag-server</code> để khi có sự kiện ghi mới (như Follow), ứng dụng sẽ ghi đồng thời vào cả MongoDB và PostgreSQL. Trong đó, MongoDB vẫn là DB chính (Primary) để đảm bảo không lỗi ứng dụng, còn việc ghi PostgreSQL là thứ cấp (Secondary) được bọc trong khối try-catch không gây lỗi lan truyền nếu Postgres gặp sự cố hoặc timeout."</em>
+                            <em>"Em sửa code ở module <code>user_relation</code> trong <code>main-server</code> để khi có sự kiện ghi mới (như Follow), ứng dụng sẽ ghi đồng thời vào cả MongoDB và PostgreSQL. Trong đó, MongoDB vẫn là DB chính (Primary) để đảm bảo không lỗi ứng dụng, còn việc ghi PostgreSQL là thứ cấp (Secondary) được bọc trong khối try-catch không gây lỗi lan truyền nếu Postgres gặp sự cố hoặc timeout."</em>
                         </li>
                         <li class="mb-8">
                             <strong>Bước 2 - Data Migration (Di chuyển dữ liệu cũ):</strong> 

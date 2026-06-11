@@ -4,68 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Senior Java Interview Guide: Mongo-to-ES Sync - Mini Shopee Docs Portal</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
     <header>
         <div class="container nav-container">
-            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
             <span class="header-tagline">Documentation Portal</span>
         </div>
     </header>
 
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-title">Tổng quan</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho QA / Tester</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho Dev / Architect</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                    <a href="scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                    <a href="concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="sync_interview.html" class="sidebar-link active">Phỏng vấn Senior: Sync Data</a>
-                    <ul class="sidebar-sub-menu">
-                        <li><a href="#overview" class="sidebar-sub-link">Tổng quan đề bài</a></li>
-                        <li><a href="#star-answer" class="sidebar-sub-link">Mẫu trả lời STAR (Kiến trúc)</a></li>
-                        <li><a href="#part1-pagination" class="sidebar-sub-link">1. Keyset Pagination</a></li>
-                        <li><a href="#part2-bulk" class="sidebar-sub-link">2. Tối ưu Bulk write</a></li>
-                        <li><a href="#part3-cdc" class="sidebar-sub-link">3. CDC & Buffer</a></li>
-                        <li><a href="#part4-resilience" class="sidebar-sub-link">4. Oplog & Checkpoint</a></li>
-                        <li><a href="#part5-zero-downtime" class="sidebar-sub-link">5. Zero-downtime & Alias</a></li>
-                    </ul>
+                    <a href="sync_interview.html" class="sidebar-link" class="sidebar-link active" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="db_migration_interview.html" class="sidebar-link">Phỏng vấn Senior: Migrate DB</a>
+                    <a href="db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
                 </li>
             </ul>
         </aside>
@@ -124,8 +135,8 @@
                     <p class="mb-12"><em>"Để giải quyết bài toán này mà không làm gián đoạn dịch vụ và đảm bảo tính nhất quán cao, em đã phân chia trách nhiệm rõ ràng giữa Backend Service chính và Pipeline đồng bộ:"</em></p>
                     <ul style="margin-left: 20px;">
                         <li class="mb-8">
-                            <strong>Thiết lập Dual-Write và Shadow-Read tại Backend App chính (swag-server):</strong> 
-                            <em>"Để quá trình chuyển đổi traffic diễn ra an toàn, tại ứng dụng API chính (swag-server), em áp dụng cơ chế <strong>Dual-Write</strong>: Các API ghi mới sẽ lưu vào MongoDB đồng thời bắn event bất đồng bộ qua hàng đợi Celery / RabbitMQ để ghi song song vào PostgreSQL và Elasticsearch. Để kiểm chứng dữ liệu trước khi chuyển giao, em triển khai kịch bản <strong>Shadow-Read</strong>: Khi Client gọi đọc dữ liệu, hệ thống vẫn trả kết quả từ MongoDB, nhưng chạy một thread ngầm bất đồng bộ gửi truy vấn đọc tương tự sang ES để so sánh kết quả và ghi nhận lỗi chênh lệch (data discrepancy) mà không làm ảnh hưởng tới người dùng cuối. Khi tỷ lệ khớp đạt 100%, em mới chính thức switch traffic đọc hẳn sang ES."</em>
+                            <strong>Thiết lập Dual-Write và Shadow-Read tại Backend App chính (main-server):</strong>
+                            <em>"Để quá trình chuyển đổi traffic diễn ra an toàn, tại ứng dụng API chính (main-server), em áp dụng cơ chế <strong>Dual-Write</strong>: Các API ghi mới sẽ lưu vào MongoDB đồng thời bắn event bất đồng bộ qua hàng đợi Celery / RabbitMQ để ghi song song vào PostgreSQL và Elasticsearch. Để kiểm chứng dữ liệu trước khi chuyển giao, em triển khai kịch bản <strong>Shadow-Read</strong>: Khi Client gọi đọc dữ liệu, hệ thống vẫn trả kết quả từ MongoDB, nhưng chạy một thread ngầm bất đồng bộ gửi truy vấn đọc tương tự sang ES để so sánh kết quả và ghi nhận lỗi chênh lệch (data discrepancy) mà không làm ảnh hưởng tới người dùng cuối. Khi tỷ lệ khớp đạt 100%, em mới chính thức switch traffic đọc hẳn sang ES."</em>
                         </li>
                         <li class="mb-8">
                             <strong>Xây dựng Pipeline Đồng bộ Dữ liệu (search_sync_worker) với cơ chế Backfile & Changestream:</strong>

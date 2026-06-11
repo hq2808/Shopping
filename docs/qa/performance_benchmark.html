@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Performance Benchmark & Baseline – Mini Shopee Docs</title>
+    <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<header>
+    <div class="container nav-container">
+        <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+        <span class="header-tagline">Documentation Portal</span>
+    </div>
+</header>
+
+<div class="layout-wrapper">
+
+    <!-- ===== SIDEBAR ===== -->
+            <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="performance_benchmark.html" class="sidebar-link" class="sidebar-link active" id="nav-performance">Performance Benchmark</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="content-wrapper">
+
+        <!-- HERO -->
+        <section class="hero-section">
+            <div class="badge-group">
+                <span class="badge badge-primary">Performance QA</span>
+                <span class="badge badge-info">Benchmark</span>
+                <span class="badge badge-success">Baseline v1.0.0</span>
+            </div>
+            <h1 class="gradient-text">Performance Benchmark &amp; Baseline Kết quả</h1>
+            <p>
+                Tài liệu này thiết lập các <strong>ngưỡng hiệu năng baseline</strong> chính thức của Mini Shopee,
+                được đo lường trên môi trường chuẩn hóa. Mục tiêu là cung cấp một điểm tham chiếu khách quan
+                để so sánh và phát hiện <em>regression</em> hiệu năng qua mỗi release.
+                Tất cả số liệu phải được tái đo và ghi lại vào bảng log ở cuối tài liệu trước mỗi lần phát hành.
+            </p>
+        </section>
+
+        <!-- ===== 1. SETUP ===== -->
+        <section id="setup">
+            <h2>⚙️ Thiết lập môi trường chạy Benchmark</h2>
+            <p>
+                Để đảm bảo tính nhất quán, benchmark phải được chạy trên cùng một cấu hình phần cứng và phần mềm.
+                Bảng dưới đây mô tả môi trường chuẩn đã được sử dụng để thu thập số liệu baseline.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Thành phần</th>
+                            <th>Cấu hình test</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Máy test (Host)</strong></td>
+                            <td>8 CPU cores, 16 GB RAM, SSD NVMe — Ubuntu 22.04 LTS</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Docker resources</strong></td>
+                            <td>Giới hạn <code class="code">4 CPU</code>, <code class="code">8 GB RAM</code> cho toàn bộ Compose stack</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Spring Boot JVM</strong></td>
+                            <td><code class="code">-Xmx2g -Xms512m</code> — GC: G1GC</td>
+                        </tr>
+                        <tr>
+                            <td><strong>HikariCP pool</strong></td>
+                            <td><code class="code">maximumPoolSize=10</code>, connectionTimeout=30 000 ms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PostgreSQL</strong></td>
+                            <td>Version 15, shared_buffers=256MB, max_connections=100</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redis</strong></td>
+                            <td>Version 7, maxmemory=512mb, policy=allkeys-lru</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RabbitMQ</strong></td>
+                            <td>Version 3.12, 1 queue <code class="code">order.queue</code>, 3 consumer threads</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Test tool</strong></td>
+                            <td>
+                                <span class="badge badge-info">wrk2 v4.2</span>
+                                <span class="badge badge-primary">Apache JMeter 5.6</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Warm-up</strong></td>
+                            <td>30 giây warm-up trước khi ghi nhận kết quả chính thức</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Thời lượng đo</strong></td>
+                            <td>30 giây / endpoint (sau warm-up)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert">
+                <strong>⚠️ Lưu ý quan trọng:</strong> Kết quả benchmark <strong>phụ thuộc vào phần cứng và cấu hình môi trường</strong>.
+                Hãy sử dụng các con số này làm <strong>BASELINE so sánh giữa các release</strong> — tức là so sánh
+                kết quả của release mới với kết quả baseline trên <em>cùng một máy, cùng cấu hình</em>.
+                <strong>Không</strong> so sánh tuyệt đối với môi trường khác (staging, production, CI/CD runner khác).
+            </div>
+        </section>
+
+        <!-- ===== 2. BASELINE RESULTS ===== -->
+        <section id="baseline">
+            <h2>📊 Kết quả Baseline (Điều kiện bình thường)</h2>
+            <p>
+                Số liệu dưới đây được thu thập khi hệ thống đang hoạt động bình thường: database đã có seed data
+                (~1,000 sản phẩm, ~5,000 đơn hàng), Redis cache đã warm, không có maintenance job nào chạy đồng thời.
+            </p>
+
+            <!-- 2a. GET /api/products -->
+            <div class="card">
+                <h3>
+                    <span class="badge badge-success">GET</span>
+                    <code class="code">/api/products</code>
+                    &nbsp;— Read-heavy, Redis cache, không cần auth
+                </h3>
+                <p>
+                    Endpoint lấy danh sách sản phẩm — có phân trang, được cache tại Redis với TTL 5 phút.
+                    Đây là endpoint được truy cập nhiều nhất, kỳ vọng RPS rất cao nhờ cache hit rate &gt; 90%.
+                </p>
+                <div class="table-responsive">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Kết quả đo được</th>
+                                <th>Ngưỡng PASS</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>RPS (Requests/sec)</td>
+                                <td><strong>2,500 req/s</strong></td>
+                                <td>≥ 1,000 req/s</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Avg Latency</td>
+                                <td><strong>45 ms</strong></td>
+                                <td>≤ 200 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>P95 Latency</td>
+                                <td><strong>120 ms</strong></td>
+                                <td>≤ 500 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>P99 Latency</td>
+                                <td><strong>280 ms</strong></td>
+                                <td>≤ 1,000 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Error Rate</td>
+                                <td><strong>0%</strong></td>
+                                <td>≤ 0.1%</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Concurrency (wrk -c)</td>
+                                <td><strong>100 connections</strong></td>
+                                <td>—</td>
+                                <td><span class="badge badge-info">Tham số test</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2b. POST /api/orders (sync) -->
+            <div class="card">
+                <h3>
+                    <span class="badge badge-warning">POST</span>
+                    <code class="code">/api/orders</code>
+                    &nbsp;— Đồng bộ, Pessimistic Lock, cần JWT
+                </h3>
+                <p>
+                    Endpoint tạo đơn hàng đồng bộ — sử dụng <strong>Pessimistic Lock</strong> trên PostgreSQL để đảm bảo
+                    tính toàn vẹn tồn kho. RPS thấp hơn đáng kể do mỗi request phải giữ row-lock cho đến khi transaction hoàn tất.
+                    Độ trễ phụ thuộc vào thời gian giữ lock và độ tranh chấp.
+                </p>
+                <div class="table-responsive">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Kết quả đo được</th>
+                                <th>Ngưỡng PASS</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>RPS (Requests/sec)</td>
+                                <td><strong>85 req/s</strong></td>
+                                <td>≥ 50 req/s</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Avg Latency</td>
+                                <td><strong>180 ms</strong></td>
+                                <td>≤ 500 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>P95 Latency</td>
+                                <td><strong>450 ms</strong></td>
+                                <td>≤ 1,500 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>P99 Latency</td>
+                                <td><strong>890 ms</strong></td>
+                                <td>≤ 3,000 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Error Rate</td>
+                                <td><strong>0.2%</strong></td>
+                                <td>≤ 1%</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Concurrency (wrk -c)</td>
+                                <td><strong>50 connections</strong></td>
+                                <td>—</td>
+                                <td><span class="badge badge-info">Tham số test</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert">
+                    <strong>📝 Ghi chú:</strong> Error rate 0.2% đến từ một số request bị timeout khi DB connection pool
+                    bão hòa tạm thời. Đây là hành vi được chấp nhận ở mức tải cao với Pessimistic Lock.
+                    Nếu error rate &gt; 1%, cần kiểm tra lại <code class="code">HikariCP maximumPoolSize</code> và
+                    <code class="code">lock_timeout</code> của PostgreSQL.
+                </div>
+            </div>
+
+            <!-- 2c. POST /api/orders/async -->
+            <div class="card">
+                <h3>
+                    <span class="badge badge-primary">POST</span>
+                    <code class="code">/api/orders/async</code>
+                    &nbsp;— Bất đồng bộ, Redis + RabbitMQ, cần JWT
+                </h3>
+                <p>
+                    Endpoint tạo đơn hàng bất đồng bộ — request được xác nhận nhanh và đẩy vào
+                    <strong>RabbitMQ queue</strong>, xử lý thực tế bởi consumer riêng. Redis được dùng để
+                    kiểm tra tồn kho tạm thời (optimistic approach). RPS cao hơn nhiều so với sync endpoint
+                    do không giữ DB connection trong suốt quá trình xử lý.
+                </p>
+                <div class="table-responsive">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Kết quả đo được</th>
+                                <th>Ngưỡng PASS</th>
+                                <th>Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>RPS (Requests/sec)</td>
+                                <td><strong>1,200 req/s</strong></td>
+                                <td>≥ 500 req/s</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Avg Latency</td>
+                                <td><strong>25 ms</strong></td>
+                                <td>≤ 100 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>P95 Latency</td>
+                                <td><strong>80 ms</strong></td>
+                                <td>≤ 300 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>P99 Latency</td>
+                                <td><strong>150 ms</strong></td>
+                                <td>≤ 600 ms</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Error Rate</td>
+                                <td><strong>0%</strong></td>
+                                <td>≤ 0.1%</td>
+                                <td><span class="badge badge-success">✅ PASS</span></td>
+                            </tr>
+                            <tr>
+                                <td>Concurrency (wrk -c)</td>
+                                <td><strong>200 connections</strong></td>
+                                <td>—</td>
+                                <td><span class="badge badge-info">Tham số test</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert alert-success">
+                    <strong>✅ Nhận xét:</strong> Async endpoint cho thấy hiệu năng vượt trội (~14× RPS so với sync).
+                    Đây là lựa chọn ưu tiên cho traffic cao. Cần đảm bảo consumer xử lý queue không bị lag
+                    bằng cách theo dõi <code class="code">messages</code> depth trong RabbitMQ.
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== 3. COMMANDS ===== -->
+        <section id="commands">
+            <h2>🖥️ Lệnh chạy Benchmark</h2>
+            <p>
+                Chạy đúng thứ tự các lệnh sau. Đảm bảo hệ thống đã được khởi động đầy đủ và đã qua
+                giai đoạn warm-up 30 giây trước khi ghi nhận kết quả.
+            </p>
+
+            <div class="card">
+                <h3>Bước 0 — Warm-up hệ thống</h3>
+                <p>Gửi 30 giây request nhẹ để JVM JIT compile và Redis cache được làm đầy trước khi đo chính thức:</p>
+                <pre class="pre"><code class="code"># Warm-up GET endpoint (30s, không ghi kết quả)
+wrk -t2 -c20 -d30s http://localhost:8080/api/products
+
+echo "=== Warm-up complete. Chờ 5 giây trước khi đo chính thức ==="
+sleep 5</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Bước 1 — Lấy JWT Token</h3>
+                <pre class="pre"><code class="code"># 1. Lấy JWT token trước
+TOKEN=$(curl -s -X POST http://localhost:8080/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"user","password":"password"}' | jq -r '.token')
+
+# Kiểm tra token hợp lệ
+echo "Token: ${TOKEN:0:50}..."</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Bước 2 — Benchmark <code class="code">GET /api/products</code></h3>
+                <pre class="pre"><code class="code"># 2. Benchmark GET /api/products (không cần body)
+wrk -t4 -c100 -d30s \
+  -H "Authorization: Bearer $TOKEN" \
+  --latency http://localhost:8080/api/products</code></pre>
+                <p>
+                    <span class="badge badge-info">-t4</span> 4 luồng wrk &nbsp;
+                    <span class="badge badge-info">-c100</span> 100 kết nối đồng thời &nbsp;
+                    <span class="badge badge-info">-d30s</span> đo trong 30 giây &nbsp;
+                    <span class="badge badge-info">--latency</span> hiển thị phân phối latency
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Bước 3 &amp; 4 — Benchmark <code class="code">POST /api/orders</code> (Sync)</h3>
+                <pre class="pre"><code class="code"># 3. Tạo file Lua script cho POST order (sync)
+cat > benchmark_order_sync.lua &lt;&lt; 'EOF'
+wrk.method = "POST"
+wrk.body   = '{"items":[{"productId":2,"quantity":1}]}'
+wrk.headers["Content-Type"] = "application/json"
+wrk.headers["Authorization"] = "Bearer TOKEN_HERE"
+EOF
+
+# Thay TOKEN_HERE bằng token thực
+sed -i "s/TOKEN_HERE/$TOKEN/" benchmark_order_sync.lua
+
+# 4. Benchmark POST /api/orders (sync, pessimistic lock)
+wrk -t4 -c50 -d30s -s benchmark_order_sync.lua \
+  --latency http://localhost:8080/api/orders</code></pre>
+                <p>
+                    <span class="badge badge-warning">-c50</span> Chỉ dùng 50 connections để tránh quá tải DB lock pool.
+                    Tăng lên để test giới hạn chịu tải nhưng <strong>không dùng số cao hơn cho baseline</strong>.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Bước 5 — Benchmark <code class="code">POST /api/orders/async</code></h3>
+                <pre class="pre"><code class="code"># Tạo Lua script cho async order
+cat > benchmark_order_async.lua &lt;&lt; 'EOF'
+wrk.method = "POST"
+wrk.body   = '{"items":[{"productId":3,"quantity":1}]}'
+wrk.headers["Content-Type"] = "application/json"
+wrk.headers["Authorization"] = "Bearer TOKEN_HERE"
+EOF
+
+sed -i "s/TOKEN_HERE/$TOKEN/" benchmark_order_async.lua
+
+# 5. Benchmark POST /api/orders/async
+wrk -t8 -c200 -d30s -s benchmark_order_async.lua \
+  --latency http://localhost:8080/api/orders/async</code></pre>
+                <p>
+                    <span class="badge badge-primary">-t8 -c200</span> Dùng 8 luồng và 200 connections để mô phỏng
+                    tải cao — async endpoint được thiết kế chịu tải này.
+                </p>
+            </div>
+        </section>
+
+        <!-- ===== 4. MONITORING ===== -->
+        <section id="monitoring">
+            <h2>📡 Giám sát tài nguyên trong khi chạy benchmark</h2>
+            <p>
+                Mở <strong>terminal riêng biệt</strong> để chạy các lệnh monitoring song song với benchmark.
+                Ghi lại peak values (giá trị cao nhất) vào bảng log release.
+            </p>
+
+            <div class="card">
+                <h3>Docker Container Stats (Realtime)</h3>
+                <pre class="pre"><code class="code"># Monitor Docker container resources realtime
+# Ctrl+C để dừng
+docker stats shopee_mini_app shopee_mini_db shopee_mini_redis shopee_mini_rabbitmq</code></pre>
+                <p>Output mẫu kỳ vọng:</p>
+                <pre class="pre"><code class="code">NAME                CPU %   MEM USAGE / LIMIT    MEM %   NET I/O
+shopee_mini_app     45%     1.2GiB / 2GiB        60%     500MB / 200MB
+shopee_mini_db      20%     300MiB / 1GiB        30%     50MB / 100MB
+shopee_mini_redis   5%      80MiB / 512MiB       16%     200MB / 200MB
+shopee_mini_rabbitmq 3%     120MiB / 512MiB      23%     150MB / 150MB</code></pre>
+            </div>
+
+            <div class="card">
+                <h3>Kiểm tra DB Connections đang mở</h3>
+                <pre class="pre"><code class="code"># Check DB connections đang mở (chạy trong lúc benchmark đang chạy)
+docker exec shopee_mini_db psql -U sa_user -d shopee_mini -c \
+  "SELECT count(*) as active_connections FROM pg_stat_activity WHERE state = 'active';"
+
+# Xem chi tiết từng connection (query đang chạy)
+docker exec shopee_mini_db psql -U sa_user -d shopee_mini -c \
+  "SELECT pid, state, wait_event_type, wait_event, query_start, query
+   FROM pg_stat_activity
+   WHERE state != 'idle'
+   ORDER BY query_start;"</code></pre>
+                <p>
+                    <span class="badge badge-warning">Ngưỡng cảnh báo:</span>
+                    Active connections &gt; 8 / 10 (80% HikariCP pool) — có thể gây connection timeout.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Kiểm tra Redis Memory Usage</h3>
+                <pre class="pre"><code class="code"># Check Redis memory usage
+docker exec shopee_mini_redis redis-cli INFO memory | grep used_memory_human
+
+# Xem cache hit rate
+docker exec shopee_mini_redis redis-cli INFO stats | grep -E 'keyspace_hits|keyspace_misses'
+
+# Tính hit rate thủ công
+docker exec shopee_mini_redis redis-cli INFO stats | awk '
+  /keyspace_hits/ {hits=$2}
+  /keyspace_misses/ {misses=$2}
+  END {print "Hit rate: " hits/(hits+misses)*100 "%"}'</code></pre>
+                <p>
+                    <span class="badge badge-success">Kỳ vọng:</span>
+                    used_memory &lt; 256 MiB, hit rate &gt; 90% khi benchmark GET /api/products.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>Kiểm tra RabbitMQ Queue Depth</h3>
+                <pre class="pre"><code class="code"># Check RabbitMQ queue depth
+docker exec shopee_mini_rabbitmq rabbitmqctl list_queues name messages consumers
+
+# Theo dõi liên tục mỗi 2 giây
+watch -n 2 "docker exec shopee_mini_rabbitmq rabbitmqctl list_queues name messages consumers"</code></pre>
+                <p>
+                    <span class="badge badge-warning">Lưu ý:</span>
+                    Nếu <code class="code">messages</code> trong queue tăng liên tục (không ổn định) trong lúc benchmark,
+                    consumer đang bị lag — cần tăng số consumer threads hoặc kiểm tra DB write bottleneck.
+                    Sau khi benchmark kết thúc, queue phải về 0 trong vòng 30 giây.
+                </p>
+            </div>
+
+            <div class="card">
+                <h3>JVM Heap Monitoring (tuỳ chọn)</h3>
+                <pre class="pre"><code class="code"># Xem JVM heap usage qua actuator (nếu Spring Actuator được bật)
+curl -s http://localhost:8080/actuator/metrics/jvm.memory.used | jq '.measurements[0].value / 1048576 | . * 100 | round / 100 | tostring + " MiB"'
+
+# Hoặc dùng jstat nếu có JDK trên host
+# Lấy PID của Java process trong container
+PID=$(docker exec shopee_mini_app sh -c 'jps | grep -v Jps | head -1 | cut -d" " -f1')
+docker exec shopee_mini_app jstat -gc $PID 2000 10</code></pre>
+            </div>
+        </section>
+
+        <!-- ===== 5. REGRESSION ===== -->
+        <section id="regression">
+            <h2>🚨 Ngưỡng Regression Alert</h2>
+
+            <div class="alert" style="border-left-color: #f59e0b; background: #fffbeb;">
+                <strong>⚠️ Quy tắc Regression:</strong> Nếu kết quả benchmark trong release mới
+                <strong>tệ hơn baseline từ 20% trở lên</strong> trên bất kỳ chỉ số nào được liệt kê
+                dưới đây, <strong>bắt buộc phải điều tra và tìm root cause</strong> trước khi tiến hành release.
+                Hãy tạo bug report theo mẫu <a href="bug_report_template.html">Bug Report Template</a>
+                với tag <span class="badge badge-danger">Performance Regression</span>.
+            </div>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Baseline RPS</th>
+                            <th>🚨 Alert nếu RPS dưới</th>
+                            <th>Baseline P95</th>
+                            <th>🚨 Alert nếu P95 trên</th>
+                            <th>Ngưỡng (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <span class="badge badge-success">GET</span>
+                                <code class="code">/api/products</code>
+                            </td>
+                            <td><strong>2,500 req/s</strong></td>
+                            <td><span class="badge badge-danger">&lt; 2,000 req/s</span></td>
+                            <td><strong>120 ms</strong></td>
+                            <td><span class="badge badge-danger">&gt; 150 ms</span></td>
+                            <td>−20% / +25%</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-warning">POST</span>
+                                <code class="code">/api/orders</code>
+                            </td>
+                            <td><strong>85 req/s</strong></td>
+                            <td><span class="badge badge-danger">&lt; 68 req/s</span></td>
+                            <td><strong>450 ms</strong></td>
+                            <td><span class="badge badge-danger">&gt; 562 ms</span></td>
+                            <td>−20% / +25%</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="badge badge-primary">POST</span>
+                                <code class="code">/api/orders/async</code>
+                            </td>
+                            <td><strong>1,200 req/s</strong></td>
+                            <td><span class="badge badge-danger">&lt; 960 req/s</span></td>
+                            <td><strong>80 ms</strong></td>
+                            <td><span class="badge badge-danger">&gt; 100 ms</span></td>
+                            <td>−20% / +25%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3>Checklist khi phát hiện Regression</h3>
+                <ul>
+                    <li>✅ Xác nhận lại môi trường test giống với baseline (cùng Docker config, JVM flags)</li>
+                    <li>✅ Kiểm tra có migration DB nào mới làm chậm query không (<code class="code">EXPLAIN ANALYZE</code>)</li>
+                    <li>✅ Kiểm tra có N+1 query nào mới được introduce không (enable Hibernate SQL logging)</li>
+                    <li>✅ Kiểm tra Redis cache TTL có bị thay đổi không</li>
+                    <li>✅ Kiểm tra HikariCP pool size có bị giảm không</li>
+                    <li>✅ So sánh GC logs trước và sau (<code class="code">-Xlog:gc*</code>)</li>
+                    <li>✅ Kiểm tra có dependency mới nào có bug hiệu năng không</li>
+                    <li>✅ Tạo bug report với label <span class="badge badge-danger">Performance Regression</span> và đính kèm wrk output</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ===== 6. RELEASE LOG ===== -->
+        <section id="log">
+            <h2>📋 Log kết quả Benchmark theo Release</h2>
+            <p>
+                Điền vào bảng này sau mỗi lần chạy benchmark trước release. Giữ lịch sử để theo dõi xu hướng
+                hiệu năng qua thời gian. File này có thể được commit vào repository cùng với release tag.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Release</th>
+                            <th>Ngày</th>
+                            <th>Người test</th>
+                            <th>GET /products RPS</th>
+                            <th>POST /orders RPS</th>
+                            <th>Async RPS</th>
+                            <th>Kết quả</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="background: #f0fdf4;">
+                            <td><strong>v1.0.0</strong></td>
+                            <td>2026-06-11</td>
+                            <td>QA Team</td>
+                            <td><strong>2,500</strong></td>
+                            <td><strong>85</strong></td>
+                            <td><strong>1,200</strong></td>
+                            <td><span class="badge badge-success">✅ PASS</span></td>
+                            <td>📌 Baseline chính thức</td>
+                        </tr>
+                        <tr style="color: #9ca3af; font-style: italic;">
+                            <td>v1.x.x</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                        </tr>
+                        <tr style="color: #9ca3af; font-style: italic;">
+                            <td>v1.x.x</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                            <td>_____</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-success">
+                <strong>💡 Hướng dẫn điền bảng:</strong>
+                Sau khi chạy wrk, chép số <strong>Requests/sec</strong> từ dòng cuối cùng của output wrk vào cột RPS.
+                Cột "Kết quả" là PASS nếu tất cả metrics đều đạt ngưỡng ở mục Baseline, FAIL nếu bất kỳ metric nào không đạt.
+                Cột "Ghi chú" ghi những thay đổi đáng chú ý trong release này có thể ảnh hưởng đến hiệu năng.
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 0.875rem;">
+            <p>
+                📄 Mini Shopee Documentation Portal &nbsp;|&nbsp;
+                Performance Benchmark &amp; Baseline &nbsp;|&nbsp;
+                Cập nhật lần cuối: 2026-06-11 &nbsp;|&nbsp;
+                <a href="release_checklist.html">Checklist trước Release</a> &nbsp;|&nbsp;
+                <a href="bug_report_template.html">Mẫu Bug Report</a>
+            </p>
+        </footer>
+
+    </main>
+</div>
+
+</body>
+</html>

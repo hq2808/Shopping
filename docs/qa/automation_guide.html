@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automation Testing Setup – Mini Shopee Docs</title>
+    <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<header>
+    <div class="container nav-container">
+        <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+        <span class="header-tagline">Documentation Portal</span>
+    </div>
+</header>
+
+<div class="layout-wrapper">
+
+            <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="automation_guide.html" class="sidebar-link" class="sidebar-link active" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+    <main class="content-wrapper">
+
+        <!-- ===== HERO ===== -->
+        <section class="hero-section">
+            <div class="badge-group">
+                <span class="badge badge-primary">Automation QA</span>
+            </div>
+            <h1 class="gradient-text">Hướng dẫn thiết lập Automation Testing</h1>
+            <p>
+                Chuyển đổi từ kiểm thử thủ công sang kiểm thử tự động là bước ngoặt quan trọng trong vòng đời phát triển phần mềm.
+                Tài liệu này hướng dẫn từng bước xây dựng bộ automation test cho Mini Shopee — từ mức độ đơn giản nhất với Newman (Postman CLI),
+                tiến lên RestAssured (Java), và cuối cùng là Playwright (TypeScript) để kiểm thử cả UI lẫn API.
+                Mỗi cấp độ được thiết kế để QA có thể áp dụng ngay mà không cần kinh nghiệm automation trước đó.
+            </p>
+        </section>
+
+        <!-- ===== OVERVIEW ===== -->
+        <section id="overview">
+            <h2>🔧 Tổng quan công cụ Automation</h2>
+            <p>Dưới đây là so sánh các công cụ automation phổ biến phù hợp với dự án Mini Shopee:</p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Công cụ</th>
+                            <th>Loại test</th>
+                            <th>Ngôn ngữ</th>
+                            <th>Độ khó</th>
+                            <th>Phù hợp với</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>RestAssured</strong></td>
+                            <td><span class="badge badge-info">API Testing</span></td>
+                            <td>Java</td>
+                            <td>⭐⭐</td>
+                            <td>Full-Stack QA, đã biết Java cơ bản</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Playwright</strong></td>
+                            <td><span class="badge badge-primary">UI + API</span></td>
+                            <td>JS / TS</td>
+                            <td>⭐⭐</td>
+                            <td>QA muốn dùng JS</td>
+                        </tr>
+                        <tr>
+                            <td><strong>JMeter</strong></td>
+                            <td><span class="badge badge-warning">Performance</span></td>
+                            <td>GUI / XML</td>
+                            <td>⭐⭐⭐</td>
+                            <td>Performance QA</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Postman / Newman</strong></td>
+                            <td><span class="badge badge-success">API</span></td>
+                            <td>JavaScript</td>
+                            <td>⭐</td>
+                            <td>Manual tester mới bắt đầu automation</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-success" style="margin-top: 1.5rem;">
+                <strong>💡 Khuyến nghị lộ trình:</strong><br />
+                Bắt đầu với <strong>Newman (Postman CLI)</strong> nếu bạn đã quen với Postman — không cần viết code, chỉ cần thêm test script vào
+                từng request. Sau khi thành thạo, tiến lên <strong>RestAssured</strong> để có full control hơn và tích hợp tốt hơn với CI/CD pipeline.
+            </div>
+        </section>
+
+        <!-- ===== NEWMAN ===== -->
+        <section id="newman">
+            <h2>🚀 Cấp độ 1: Automation với Newman (Postman CLI)</h2>
+            <p>
+                Newman là CLI runner chính thức của Postman. Bạn có thể chạy toàn bộ Postman Collection tự động mà không cần mở giao diện.
+                Đây là bước khởi đầu lý tưởng nhất cho Manual Tester muốn bước vào Automation.
+            </p>
+
+            <h3>Bước 1 — Cài đặt Newman</h3>
+            <p>Yêu cầu: <strong>Node.js &gt;= 16</strong> đã được cài trên máy.</p>
+            <pre><code>npm install -g newman</code></pre>
+
+            <h3>Bước 2 — Chạy Collection</h3>
+            <p>Export collection từ Postman (File → Export) rồi chạy lệnh sau:</p>
+            <pre><code>newman run mini_shopee_postman_collection.json \
+  --env-var "base_url=http://localhost:8080"</code></pre>
+
+            <div class="alert" style="margin-top: 1rem;">
+                <strong>📝 Lưu ý:</strong> Đảm bảo ứng dụng đang chạy trên <code>localhost:8080</code> trước khi thực thi lệnh trên.
+            </div>
+
+            <h3>Bước 3 — Thêm Test Scripts trong Postman</h3>
+            <p>
+                Với mỗi request trong Postman, mở tab <strong>Tests</strong> và viết assertion bằng JavaScript.
+                Ví dụ assertion đơn giản nhất:
+            </p>
+            <pre><code>pm.test("Status 200", () =&gt; pm.response.to.have.status(200));</code></pre>
+
+            <h3>Bước 4 — Xuất báo cáo HTML</h3>
+            <p>Cài thêm reporter để xuất báo cáo dạng HTML đẹp mắt:</p>
+            <pre><code>npm install -g newman-reporter-html
+
+newman run collection.json \
+  --reporters html \
+  --reporter-html-export report.html</code></pre>
+
+            <h3>📋 Ví dụ: Test Script đầy đủ cho API Login</h3>
+            <p>Dán đoạn code dưới đây vào tab <strong>Tests</strong> của request <code>POST /api/auth/login</code>:</p>
+            <pre><code class="language-javascript">// Trong tab 'Tests' của request POST /api/auth/login
+pm.test("Login thành công - Status 200", function () {
+    pm.response.to.have.status(200);
+});
+
+pm.test("Response có JWT token", function () {
+    const jsonData = pm.response.json();
+    pm.expect(jsonData.token).to.be.a('string');
+    pm.expect(jsonData.token.length).to.be.above(100);
+});
+
+// Tự động lưu token vào environment variable
+const token = pm.response.json().token;
+pm.environment.set("jwt_token", token);</code></pre>
+
+            <div class="alert alert-success">
+                <strong>✅ Kết quả mong đợi:</strong> Sau khi chạy Newman, terminal sẽ hiển thị số lượng test passed/failed.
+                Token JWT được lưu vào environment và các request tiếp theo có thể dùng <code>{{jwt_token}}</code> để xác thực.
+            </div>
+        </section>
+
+        <!-- ===== RESTASSURED ===== -->
+        <section id="restassured">
+            <h2>☕ Cấp độ 2: API Test với RestAssured (Java)</h2>
+            <p>
+                RestAssured là thư viện Java mạnh mẽ để viết API test theo phong cách BDD (Given / When / Then).
+                Phù hợp với QA đã có nền tảng Java và muốn tích hợp automation vào Maven project của Spring Boot.
+            </p>
+
+            <h3>Thêm Maven Dependencies</h3>
+            <p>Thêm các dependency sau vào <code>pom.xml</code> của dự án:</p>
+            <pre><code class="language-xml">&lt;dependency&gt;
+    &lt;groupId&gt;io.rest-assured&lt;/groupId&gt;
+    &lt;artifactId&gt;rest-assured&lt;/artifactId&gt;
+    &lt;version&gt;5.4.0&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;org.junit.jupiter&lt;/groupId&gt;
+    &lt;artifactId&gt;junit-jupiter&lt;/artifactId&gt;
+    &lt;version&gt;5.10.0&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;</code></pre>
+
+            <h3>📋 Ví dụ: Test Class hoàn chỉnh cho Order API</h3>
+            <p>
+                Tạo file <code>src/test/java/com/example/OrderApiTest.java</code>:
+            </p>
+            <pre><code class="language-java">@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class OrderApiTest {
+
+    private static String jwtToken;
+    private static final String BASE_URL = "http://localhost:8080";
+
+    @Test
+    @Order(1)
+    void testLogin() {
+        jwtToken = given()
+            .contentType("application/json")
+            .body("{\"username\":\"user\",\"password\":\"password\"}")
+        .when()
+            .post(BASE_URL + "/api/auth/login")
+        .then()
+            .statusCode(200)
+            .body("token", notNullValue())
+            .extract().path("token");
+    }
+
+    @Test
+    @Order(2)
+    void testCreateOrderSuccess() {
+        given()
+            .header("Authorization", "Bearer " + jwtToken)
+            .contentType("application/json")
+            .body("{\"items\":[{\"productId\":2,\"quantity\":1}]}")
+        .when()
+            .post(BASE_URL + "/api/orders")
+        .then()
+            .statusCode(200);
+    }
+
+    @Test
+    @Order(3)
+    void testOrderWithInsufficientStock() {
+        given()
+            .header("Authorization", "Bearer " + jwtToken)
+            .contentType("application/json")
+            .body("{\"items\":[{\"productId\":1,\"quantity\":99999}]}")
+        .when()
+            .post(BASE_URL + "/api/orders")
+        .then()
+            .statusCode(400);
+    }
+}</code></pre>
+
+            <div class="table-responsive" style="margin-top: 1.5rem;">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Test Case</th>
+                            <th>Mô tả</th>
+                            <th>Expected Status</th>
+                            <th>Kết quả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>testLogin()</code></td>
+                            <td>Đăng nhập bằng credentials hợp lệ và lấy JWT token</td>
+                            <td><span class="badge badge-success">200 OK</span></td>
+                            <td>Token được lưu vào biến tĩnh để dùng chung</td>
+                        </tr>
+                        <tr>
+                            <td><code>testCreateOrderSuccess()</code></td>
+                            <td>Tạo đơn hàng với sản phẩm có tồn kho đủ</td>
+                            <td><span class="badge badge-success">200 OK</span></td>
+                            <td>Đơn hàng được tạo thành công</td>
+                        </tr>
+                        <tr>
+                            <td><code>testOrderWithInsufficientStock()</code></td>
+                            <td>Tạo đơn hàng với số lượng vượt quá tồn kho</td>
+                            <td><span class="badge badge-danger">400 Bad Request</span></td>
+                            <td>Hệ thống từ chối và trả về lỗi</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 1.5rem;">Chạy test bằng Maven</h3>
+            <pre><code>mvn test -Dtest=OrderApiTest</code></pre>
+
+            <div class="alert alert-success">
+                <strong>💡 Tip:</strong> Dùng <code>@TestMethodOrder(MethodOrderer.OrderAnnotation.class)</code> để đảm bảo thứ tự thực thi:
+                login trước → lấy token → dùng token cho các test tiếp theo. Đây là pattern chuẩn cho API test có stateful session.
+            </div>
+        </section>
+
+        <!-- ===== PLAYWRIGHT ===== -->
+        <section id="playwright">
+            <h2>🎭 Cấp độ 3: UI + API Test với Playwright</h2>
+            <p>
+                Playwright hỗ trợ cả kiểm thử UI (browser automation) lẫn API trong cùng một framework.
+                Với TypeScript, bạn có type-safety và intellisense đầy đủ khi viết test.
+            </p>
+
+            <h3>Khởi tạo dự án Playwright</h3>
+            <pre><code class="language-bash">npm init playwright@latest</code></pre>
+            <p>Lệnh này sẽ tạo cấu trúc thư mục chuẩn gồm <code>tests/</code>, <code>playwright.config.ts</code>, và cài sẵn các browser (Chromium, Firefox, WebKit).</p>
+
+            <h3>📋 Ví dụ: Kiểm thử luồng mua hàng đầy đủ (API mode)</h3>
+            <p>Tạo file <code>tests/shopping-flow.spec.ts</code>:</p>
+            <pre><code class="language-typescript">import { test, expect } from '@playwright/test';
+
+test('Luồng mua hàng đầy đủ', async ({ request }) =&gt; {
+  // Step 1: Login
+  const loginRes = await request.post('http://localhost:8080/api/auth/login', {
+    data: { username: 'user', password: 'password' }
+  });
+  expect(loginRes.ok()).toBeTruthy();
+  const { token } = await loginRes.json();
+
+  // Step 2: Get products
+  const productsRes = await request.get('http://localhost:8080/api/products', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  expect(productsRes.status()).toBe(200);
+
+  // Step 3: Place order
+  const orderRes = await request.post('http://localhost:8080/api/orders', {
+    headers: { 'Authorization': `Bearer ${token}` },
+    data: { items: [{ productId: 2, quantity: 1 }] }
+  });
+  expect(orderRes.status()).toBe(200);
+});</code></pre>
+
+            <h3>Chạy test Playwright</h3>
+            <pre><code class="language-bash"># Chạy tất cả test
+npx playwright test
+
+# Chạy với UI mode (có giao diện trực quan)
+npx playwright test --ui
+
+# Xuất báo cáo HTML
+npx playwright show-report</code></pre>
+
+            <div class="alert alert-success">
+                <strong>🌟 Điểm mạnh của Playwright:</strong> Một file test có thể cover cả API (dùng <code>request</code> fixture) lẫn UI
+                (dùng <code>page</code> fixture). Bạn có thể viết test E2E kiểm tra từ giao diện người dùng cho đến phản hồi API trong một kịch bản thống nhất.
+            </div>
+
+            <div class="card" style="margin-top: 1.5rem;">
+                <h4>📦 Cấu trúc thư mục đề xuất cho Playwright project</h4>
+                <pre><code>playwright-tests/
+├── tests/
+│   ├── auth/
+│   │   └── login.spec.ts
+│   ├── products/
+│   │   └── product-list.spec.ts
+│   └── orders/
+│       ├── create-order.spec.ts
+│       └── order-edge-cases.spec.ts
+├── fixtures/
+│   └── auth.fixture.ts       ← Tái sử dụng token login
+├── playwright.config.ts
+└── package.json</code></pre>
+            </div>
+        </section>
+
+        <!-- ===== ROADMAP ===== -->
+        <section id="roadmap-auto">
+            <h2>🗺️ Lộ trình tiến hóa Automation</h2>
+            <p>Kế hoạch 3 tháng được đề xuất để xây dựng bộ automation test từ đầu cho dự án Mini Shopee:</p>
+
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #3b82f6;">
+                <div style="display: flex; align-items: flex-start; gap: 1rem;">
+                    <div>
+                        <div class="badge-group">
+                            <span class="badge badge-primary">Tuần 1 – 2</span>
+                            <span class="badge badge-info">Newman</span>
+                        </div>
+                        <h4 style="margin-top: 0.5rem;">Viết Postman test scripts &amp; chạy bằng Newman</h4>
+                        <ul>
+                            <li>Thêm test script vào tất cả request trong Postman Collection</li>
+                            <li>Phủ toàn bộ happy path: <code>GET /products</code>, <code>POST /orders</code>, <code>GET /orders/{id}</code>, ...</li>
+                            <li>Cài Newman và chạy collection từ terminal thành công</li>
+                            <li>Tạo báo cáo HTML và lưu vào thư mục <code>reports/</code></li>
+                        </ul>
+                        <pre><code>newman run collection.json \
+  --env-var "base_url=http://localhost:8080" \
+  --reporters html \
+  --reporter-html-export reports/week1.html</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #10b981;">
+                <div>
+                    <div class="badge-group">
+                        <span class="badge badge-success">Tuần 3 – 4</span>
+                        <span class="badge badge-info">RestAssured</span>
+                    </div>
+                    <h4 style="margin-top: 0.5rem;">Setup RestAssured &amp; viết 20 test cases cơ bản</h4>
+                    <ul>
+                        <li>Tạo Maven module riêng cho automation test (<code>api-tests/</code>)</li>
+                        <li>Viết test cho: Login, Register, Product list, Product detail, Create order, Get orders</li>
+                        <li>Đạt mốc <strong>20 test cases</strong> pass ổn định</li>
+                        <li>Thiết lập <code>@BeforeAll</code> để login một lần, dùng token cho tất cả test</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #f59e0b;">
+                <div>
+                    <div class="badge-group">
+                        <span class="badge badge-warning">Tháng 2</span>
+                        <span class="badge badge-danger">Negative &amp; Concurrency</span>
+                    </div>
+                    <h4 style="margin-top: 0.5rem;">Viết test cho negative cases và concurrency scenarios</h4>
+                    <ul>
+                        <li>Negative cases: đặt hàng quá tồn kho, đăng nhập sai mật khẩu, token hết hạn, ...</li>
+                        <li>Concurrency test: gửi 10 request đặt hàng đồng thời, kiểm tra chỉ 1 request thành công</li>
+                        <li>Dùng <code>ExecutorService</code> hoặc <code>CompletableFuture</code> trong Java để simulate concurrent requests</li>
+                        <li>Mục tiêu: phát hiện race condition và lỗi business logic dưới tải</li>
+                    </ul>
+                    <pre><code class="language-java">// Ví dụ: Concurrent order test
+ExecutorService pool = Executors.newFixedThreadPool(10);
+List&lt;Future&lt;Integer&gt;&gt; futures = new ArrayList&lt;&gt;();
+for (int i = 0; i &lt; 10; i++) {
+    futures.add(pool.submit(() -&gt; placeOrder(jwtToken)));
+}
+long successCount = futures.stream()
+    .map(f -&gt; f.get())
+    .filter(status -&gt; status == 200)
+    .count();
+assertEquals(1, successCount, "Chỉ 1 request nên thành công!");</code></pre>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #8b5cf6;">
+                <div>
+                    <div class="badge-group">
+                        <span class="badge badge-primary">Tháng 3</span>
+                        <span class="badge badge-info">CI/CD</span>
+                    </div>
+                    <h4 style="margin-top: 0.5rem;">Tích hợp CI/CD với GitHub Actions</h4>
+                    <ul>
+                        <li>Tạo workflow <code>.github/workflows/api-test.yml</code></li>
+                        <li>Cấu hình: mỗi lần <code>push</code> hoặc <code>pull_request</code> lên <code>main</code> → tự động chạy toàn bộ test suite</li>
+                        <li>Hiển thị badge test status trên README</li>
+                        <li>Gửi thông báo Slack/Email khi test fail</li>
+                    </ul>
+                    <pre><code class="language-yaml"># .github/workflows/api-test.yml
+name: API Automation Test
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Start application
+        run: mvn spring-boot:run &amp;
+      - name: Wait for app to start
+        run: sleep 30
+      - name: Run API tests
+        run: mvn test -Dtest=OrderApiTest,ProductApiTest</code></pre>
+                </div>
+            </div>
+
+            <div class="alert alert-success">
+                <strong>🎯 Mục tiêu cuối lộ trình:</strong> Sau 3 tháng, mỗi lần developer push code lên GitHub,
+                toàn bộ test suite sẽ chạy tự động trong vòng dưới 5 phút và thông báo ngay nếu có regression.
+                Đây là nền tảng vững chắc để tiến lên continuous delivery.
+            </div>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

@@ -4,67 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scalability Audit & Optimization - Mini Shopee Docs Portal</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../style.css">
 </head>
 <body>
 
     <header>
         <div class="container nav-container">
-            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
             <span class="header-tagline">Documentation Portal</span>
         </div>
     </header>
 
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation (Unified Single Source of Truth with Tree-view) -->
+                <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
         <aside class="sidebar">
             <div class="sidebar-title">Tổng quan</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho QA / Tester</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
                 </li>
             </ul>
 
             <div class="sidebar-title">Dành cho Dev / Architect</div>
             <ul class="sidebar-menu">
                 <li class="sidebar-item">
-                    <a href="scalability_audit.html" class="sidebar-link active">Đánh giá chịu tải DB</a>
-                    <!-- Nested Local Section Navigation Links -->
-                    <ul class="sidebar-sub-menu">
-                        <li><a href="#bottleneck-race-condition" class="sidebar-sub-link">1. Tranh Chấp Kho</a></li>
-                        <li><a href="#bottleneck-table-scan" class="sidebar-sub-link">2. Quét Bảng Tìm Kiếm</a></li>
-                        <li><a href="#bottleneck-foreign-keys" class="sidebar-sub-link">3. Thiếu Khóa Ngoại</a></li>
-                        <li><a href="#bottleneck-connection-pool" class="sidebar-sub-link">4. Nghẽn Hikari Pool</a></li>
-                        <li><a href="#bottleneck-pagination" class="sidebar-sub-link">5. Phân Trang Offset</a></li>
-                    </ul>
+                    <a href="scalability_audit.html" class="sidebar-link" class="sidebar-link active" id="nav-scalability">Đánh giá chịu tải DB</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                    <a href="concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="sync_interview.html" class="sidebar-link">Phỏng vấn Senior: Sync Data</a>
+                    <a href="sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
                 </li>
                 <li class="sidebar-item">
-                    <a href="db_migration_interview.html" class="sidebar-link">Phỏng vấn Senior: Migrate DB</a>
+                    <a href="db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
                 </li>
             </ul>
         </aside>

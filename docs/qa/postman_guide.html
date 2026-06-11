@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hướng dẫn sử dụng Postman Collection – Mini Shopee Docs</title>
+    <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+
+<header>
+    <div class="container nav-container">
+        <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+        <span class="header-tagline">Documentation Portal</span>
+    </div>
+</header>
+
+<div class="layout-wrapper">
+
+    <!-- ===================== SIDEBAR ===================== -->
+            <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="postman_guide.html" class="sidebar-link" class="sidebar-link active" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="bug_report_template.html" class="sidebar-link" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+    <!-- =================== END SIDEBAR =================== -->
+
+    <main class="content-wrapper">
+
+        <!-- =================== HERO =================== -->
+        <section class="hero-section">
+            <div class="badge-group" style="margin-bottom: 1rem;">
+                <span class="badge badge-primary">QA Tool Guide</span>
+                <span class="badge badge-info">Postman</span>
+                <span class="badge badge-success">REST API</span>
+            </div>
+            <h1 class="gradient-text">Hướng dẫn sử dụng Postman Collection</h1>
+            <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 760px; line-height: 1.8;">
+                Tài liệu này hướng dẫn QA / Tester cách sử dụng bộ Postman Collection có sẵn để kiểm thử toàn bộ
+                các REST API của hệ thống <strong>Mini Shopee</strong>. Collection bao gồm đầy đủ các nhóm endpoint
+                từ xác thực, sản phẩm, đặt hàng đến quản lý người dùng — tất cả đã được cấu hình sẵn
+                Bearer Token và Environment Variables để giúp bạn bắt đầu kiểm thử ngay lập tức.
+            </p>
+            <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <span class="badge badge-success">✅ Không cần code</span>
+                <span class="badge badge-info">🔐 JWT Auth có sẵn</span>
+                <span class="badge badge-warning">⚡ Cả Happy &amp; Negative path</span>
+            </div>
+        </section>
+        <!-- ================ END HERO ================ -->
+
+
+        <!-- =================== SECTION 1: IMPORT =================== -->
+        <section id="import" style="margin-top: 2.5rem;">
+            <h2>📥 Bước 1: Import Collection vào Postman</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Thực hiện theo các bước dưới đây để nhập Collection và thiết lập môi trường làm việc trong Postman.
+            </p>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0;">🗂️ Tải file Collection</h3>
+                <p>
+                    File collection được lưu trong repository của dự án. Tải về file
+                    <code class="code">mini_shopee_postman_collection.json</code> tại thư mục
+                    <code class="code">/docs/postman/</code> của repo hoặc trực tiếp từ nhánh
+                    <code class="code">main</code>.
+                </p>
+                <div class="alert alert-success" style="margin-top: 1rem;">
+                    📁 Đường dẫn trong repo: <code class="code">docs/postman/mini_shopee_postman_collection.json</code>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0;">🚀 Các bước Import vào Postman</h3>
+                <ol style="line-height: 2.2; color: var(--text-secondary);">
+                    <li>Mở ứng dụng <strong>Postman</strong> trên máy tính.</li>
+                    <li>Nhấn nút <strong>"Import"</strong> ở góc trên bên trái (cạnh logo Postman).</li>
+                    <li>Trong hộp thoại Import, kéo và thả file
+                        <code class="code">mini_shopee_postman_collection.json</code> vào vùng
+                        <em>"Drop files here"</em>, hoặc nhấn <strong>"Browse Files"</strong>
+                        để chọn file từ máy tính.</li>
+                    <li>Nhấn <strong>"Import"</strong> để xác nhận.</li>
+                    <li>Sau khi import thành công, bộ collection
+                        <strong>🛒 Mini Shopee API</strong> sẽ xuất hiện ở <strong>thanh bên trái</strong>
+                        (mục Collections).</li>
+                </ol>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">⚙️ Thiết lập Environment Variables</h3>
+                <p style="color: var(--text-secondary);">
+                    Để collection hoạt động đúng, bạn cần tạo một <strong>Environment</strong> trong Postman
+                    với các biến sau:
+                </p>
+                <ol style="line-height: 2; color: var(--text-secondary); margin-bottom: 1.25rem;">
+                    <li>Nhấn vào biểu tượng <strong>🌍 Environments</strong> ở thanh bên trái.</li>
+                    <li>Nhấn <strong>"Create Environment"</strong> → Đặt tên là <code class="code">Mini Shopee Local</code>.</li>
+                    <li>Thêm các biến theo bảng bên dưới.</li>
+                    <li>Nhấn <strong>"Save"</strong> rồi chọn environment này ở góc phải trên của Postman.</li>
+                </ol>
+
+                <div class="table-responsive">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Tên biến</th>
+                                <th>Kiểu</th>
+                                <th>Giá trị ban đầu</th>
+                                <th>Mô tả</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code class="code">base_url</code></td>
+                                <td><span class="badge badge-info">String</span></td>
+                                <td><code class="code">http://localhost:8080</code></td>
+                                <td>URL gốc của server Mini Shopee đang chạy local</td>
+                            </tr>
+                            <tr>
+                                <td><code class="code">jwt_token</code></td>
+                                <td><span class="badge badge-warning">String</span></td>
+                                <td><em>(để trống)</em></td>
+                                <td>JWT Bearer Token sau khi đăng nhập thành công, dùng cho tất cả API có Auth</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert" style="margin-top: 1rem; background: rgba(99,102,241,0.08); border-left-color: #6366f1;">
+                    💡 <strong>Lưu ý:</strong> Tất cả request trong Collection đã sử dụng
+                    <code class="code">{{base_url}}</code> và <code class="code">{{jwt_token}}</code>
+                    — bạn chỉ cần đặt đúng giá trị trong Environment là xong.
+                </div>
+            </div>
+        </section>
+        <!-- ================ END SECTION 1 ================ -->
+
+
+        <!-- =================== SECTION 2: AUTH =================== -->
+        <section id="auth" style="margin-top: 3rem;">
+            <h2>🔐 Bước 2: Xác thực &amp; Lấy JWT Token</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Hầu hết các API của Mini Shopee yêu cầu xác thực bằng <strong>JWT Bearer Token</strong>.
+                Bạn cần đăng nhập trước để lấy token, sau đó gán vào biến môi trường.
+            </p>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0;">1️⃣ Gọi API Đăng nhập</h3>
+                <p style="color: var(--text-secondary);">Thực hiện request sau để lấy JWT token:</p>
+                <div class="table-responsive" style="margin-bottom: 1rem;">
+                    <table class="spec-table">
+                        <tbody>
+                            <tr>
+                                <td style="font-weight:600; width:130px;">Method</td>
+                                <td><span class="badge badge-success">POST</span></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight:600;">Endpoint</td>
+                                <td><code class="code">{{base_url}}/api/auth/login</code></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight:600;">Content-Type</td>
+                                <td><code class="code">application/json</code></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight:600;">Auth</td>
+                                <td><span class="badge badge-danger">❌ Không cần</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;"><strong>Request Body:</strong></p>
+                <pre class="pre"><code class="code">{
+  "username": "user",
+  "password": "password"
+}</code></pre>
+
+                <p style="color: var(--text-secondary); margin: 1rem 0 0.5rem;"><strong>Response mẫu (200 OK):</strong></p>
+                <pre class="pre"><code class="code">{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyIiwia...",
+  "type": "Bearer",
+  "expiresIn": 86400
+}</code></pre>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0;">2️⃣ Gán Token vào Environment</h3>
+                <ol style="line-height: 2.2; color: var(--text-secondary);">
+                    <li>Sau khi nhận response, sao chép giá trị của trường <code class="code">token</code>.</li>
+                    <li>Mở <strong>Environments</strong> → Chọn <code class="code">Mini Shopee Local</code>.</li>
+                    <li>Dán token vào cột <strong>Current Value</strong> của biến <code class="code">jwt_token</code>.</li>
+                    <li>Nhấn <strong>"Save"</strong>.</li>
+                    <li>Từ đây, tất cả request yêu cầu Auth sẽ tự động gửi header
+                        <code class="code">Authorization: Bearer {{jwt_token}}</code>.</li>
+                </ol>
+                <div class="alert alert-success" style="margin-top: 0.75rem;">
+                    ✅ Collection đã cấu hình sẵn <strong>Bearer Token</strong> tại tab
+                    <em>Authorization</em> của từng request (loại: <code class="code">Bearer Token</code>,
+                    giá trị: <code class="code">{{jwt_token}}</code>).
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">👥 Tài khoản mặc định để kiểm thử</h3>
+                <div class="table-responsive">
+                    <table class="spec-table">
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Role</th>
+                                <th>Quyền truy cập</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code class="code">user</code></td>
+                                <td><code class="code">password</code></td>
+                                <td><span class="badge badge-info">ROLE_USER</span></td>
+                                <td>Xem sản phẩm, đặt hàng, xem profile &amp; lịch sử đơn hàng</td>
+                            </tr>
+                            <tr>
+                                <td><code class="code">admin</code></td>
+                                <td><code class="code">password</code></td>
+                                <td><span class="badge badge-danger">ROLE_ADMIN</span></td>
+                                <td>Toàn bộ quyền của USER + quản trị hệ thống, quản lý sản phẩm</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="alert" style="margin-top: 1rem; background: rgba(251,191,36,0.1); border-left-color: #f59e0b;">
+                    ⚠️ <strong>Quan trọng:</strong> Đây là tài khoản seed data dành cho môi trường phát triển.
+                    Tuyệt đối <strong>không</strong> sử dụng thông tin này trong môi trường production.
+                </div>
+            </div>
+        </section>
+        <!-- ================ END SECTION 2 ================ -->
+
+
+        <!-- =================== SECTION 3: API GROUPS =================== -->
+        <section id="api-groups" style="margin-top: 3rem;">
+            <h2>📋 Bước 3: Danh sách API theo nhóm</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Toàn bộ các endpoint trong Collection được tổ chức thành 4 nhóm chính.
+                Các nhóm được hiển thị dưới dạng folder trong Postman.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Nhóm</th>
+                            <th>Method</th>
+                            <th>Endpoint</th>
+                            <th>Mô tả</th>
+                            <th style="text-align:center;">Auth cần?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Auth -->
+                        <tr>
+                            <td><span class="badge badge-warning">🔑 Auth</span></td>
+                            <td><span class="badge badge-success">POST</span></td>
+                            <td><code class="code">/api/auth/login</code></td>
+                            <td>Đăng nhập lấy JWT token</td>
+                            <td style="text-align:center;"><span class="badge badge-danger">❌ Không</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-warning">🔑 Auth</span></td>
+                            <td><span class="badge badge-success">POST</span></td>
+                            <td><code class="code">/api/auth/register</code></td>
+                            <td>Đăng ký tài khoản người dùng mới</td>
+                            <td style="text-align:center;"><span class="badge badge-danger">❌ Không</span></td>
+                        </tr>
+                        <!-- Products -->
+                        <tr>
+                            <td><span class="badge badge-info">🛍️ Products</span></td>
+                            <td><span class="badge badge-primary">GET</span></td>
+                            <td><code class="code">/api/products</code></td>
+                            <td>Lấy danh sách tất cả sản phẩm (có phân trang)</td>
+                            <td style="text-align:center;"><span class="badge badge-success">✅ Có</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-info">🛍️ Products</span></td>
+                            <td><span class="badge badge-primary">GET</span></td>
+                            <td><code class="code">/api/products/{id}</code></td>
+                            <td>Lấy chi tiết một sản phẩm theo ID</td>
+                            <td style="text-align:center;"><span class="badge badge-success">✅ Có</span></td>
+                        </tr>
+                        <!-- Orders -->
+                        <tr>
+                            <td><span class="badge badge-danger">📦 Orders</span></td>
+                            <td><span class="badge badge-success">POST</span></td>
+                            <td><code class="code">/api/orders</code></td>
+                            <td>Đặt hàng đồng bộ (Pessimistic Lock – an toàn cao)</td>
+                            <td style="text-align:center;"><span class="badge badge-success">✅ Có</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-danger">📦 Orders</span></td>
+                            <td><span class="badge badge-success">POST</span></td>
+                            <td><code class="code">/api/orders/async</code></td>
+                            <td>Đặt hàng bất đồng bộ (Redis + Message Queue – hiệu suất cao)</td>
+                            <td style="text-align:center;"><span class="badge badge-success">✅ Có</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-danger">📦 Orders</span></td>
+                            <td><span class="badge badge-primary">GET</span></td>
+                            <td><code class="code">/api/orders</code></td>
+                            <td>Xem lịch sử đơn hàng của người dùng hiện tại</td>
+                            <td style="text-align:center;"><span class="badge badge-success">✅ Có</span></td>
+                        </tr>
+                        <!-- Users -->
+                        <tr>
+                            <td><span class="badge" style="background:rgba(168,85,247,0.15);color:#a855f7;">👤 Users</span></td>
+                            <td><span class="badge badge-primary">GET</span></td>
+                            <td><code class="code">/api/users/profile</code></td>
+                            <td>Lấy thông tin profile &amp; số dư ví của người dùng hiện tại</td>
+                            <td style="text-align:center;"><span class="badge badge-success">✅ Có</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <!-- ================ END SECTION 3 ================ -->
+
+
+        <!-- =================== SECTION 4: TEST FLOW =================== -->
+        <section id="test-flow" style="margin-top: 3rem;">
+            <h2>✅ Bước 4: Luồng kiểm thử chuẩn (Happy Path)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Thực hiện các bước theo thứ tự dưới đây để hoàn thành một luồng kiểm thử end-to-end
+                cơ bản cho chức năng đặt hàng của Mini Shopee.
+            </p>
+
+            <!-- Step 1 -->
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #6366f1;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span class="badge badge-primary" style="font-size:1rem; min-width:32px; text-align:center;">1</span>
+                    <h3 style="margin:0;">Đăng nhập &amp; Lấy JWT Token</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin:0 0 0.75rem;">Gọi <code class="code">POST /api/auth/login</code> với tài khoản <code class="code">user / password</code>.</p>
+                <pre class="pre"><code class="code">POST {{base_url}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "user",
+  "password": "password"
+}</code></pre>
+                <p style="color: var(--text-secondary); margin: 0.75rem 0 0;">
+                    ➡️ Sao chép giá trị <code class="code">token</code> từ response → Gán vào biến
+                    <code class="code">{{jwt_token}}</code> trong Environment.
+                </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #10b981;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span class="badge badge-success" style="font-size:1rem; min-width:32px; text-align:center;">2</span>
+                    <h3 style="margin:0;">Lấy danh sách sản phẩm</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin:0 0 0.75rem;">Gọi <code class="code">GET /api/products</code> để xem toàn bộ sản phẩm có sẵn.</p>
+                <pre class="pre"><code class="code">GET {{base_url}}/api/products
+Authorization: Bearer {{jwt_token}}</code></pre>
+                <p style="color: var(--text-secondary); margin: 0.75rem 0 0;">
+                    ➡️ Ghi nhớ <code class="code">productId</code> của sản phẩm bạn muốn mua (ví dụ: <code class="code">id: 2</code>).
+                    Kiểm tra trường <code class="code">stock</code> phải <strong>&gt; 0</strong>.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #f59e0b;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span class="badge badge-warning" style="font-size:1rem; min-width:32px; text-align:center;">3</span>
+                    <h3 style="margin:0;">Đặt hàng</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin:0 0 0.75rem;">Gọi <code class="code">POST /api/orders</code> với danh sách sản phẩm muốn mua.</p>
+                <pre class="pre"><code class="code">POST {{base_url}}/api/orders
+Authorization: Bearer {{jwt_token}}
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "productId": 2,
+      "quantity": 1
+    }
+  ]
+}</code></pre>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #6366f1;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span class="badge badge-primary" style="font-size:1rem; min-width:32px; text-align:center;">4</span>
+                    <h3 style="margin:0;">Kiểm tra Response đặt hàng</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin:0 0 0.75rem;">Xác nhận response trả về thành công:</p>
+                <div class="table-responsive">
+                    <table class="spec-table">
+                        <thead><tr><th>Trường cần kiểm tra</th><th>Giá trị mong đợi</th></tr></thead>
+                        <tbody>
+                            <tr><td>HTTP Status Code</td><td><span class="badge badge-success">200 OK</span></td></tr>
+                            <tr><td><code class="code">id</code></td><td>Số nguyên dương (orderId mới tạo)</td></tr>
+                            <tr><td><code class="code">status</code></td><td><code class="code">CONFIRMED</code> hoặc <code class="code">PENDING</code></td></tr>
+                            <tr><td><code class="code">totalAmount</code></td><td>Tổng tiền đúng với giá sản phẩm × số lượng</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="card" style="margin-bottom: 1.25rem; border-left: 4px solid #10b981;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span class="badge badge-success" style="font-size:1rem; min-width:32px; text-align:center;">5</span>
+                    <h3 style="margin:0;">Xác nhận lịch sử đơn hàng</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin:0 0 0.75rem;">Gọi <code class="code">GET /api/orders</code> để xác nhận đơn hàng xuất hiện trong lịch sử.</p>
+                <pre class="pre"><code class="code">GET {{base_url}}/api/orders
+Authorization: Bearer {{jwt_token}}</code></pre>
+                <p style="color: var(--text-secondary); margin: 0.75rem 0 0;">
+                    ➡️ Kiểm tra đơn hàng vừa tạo xuất hiện trong mảng kết quả với đúng
+                    <code class="code">orderId</code>, <code class="code">status</code> và <code class="code">totalAmount</code>.
+                </p>
+            </div>
+
+            <!-- Step 6 -->
+            <div class="card" style="border-left: 4px solid #a855f7;">
+                <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:0.75rem;">
+                    <span class="badge" style="background:rgba(168,85,247,0.15);color:#a855f7;font-size:1rem; min-width:32px; text-align:center;">6</span>
+                    <h3 style="margin:0;">Kiểm tra số dư ví</h3>
+                </div>
+                <p style="color: var(--text-secondary); margin:0 0 0.75rem;">Gọi <code class="code">GET /api/users/profile</code> để xác nhận số dư ví đã bị trừ đúng.</p>
+                <pre class="pre"><code class="code">GET {{base_url}}/api/users/profile
+Authorization: Bearer {{jwt_token}}</code></pre>
+                <p style="color: var(--text-secondary); margin: 0.75rem 0 0;">
+                    ➡️ Trường <code class="code">walletBalance</code> phải <strong>giảm</strong> đúng bằng
+                    <code class="code">totalAmount</code> của đơn hàng vừa đặt.
+                    Nếu không khớp → Ghi nhận bug về logic thanh toán.
+                </p>
+            </div>
+        </section>
+        <!-- ================ END SECTION 4 ================ -->
+
+
+        <!-- =================== SECTION 5: NEGATIVE =================== -->
+        <section id="negative" style="margin-top: 3rem;">
+            <h2>🚫 Bước 5: Kiểm thử trường hợp ngoại lệ (Negative Cases)</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.25rem;">
+                Các kịch bản sau đây kiểm tra khả năng xử lý lỗi của hệ thống. Mỗi kịch bản
+                phải trả về đúng HTTP status code và message lỗi rõ ràng.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Kịch bản</th>
+                            <th>Request</th>
+                            <th>Expected Response</th>
+                            <th>Ghi chú</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align:center; font-weight:600;">1</td>
+                            <td>Không có token</td>
+                            <td>Gọi <code class="code">GET /api/products</code> <strong>không có</strong> header <code class="code">Authorization</code></td>
+                            <td><span class="badge badge-danger">401 Unauthorized</span></td>
+                            <td>Kiểm tra message: <code class="code">"Unauthorized"</code> hoặc <code class="code">"Full authentication is required"</code></td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center; font-weight:600;">2</td>
+                            <td>Token sai / hết hạn</td>
+                            <td>Header: <code class="code">Bearer token_sai_abc123</code></td>
+                            <td><span class="badge badge-danger">401 Unauthorized</span></td>
+                            <td>Hệ thống phải từ chối token không hợp lệ</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center; font-weight:600;">3</td>
+                            <td>Tồn kho bằng 0</td>
+                            <td><code class="code">POST /api/orders</code> với sản phẩm đã hết hàng (<code class="code">stock = 0</code>)</td>
+                            <td><span class="badge badge-warning">400 Bad Request</span></td>
+                            <td>Message: <code class="code">"Insufficient stock"</code> hoặc tương đương</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center; font-weight:600;">4</td>
+                            <td>Số dư ví không đủ</td>
+                            <td><code class="code">POST /api/orders</code> với tổng giá trị vượt quá số dư trong ví</td>
+                            <td><span class="badge badge-warning">400 Bad Request</span></td>
+                            <td>Message: <code class="code">"Insufficient balance"</code> hoặc tương đương</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align:center; font-weight:600;">5</td>
+                            <td>productId không tồn tại</td>
+                            <td><code class="code">POST /api/orders</code> với <code class="code">"productId": 99999</code></td>
+                            <td><span class="badge badge-primary">404 Not Found</span></td>
+                            <td>Message: <code class="code">"Product not found"</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert" style="margin-top: 1.5rem; background: rgba(99,102,241,0.08); border-left-color: #6366f1;">
+                💡 <strong>Tip:</strong> Postman cho phép bạn viết <em>Tests Script</em> (tab <strong>Tests</strong>)
+                để tự động kiểm tra status code &amp; nội dung response. Ví dụ:
+                <pre class="pre" style="margin-top:0.75rem;"><code class="code">pm.test("Status is 401", () => {
+    pm.response.to.have.status(401);
+});
+pm.test("Error message exists", () => {
+    pm.expect(pm.response.json()).to.have.property("message");
+});</code></pre>
+            </div>
+        </section>
+        <!-- ================ END SECTION 5 ================ -->
+
+
+        <!-- =================== SECTION 6: TIPS =================== -->
+        <section id="tips" style="margin-top: 3rem;">
+            <h2>💡 Mẹo &amp; Lưu ý</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                Một số lưu ý quan trọng giúp quá trình kiểm thử diễn ra suôn sẻ và nhất quán.
+            </p>
+
+            <div class="alert" style="background: rgba(251,191,36,0.1); border-left-color: #f59e0b; margin-bottom: 1.25rem;">
+                ⏰ <strong>Token hết hạn:</strong> JWT Token có thời gian sống là <strong>24 giờ</strong>
+                (<code class="code">expiresIn: 86400</code>). Nếu gặp lỗi <code class="code">401</code>
+                sau khi đã đặt token, hãy thực hiện lại bước đăng nhập để lấy token mới và cập nhật
+                biến <code class="code">jwt_token</code> trong Environment.
+            </div>
+
+            <div class="alert alert-success" style="margin-bottom: 1.25rem;">
+                🖥️ <strong>Server phải chạy trước:</strong> Đảm bảo ứng dụng Mini Shopee đang chạy tại
+                <code class="code">http://localhost:8080</code> trước khi thực hiện bất kỳ request nào.
+                Kiểm tra bằng cách truy cập <code class="code">http://localhost:8080/actuator/health</code>
+                — nếu trả về <code class="code">{"status":"UP"}</code> là server đã sẵn sàng.
+            </div>
+
+            <div class="alert" style="background: rgba(239,68,68,0.08); border-left-color: #ef4444; margin-bottom: 2rem;">
+                🔄 <strong>Reset dữ liệu sau mỗi lần test:</strong> Sau các bài test đặt hàng,
+                tồn kho và số dư ví có thể thay đổi, ảnh hưởng đến các test case tiếp theo.
+                Sử dụng các lệnh sau để reset về trạng thái ban đầu:
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0;">🗄️ Reset tồn kho bằng SQL</h3>
+                <p style="color: var(--text-secondary);">Kết nối vào database MySQL/PostgreSQL và chạy lệnh:</p>
+                <pre class="pre"><code class="code">-- Reset tồn kho về 100 cho tất cả sản phẩm
+UPDATE products SET stock = 100;
+
+-- Hoặc reset cho một sản phẩm cụ thể (ví dụ: id = 1)
+UPDATE products SET stock = 100 WHERE id = 1;
+
+-- Kiểm tra sau khi reset
+SELECT id, name, stock FROM products;</code></pre>
+            </div>
+
+            <div class="card" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0;">⚡ Reset tồn kho trong Redis Cache</h3>
+                <p style="color: var(--text-secondary);">
+                    Nếu hệ thống sử dụng Redis để cache tồn kho (cho luồng đặt hàng bất đồng bộ),
+                    bạn cần reset cả dữ liệu trong Redis:
+                </p>
+                <pre class="pre"><code class="code"># Reset tồn kho sản phẩm id=1 về 100
+redis-cli SET product:stock:1 100
+
+# Kiểm tra giá trị hiện tại
+redis-cli GET product:stock:1
+
+# Reset tất cả (CẢNH BÁO: Xóa toàn bộ dữ liệu Redis!)
+redis-cli FLUSHDB</code></pre>
+                <div class="alert" style="margin-top:0.75rem; background: rgba(239,68,68,0.08); border-left-color: #ef4444;">
+                    ⚠️ <strong>Cảnh báo:</strong> Lệnh <code class="code">FLUSHDB</code> sẽ xóa
+                    <strong>toàn bộ</strong> dữ liệu trong Redis database hiện tại.
+                    Chỉ dùng trong môi trường development.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top: 0;">💰 Reset số dư ví người dùng</h3>
+                <pre class="pre"><code class="code">-- Reset số dư ví của user thành 1,000,000
+UPDATE users SET wallet_balance = 1000000 WHERE username = 'user';
+
+-- Kiểm tra sau khi reset
+SELECT username, wallet_balance FROM users;</code></pre>
+            </div>
+        </section>
+        <!-- ================ END SECTION 6 ================ -->
+
+
+        <!-- =================== FOOTER NOTE =================== -->
+        <section style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border);">
+            <div class="alert" style="background: rgba(99,102,241,0.08); border-left-color: #6366f1;">
+                📬 <strong>Câu hỏi &amp; Hỗ trợ:</strong> Nếu gặp bất kỳ vấn đề nào khi sử dụng Postman Collection,
+                vui lòng tạo Issue trên GitHub repo hoặc liên hệ team Dev qua kênh Slack
+                <code class="code">#mini-shopee-qa</code>. Khi báo lỗi, hãy đính kèm
+                <em>Request &amp; Response log</em> từ Postman để team hỗ trợ nhanh hơn.
+            </div>
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

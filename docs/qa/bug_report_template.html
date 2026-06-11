@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mẫu Bug Report chuẩn – Mini Shopee Docs</title>
+    <link rel="stylesheet" href="../style.css" />
+    <style>
+        /* ── Bug-report-specific helpers ─────────────────────────── */
+        .bug-card {
+            background: var(--bg-card, #fff);
+            border: 1px solid var(--border, #e5e7eb);
+            border-radius: 12px;
+            padding: 0;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        }
+        .bug-card-header {
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            border-bottom: 1px solid var(--border, #e5e7eb);
+        }
+        .bug-card-header.critical { background: #fff0f0; }
+        .bug-card-header.high     { background: #fff4ec; }
+        .bug-card-header.medium   { background: #fffbec; }
+        .bug-card-header.low      { background: #f0fdf4; }
+
+        .bug-card-body { padding: 1.25rem 1.5rem; }
+
+        .bug-field {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: .4rem 1rem;
+            padding: .55rem 0;
+            border-bottom: 1px dashed #f0f0f0;
+            font-size: .92rem;
+        }
+        .bug-field:last-child { border-bottom: none; }
+        .bug-field-label {
+            font-weight: 600;
+            color: #6b7280;
+            display: flex;
+            align-items: flex-start;
+            gap: .35rem;
+        }
+        .bug-field-value { color: #1f2937; line-height: 1.6; }
+
+        /* Template skeleton */
+        .template-card {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .template-field {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: .4rem 1rem;
+            padding: .6rem 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: .93rem;
+        }
+        .template-field:last-child { border-bottom: none; }
+        .template-label {
+            font-weight: 700;
+            color: #374151;
+        }
+        .template-value {
+            color: #6b7280;
+            font-style: italic;
+        }
+        .template-value code {
+            font-style: normal;
+            background: #e5e7eb;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: .88rem;
+            color: #111827;
+        }
+
+        /* Checklist */
+        .checklist { list-style: none; padding: 0; margin: 0; }
+        .checklist li {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            padding: .75rem 1rem;
+            border-radius: 8px;
+            margin-bottom: .5rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            font-size: .95rem;
+        }
+        .checklist li:hover { background: #f0fdf4; border-color: #86efac; }
+        .check-icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+        .check-text { line-height: 1.5; }
+
+        /* Steps list */
+        .steps-list {
+            margin: 0; padding-left: 1.25rem;
+        }
+        .steps-list li { margin-bottom: .3rem; line-height: 1.6; }
+
+        /* Severity table badge column */
+        .sev-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            font-weight: 700;
+            font-size: .85rem;
+            padding: .3rem .75rem;
+            border-radius: 20px;
+        }
+        .sev-critical { background:#fee2e2; color:#b91c1c; }
+        .sev-high     { background:#ffedd5; color:#c2410c; }
+        .sev-medium   { background:#fef9c3; color:#854d0e; }
+        .sev-low      { background:#dcfce7; color:#15803d; }
+    </style>
+</head>
+<body>
+
+<!-- ══════════════ HEADER ══════════════ -->
+<header>
+    <div class="container nav-container">
+        <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+        <span class="header-tagline">Documentation Portal</span>
+    </div>
+</header>
+
+<!-- ══════════════ LAYOUT ══════════════ -->
+<div class="layout-wrapper">
+
+    <!-- ── Sidebar ─────────────────────────────────────────────── -->
+            <!-- Left Sidebar Navigation -->
+                <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link" id="nav-sa-test">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link" id="nav-run">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link" id="nav-project-spec">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link" id="nav-test-cases">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link" id="nav-testing">Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="postman_guide.html" class="sidebar-link" id="nav-postman">Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="bug_report_template.html" class="sidebar-link" class="sidebar-link active" id="nav-bug-report">Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="release_checklist.html" class="sidebar-link" id="nav-release-checklist">Checklist trước Release</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_data_guide.html" class="sidebar-link" id="nav-test-data">Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="automation_guide.html" class="sidebar-link" id="nav-automation">Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="performance_benchmark.html" class="sidebar-link" id="nav-performance">Performance Benchmark</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+    <!-- ── Main content ─────────────────────────────────────────── -->
+    <main class="content-wrapper">
+
+        <!-- HERO -->
+        <section class="hero-section">
+            <div class="badge-group" style="margin-bottom:1rem;">
+                <span class="badge badge-primary">QA Process</span>
+            </div>
+            <h1 class="gradient-text">Mẫu Bug Report &amp; Hướng dẫn viết Bug chuẩn</h1>
+            <p style="font-size:1.08rem;color:#4b5563;max-width:780px;line-height:1.8;">
+                Một bug report chất lượng cao là cầu nối quan trọng giữa QA và Developer.
+                Báo cáo lỗi rõ ràng, đầy đủ thông tin giúp rút ngắn thời gian tái hiện, phân tích
+                và sửa lỗi – từ đó nâng cao chất lượng phần mềm và hiệu suất làm việc của cả team.
+                Trang này cung cấp chuẩn phân loại severity, mẫu đầy đủ và các ví dụ thực tế
+                trong dự án <strong>Mini Shopee</strong>.
+            </p>
+            <div class="badge-group" style="margin-top:1.25rem;">
+                <span class="badge badge-danger">Critical</span>
+                <span class="badge badge-warning">High</span>
+                <span class="badge badge-info">Medium</span>
+                <span class="badge badge-success">Low</span>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION 1 – Severity Classification
+        ═══════════════════════════════════════════════════════════ -->
+        <section id="severity" style="margin-bottom:3rem;">
+            <h2>⚠️ Phân loại mức độ nghiêm trọng (Severity)</h2>
+            <p style="color:#4b5563;margin-bottom:1.25rem;line-height:1.7;">
+                Severity phản ánh <strong>mức độ ảnh hưởng kỹ thuật</strong> của lỗi đến hệ thống,
+                khác với Priority (mức độ ưu tiên xử lý theo nghiệp vụ). Luôn đánh giá Severity
+                dựa trên tác động thực tế, không phụ thuộc vào cảm quan.
+            </p>
+
+            <div class="table-responsive">
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>Mức độ</th>
+                            <th>Nhãn</th>
+                            <th>Định nghĩa</th>
+                            <th>Ví dụ trong Mini Shopee</th>
+                            <th>SLA xử lý</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="sev-badge sev-critical">🔴 Critical</span></td>
+                            <td><span class="badge badge-danger">P1</span></td>
+                            <td>
+                                Hệ thống <strong>không thể hoạt động</strong>; dữ liệu bị sai nghiêm trọng
+                                hoặc có nguy cơ mất mát dữ liệu. Ảnh hưởng đến toàn bộ người dùng.
+                            </td>
+                            <td>
+                                API <code class="code">POST /api/orders</code> trả về 500;<br/>
+                                Overselling xảy ra – tồn kho về âm;<br/>
+                                Race condition khiến DB corrupt
+                            </td>
+                            <td><strong style="color:#b91c1c;">≤ 4 giờ</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="sev-badge sev-high">🟠 High</span></td>
+                            <td><span class="badge badge-warning">P1-P2</span></td>
+                            <td>
+                                <strong>Chức năng chính bị lỗi</strong> nhưng hệ thống vẫn chạy được.
+                                Người dùng không thể hoàn thành luồng nghiệp vụ cốt lõi.
+                            </td>
+                            <td>
+                                Không đăng nhập được;<br/>
+                                JWT token hết hạn nhưng vẫn nhận 200 OK;<br/>
+                                Thanh toán bị timeout 100%
+                            </td>
+                            <td><strong style="color:#c2410c;">≤ 1 ngày</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="sev-badge sev-medium">🟡 Medium</span></td>
+                            <td><span class="badge badge-info">P2-P3</span></td>
+                            <td>
+                                <strong>Chức năng phụ bị ảnh hưởng</strong>; người dùng có thể thực hiện
+                                luồng chính bằng cách khác (workaround tồn tại).
+                            </td>
+                            <td>
+                                Lịch sử đơn hàng hiển thị sai thứ tự;<br/>
+                                UI bị vỡ layout trên mobile;<br/>
+                                Số dư ví không cập nhật realtime
+                            </td>
+                            <td><strong style="color:#854d0e;">≤ 3 ngày</strong></td>
+                        </tr>
+                        <tr>
+                            <td><span class="sev-badge sev-low">🟢 Low</span></td>
+                            <td><span class="badge badge-success">P3</span></td>
+                            <td>
+                                <strong>Lỗi nhỏ, không ảnh hưởng chức năng.</strong>
+                                Giao diện, văn bản, màu sắc sai nhưng hệ thống vẫn dùng bình thường.
+                            </td>
+                            <td>
+                                Typo trong error message;<br/>
+                                Màu nút không đúng design;<br/>
+                                Padding/margin lệch 2px
+                            </td>
+                            <td><strong style="color:#15803d;">Sprint tiếp theo</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-success" style="margin-top:1rem;">
+                💡 <strong>Lưu ý:</strong> Severity ≠ Priority. Một lỗi <em>typo trên trang thanh toán</em>
+                có thể là Low Severity nhưng High Priority vì ảnh hưởng đến hình ảnh thương hiệu.
+                Hãy đánh giá cả hai chiều độc lập nhau.
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION 2 – Bug Report Template
+        ═══════════════════════════════════════════════════════════ -->
+        <section id="template" style="margin-bottom:3rem;">
+            <h2>📋 Mẫu Bug Report</h2>
+            <p style="color:#4b5563;margin-bottom:1.5rem;line-height:1.7;">
+                Sử dụng mẫu dưới đây cho mọi bug report trong dự án Mini Shopee.
+                Điền <strong>đầy đủ tất cả các trường</strong> – thiếu thông tin sẽ làm chậm quá trình triage.
+            </p>
+
+            <div class="template-card">
+                <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;">
+                    <span style="font-size:1.5rem;">🐞</span>
+                    <h3 style="margin:0;font-size:1.15rem;color:#1f2937;">BUG REPORT – Mini Shopee</h3>
+                    <span class="badge badge-info" style="margin-left:auto;">Template v1.0</span>
+                </div>
+
+                <div class="template-field">
+                    <span class="template-label">🆔 Bug ID</span>
+                    <span class="template-value">
+                        <code>BUG-[MODULE]-[NUMBER]</code>
+                        &nbsp;— Ví dụ: <code>BUG-ORDER-001</code>, <code>BUG-AUTH-002</code>
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">📌 Tiêu đề</span>
+                    <span class="template-value">
+                        [SEVERITY] Mô tả ngắn gọn theo cấu trúc: <em>"Ai / Làm gì / Ở đâu / Kết quả gì"</em><br/>
+                        Ví dụ: <code>[CRITICAL] Overselling xảy ra khi đặt hàng đồng thời</code>
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">📦 Module bị ảnh hưởng</span>
+                    <span class="template-value">
+                        <span class="badge badge-info">Auth</span>
+                        <span class="badge badge-primary">Products</span>
+                        <span class="badge badge-warning">Orders</span>
+                        <span class="badge badge-success">Users</span>
+                        <span class="badge badge-danger">Performance</span>
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">🔴 Severity</span>
+                    <span class="template-value">
+                        <span class="sev-badge sev-critical">Critical</span>
+                        &nbsp;<span class="sev-badge sev-high">High</span>
+                        &nbsp;<span class="sev-badge sev-medium">Medium</span>
+                        &nbsp;<span class="sev-badge sev-low">Low</span>
+                        &nbsp;— Chọn một mức phù hợp (xem bảng Severity ở trên)
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">🚦 Priority</span>
+                    <span class="template-value">
+                        <code>P1</code> (Khẩn cấp) &nbsp;/&nbsp;
+                        <code>P2</code> (Quan trọng) &nbsp;/&nbsp;
+                        <code>P3</code> (Bình thường)
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">🖥️ Môi trường</span>
+                    <span class="template-value">
+                        <strong>OS:</strong> [Ubuntu 22.04 / Windows 11 / macOS 14]<br/>
+                        <strong>Browser:</strong> [Chrome 124 / Firefox 125]<br/>
+                        <strong>App version / Commit:</strong> [main@abc1234]<br/>
+                        <strong>Docker version:</strong> [Docker 26.x / docker-compose 2.x]<br/>
+                        <strong>Java / Spring Boot:</strong> [Java 17 / Spring Boot 3.x]
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">🔧 Điều kiện tiên quyết</span>
+                    <span class="template-value">
+                        Mô tả trạng thái hệ thống <strong>trước khi</strong> tái hiện bug.<br/>
+                        Ví dụ: <em>"Đã seed dữ liệu, product ID=1 có stock=5, user đã đăng nhập"</em>
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">🔁 Các bước tái hiện</span>
+                    <span class="template-value">
+                        Liệt kê theo thứ tự, đủ chi tiết để Dev tái hiện độc lập:<br/>
+                        <em>1. Bước 1...<br/>2. Bước 2...<br/>3. Bước 3...</em>
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">✅ Kết quả mong đợi</span>
+                    <span class="template-value">
+                        Mô tả chính xác hành vi <strong>đúng</strong> của hệ thống theo requirement.
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">❌ Kết quả thực tế</span>
+                    <span class="template-value">
+                        Mô tả chính xác những gì <strong>thực sự xảy ra</strong>.
+                        Paste response body, error message, hoặc screenshot URL vào đây.
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">📎 Bằng chứng</span>
+                    <span class="template-value">
+                        [ ] Screenshot &nbsp; [ ] Video recording &nbsp; [ ] Log file &nbsp; [ ] HAR file<br/>
+                        <em>Đính kèm hoặc dán link tại đây</em>
+                    </span>
+                </div>
+                <div class="template-field">
+                    <span class="template-label">📝 Ghi chú</span>
+                    <span class="template-value">
+                        Thông tin bổ sung: workaround, giả thuyết nguyên nhân, bugs liên quan,
+                        tần suất tái hiện (Always / Intermittent / Rare)…
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION 3 – Real Examples
+        ═══════════════════════════════════════════════════════════ -->
+        <section id="examples" style="margin-bottom:3rem;">
+            <h2>📂 Ví dụ Bug Report thực tế cho Mini Shopee</h2>
+            <p style="color:#4b5563;margin-bottom:1.75rem;line-height:1.7;">
+                Ba ví dụ dưới đây minh họa cách điền bug report đúng chuẩn cho các lỗi
+                thường gặp trong Mini Shopee, trải dài từ Critical đến Medium.
+            </p>
+
+            <!-- ── Example 1 – Critical ──────────────────────── -->
+            <div class="bug-card">
+                <div class="bug-card-header critical">
+                    <span class="sev-badge sev-critical">🔴 Critical</span>
+                    <span style="font-weight:700;color:#7f1d1d;font-size:1rem;">
+                        BUG-ORDER-001 &nbsp;·&nbsp; Overselling race condition
+                    </span>
+                    <span class="badge badge-danger" style="margin-left:auto;">P1</span>
+                </div>
+                <div class="bug-card-body">
+                    <div class="bug-field">
+                        <span class="bug-field-label">🆔 Bug ID</span>
+                        <span class="bug-field-value"><code class="code">BUG-ORDER-001</code></span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📌 Tiêu đề</span>
+                        <span class="bug-field-value">
+                            <strong>[CRITICAL]</strong> Overselling xảy ra khi 100 user đồng thời mua
+                            1 sản phẩm còn 5 tồn kho
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📦 Module</span>
+                        <span class="bug-field-value"><span class="badge badge-warning">Orders</span></span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔴 Severity / Priority</span>
+                        <span class="bug-field-value">
+                            <span class="sev-badge sev-critical">Critical</span> &nbsp;/&nbsp;
+                            <span class="badge badge-danger">P1</span>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🖥️ Môi trường</span>
+                        <span class="bug-field-value">
+                            Ubuntu 22.04 · Docker 26.1 · Java 17 · Spring Boot 3.2.x<br/>
+                            Commit: <code class="code">main@d4f9a12</code>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔧 Điều kiện tiên quyết</span>
+                        <span class="bug-field-value">
+                            Hệ thống đã khởi chạy đầy đủ (DB, Redis, App).
+                            Product ID=1 đã được set <code class="code">stock_quantity = 5</code>.
+                            100 user account đã được tạo và lấy token.
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔁 Các bước tái hiện</span>
+                        <span class="bug-field-value">
+                            <ol class="steps-list">
+                                <li>Reset tồn kho: <code class="code">UPDATE products SET stock_quantity=5 WHERE id=1;</code></li>
+                                <li>Chạy load test đồng thời 100 request:<br/>
+                                    <code class="code">wrk -t10 -c100 -d5s -s post_order.lua http://localhost:8080/api/orders</code>
+                                </li>
+                                <li>Sau khi wrk hoàn tất, đếm số đơn thành công:<br/>
+                                    <code class="code">SELECT COUNT(*) FROM orders WHERE product_id=1 AND status='CONFIRMED';</code>
+                                </li>
+                                <li>Kiểm tra tồn kho còn lại:<br/>
+                                    <code class="code">SELECT stock_quantity FROM products WHERE id=1;</code>
+                                </li>
+                            </ol>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">✅ Kết quả mong đợi</span>
+                        <span class="bug-field-value">
+                            Chỉ <strong>5 đơn hàng</strong> được tạo thành công.
+                            Tồn kho còn lại = 0. 95 request còn lại nhận lỗi
+                            <code class="code">409 Conflict – Insufficient stock</code>.
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">❌ Kết quả thực tế</span>
+                        <span class="bug-field-value">
+                            <strong>7 đơn hàng</strong> được tạo thành công.
+                            Tồn kho về <code class="code">-2</code>.
+                            Không có lỗi race condition nào được log.
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📎 Bằng chứng</span>
+                        <span class="bug-field-value">
+                            Screenshot DB query kết quả · wrk output log đính kèm
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📝 Ghi chú</span>
+                        <span class="bug-field-value">
+                            Lỗi tái hiện <strong>100%</strong> với ≥ 50 concurrent request.
+                            Nghi vấn: thiếu pessimistic lock / SELECT FOR UPDATE trên bảng
+                            <code class="code">products</code>. Có thể liên quan đến cấu hình
+                            isolation level của MySQL (mặc định REPEATABLE READ).
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Example 2 – High ──────────────────────────── -->
+            <div class="bug-card">
+                <div class="bug-card-header high">
+                    <span class="sev-badge sev-high">🟠 High</span>
+                    <span style="font-weight:700;color:#7c2d12;font-size:1rem;">
+                        BUG-AUTH-001 &nbsp;·&nbsp; JWT expired token vẫn được chấp nhận
+                    </span>
+                    <span class="badge badge-warning" style="margin-left:auto;">P1</span>
+                </div>
+                <div class="bug-card-body">
+                    <div class="bug-field">
+                        <span class="bug-field-label">🆔 Bug ID</span>
+                        <span class="bug-field-value"><code class="code">BUG-AUTH-001</code></span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📌 Tiêu đề</span>
+                        <span class="bug-field-value">
+                            <strong>[HIGH]</strong> API trả về <code class="code">200 OK</code>
+                            khi gửi JWT token đã hết hạn thay vì <code class="code">401 Unauthorized</code>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📦 Module</span>
+                        <span class="bug-field-value"><span class="badge badge-info">Auth</span></span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔴 Severity / Priority</span>
+                        <span class="bug-field-value">
+                            <span class="sev-badge sev-high">High</span> &nbsp;/&nbsp;
+                            <span class="badge badge-warning">P1</span>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🖥️ Môi trường</span>
+                        <span class="bug-field-value">
+                            Ubuntu 22.04 · Postman v11 · Docker 26.1<br/>
+                            Commit: <code class="code">main@a8c3e55</code>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔧 Điều kiện tiên quyết</span>
+                        <span class="bug-field-value">
+                            Hệ thống đang chạy. Có tài khoản user hợp lệ.
+                            JWT expiration được cấu hình là 24 giờ (hoặc có thể test với expiry ngắn hơn).
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔁 Các bước tái hiện</span>
+                        <span class="bug-field-value">
+                            <ol class="steps-list">
+                                <li>POST <code class="code">/api/auth/login</code> với credentials hợp lệ → lấy <code class="code">accessToken</code>.</li>
+                                <li>Decode token trên <a href="https://jwt.io" target="_blank">jwt.io</a>, xác nhận trường <code class="code">exp</code>.</li>
+                                <li>Thay đổi thời gian hệ thống lên quá thời điểm <code class="code">exp</code> (hoặc chờ token hết hạn tự nhiên).</li>
+                                <li>Gọi GET <code class="code">/api/products</code> với header <code class="code">Authorization: Bearer &lt;expired_token&gt;</code>.</li>
+                                <li>Quan sát HTTP status code và response body.</li>
+                            </ol>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">✅ Kết quả mong đợi</span>
+                        <span class="bug-field-value">
+                            HTTP <code class="code">401 Unauthorized</code> với body:
+                            <code class="code">{"error": "Token expired"}</code>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">❌ Kết quả thực tế</span>
+                        <span class="bug-field-value">
+                            HTTP <code class="code">200 OK</code> – dữ liệu danh sách sản phẩm
+                            được trả về bình thường. Token hết hạn không bị từ chối.
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📎 Bằng chứng</span>
+                        <span class="bug-field-value">
+                            Postman screenshot response 200 · decoded JWT payload · server log
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📝 Ghi chú</span>
+                        <span class="bug-field-value">
+                            Nghi vấn: filter JWT trong Spring Security có thể bỏ qua kiểm tra <code class="code">exp</code>
+                            claim, hoặc clock skew quá lớn. Tái hiện <strong>Always</strong>.
+                            Đây là lỗ hổng bảo mật nghiêm trọng – cần hotfix ngay.
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Example 3 – Medium ────────────────────────── -->
+            <div class="bug-card">
+                <div class="bug-card-header medium">
+                    <span class="sev-badge sev-medium">🟡 Medium</span>
+                    <span style="font-weight:700;color:#78350f;font-size:1rem;">
+                        BUG-ORDER-002 &nbsp;·&nbsp; Số dư ví không cập nhật realtime
+                    </span>
+                    <span class="badge badge-info" style="margin-left:auto;">P2</span>
+                </div>
+                <div class="bug-card-body">
+                    <div class="bug-field">
+                        <span class="bug-field-label">🆔 Bug ID</span>
+                        <span class="bug-field-value"><code class="code">BUG-ORDER-002</code></span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📌 Tiêu đề</span>
+                        <span class="bug-field-value">
+                            <strong>[MEDIUM]</strong> Số dư ví không cập nhật realtime sau khi
+                            đặt hàng qua luồng async – phải refresh thủ công sau vài giây
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📦 Module</span>
+                        <span class="bug-field-value">
+                            <span class="badge badge-warning">Orders</span>
+                            <span class="badge badge-success">Users</span>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔴 Severity / Priority</span>
+                        <span class="bug-field-value">
+                            <span class="sev-badge sev-medium">Medium</span> &nbsp;/&nbsp;
+                            <span class="badge badge-info">P2</span>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🖥️ Môi trường</span>
+                        <span class="bug-field-value">
+                            Ubuntu 22.04 · Postman v11 · Docker 26.1<br/>
+                            Commit: <code class="code">main@f2b8c77</code>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔧 Điều kiện tiên quyết</span>
+                        <span class="bug-field-value">
+                            User đã đăng nhập, có đủ số dư ví để mua hàng.
+                            Endpoint async order đã được bật (<code class="code">POST /api/orders/async</code>).
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">🔁 Các bước tái hiện</span>
+                        <span class="bug-field-value">
+                            <ol class="steps-list">
+                                <li>GET <code class="code">/api/users/profile</code> → ghi nhận <code class="code">walletBalance</code> ban đầu (ví dụ: 500,000 VND).</li>
+                                <li>POST <code class="code">/api/orders/async</code> với body hợp lệ, nhận HTTP <code class="code">202 Accepted</code>.</li>
+                                <li>Ngay lập tức (trong vòng 1 giây) GET <code class="code">/api/users/profile</code> lần nữa.</li>
+                                <li>So sánh <code class="code">walletBalance</code> trước và sau.</li>
+                            </ol>
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">✅ Kết quả mong đợi</span>
+                        <span class="bug-field-value">
+                            <code class="code">walletBalance</code> đã được trừ đúng số tiền của đơn hàng
+                            ngay sau khi nhận 202 Accepted (hoặc có thông báo rõ "đang xử lý").
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">❌ Kết quả thực tế</span>
+                        <span class="bug-field-value">
+                            <code class="code">walletBalance</code> vẫn giữ nguyên giá trị cũ (500,000 VND).
+                            Sau khoảng 3–5 giây refresh mới thấy số dư giảm. Không có UI indicator nào
+                            thông báo trạng thái "đang xử lý".
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📎 Bằng chứng</span>
+                        <span class="bug-field-value">
+                            Video screen recording 10 giây · Postman timeline screenshot
+                        </span>
+                    </div>
+                    <div class="bug-field">
+                        <span class="bug-field-label">📝 Ghi chú</span>
+                        <span class="bug-field-value">
+                            Đây là hành vi <strong>expected</strong> với kiến trúc async/eventual consistency,
+                            tuy nhiên cần UX rõ ràng hơn (loading state, optimistic update, hoặc cảnh báo
+                            "số dư sẽ cập nhật sau vài giây"). Workaround: reload trang sau 5 giây.
+                            Tái hiện: <strong>Always</strong>.
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════════════════════
+             SECTION 4 – Pre-submit Checklist
+        ═══════════════════════════════════════════════════════════ -->
+        <section id="checklist" style="margin-bottom:3rem;">
+            <h2>✅ Checklist trước khi submit Bug</h2>
+            <p style="color:#4b5563;margin-bottom:1.25rem;line-height:1.7;">
+                Trước khi nhấn "Submit", hãy chạy qua checklist này để đảm bảo bug report
+                của bạn <strong>hoàn chỉnh, rõ ràng và có giá trị cao nhất</strong> với team.
+            </p>
+
+            <ul class="checklist">
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Đã tái hiện lỗi ít nhất 2 lần độc lập</strong> – xác nhận lỗi
+                        không phải do môi trường nhất thời (flaky) hoặc thao tác nhầm.
+                    </span>
+                </li>
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Tiêu đề mô tả rõ ràng theo cấu trúc</strong>
+                        <em>"[Severity] Ai / Làm gì / Ở đâu / Kết quả gì"</em> –
+                        Dev đọc tiêu đề là hiểu được ngay vấn đề.
+                    </span>
+                </li>
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Đã đính kèm bằng chứng</strong> (screenshot, video hoặc log) –
+                        không có bằng chứng thì bug report gần như vô nghĩa với Developer.
+                    </span>
+                </li>
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Đã ghi rõ môi trường chạy test</strong>: OS, browser/tool version,
+                        commit hash, Docker version – đảm bảo Dev có thể setup môi trường giống hệt.
+                    </span>
+                </li>
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Severity và Priority đã được đánh giá đúng</strong> –
+                        đối chiếu với bảng phân loại ở trên trước khi chọn; tránh để mặc định
+                        hoặc chọn sai khiến triage bị lệch.
+                    </span>
+                </li>
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Các bước tái hiện đủ chi tiết và theo thứ tự</strong> –
+                        một người khác chưa biết về bug này có thể tự tái hiện mà không cần hỏi thêm.
+                    </span>
+                </li>
+                <li>
+                    <span class="check-icon">✅</span>
+                    <span class="check-text">
+                        <strong>Đã kiểm tra trùng lặp</strong> – tìm trong backlog/issue tracker
+                        để chắc chắn bug này chưa được report trước đó; nếu trùng thì comment
+                        thêm thông tin vào bug cũ thay vì tạo mới.
+                    </span>
+                </li>
+            </ul>
+
+            <div class="alert" style="margin-top:1.5rem;border-left:4px solid #6366f1;background:#f5f3ff;">
+                <strong>💜 Pro tip:</strong> Một bug report tốt = Dev fix nhanh hơn = QA verify sớm hơn
+                = release đúng hạn hơn. Đầu tư 10 phút viết bug report chất lượng cao sẽ tiết kiệm
+                hàng giờ back-and-forth giữa các bên. Chất lượng bug report là thước đo trình độ QA!
+            </div>
+        </section>
+
+        <!-- Footer note -->
+        <div style="border-top:1px solid #e5e7eb;padding-top:1.5rem;margin-top:2rem;
+                    color:#9ca3af;font-size:.88rem;text-align:center;">
+            Mini Shopee Docs Portal &nbsp;·&nbsp; Mẫu Bug Report v1.0
+            &nbsp;·&nbsp; Cập nhật: 2026-06-11
+        </div>
+
+    </main>
+</div><!-- /.layout-wrapper -->
+
+</body>
+</html>
