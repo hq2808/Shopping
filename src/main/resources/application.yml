@@ -30,7 +30,7 @@ spring:
 
 app:
   jwt:
-    # 256-bit base64 encoded secret key (min 256 bits for HMAC-SHA256)
-    # This is a sample key. Do not use in production.
-    secret: dGhpc2lzYW1pbmlzaG9wZWVqd3RzZWNyZXRrZXltdXN0YmVhdGxlYXN0MjU2Yml0c2xvbmc=
-    expiration-ms: 86400000 # 24 hours
+    # Secret key loaded from .env file (APP_JWT_SECRET)
+    # For local dev: copy .env.example to .env and set your value
+    secret: ${APP_JWT_SECRET}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000} # 24 hours default
