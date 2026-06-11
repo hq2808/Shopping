@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Java Interview Guide: Mongo-to-PG Migration - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="sync_interview.html" class="sidebar-link">Phỏng vấn Senior: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="db_migration_interview.html" class="sidebar-link active">Phỏng vấn Senior: Migrate DB</a>
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#overview" class="sidebar-sub-link">Tổng quan đề bài</a></li>
+                        <li><a href="#star-answer" class="sidebar-sub-link">Mẫu trả lời STAR</a></li>
+                        <li><a href="#part1-dualwrite" class="sidebar-sub-link">1. Thiết kế Dual-Write</a></li>
+                        <li><a href="#part2-shadowread" class="sidebar-sub-link">2. Thiết kế Shadow-Read</a></li>
+                        <li><a href="#part3-dynamicflags" class="sidebar-sub-link">3. Flag so sánh động</a></li>
+                        <li><a href="#part4-batchmig" class="sidebar-sub-link">4. Di chuyển dữ liệu lớn</a></li>
+                        <li><a href="#part5-reconcile" class="sidebar-sub-link">5. Đối soát & Nhất quán</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Tuyển dụng & Chiến lược Migration</span>
+                <h1>Bộ Câu Hỏi Phỏng Vấn Senior Java <br><span class="gradient-text">Migrate Database từ MongoDB sang PostgreSQL</span></h1>
+                <p>Tài liệu phỏng vấn lập trình viên Senior Java / System Architect tập trung vào chiến lược di chuyển dữ liệu lớn không gián đoạn dịch vụ (Zero-Downtime Migration) cho phân hệ mối quan hệ người dùng <code>user_relation</code> của dự án <code>swag-server</code>.</p>
+            </section>
+
+            <!-- Case Study Overview -->
+            <section id="overview" class="card">
+                <span class="badge badge-success">Bối cảnh hệ thống thực tế (Case Study)</span>
+                <h2>Chiến dịch Migration phân hệ User Relation</h2>
+                <p class="mb-16">
+                    Hệ thống mạng xã hội Live-streaming đang lưu trữ dữ liệu mối quan hệ giữa người dùng (Follow, Block, Friend) trong MongoDB. Do yêu cầu về ràng buộc dữ liệu toàn vẹn (Foreign Key) và tối ưu hóa các truy vấn kết hợp phức tạp (như Mutual Friends, Connection Degrees), chúng ta quyết định di chuyển dữ liệu này sang PostgreSQL.
+                </p>
+                <p class="mb-16">
+                    Hiện tại, dự án <code>swag-server</code> mới chỉ triển khai phần di chuyển cho module <strong>user_relation</strong>. Thử thách lớn nhất là phải di chuyển và chuyển đổi hệ thống lưu trữ dưới áp lực hàng triệu request đọc/ghi mỗi ngày mà **không được gây gián đoạn dịch vụ (Zero-downtime)** và **không làm mất mát dữ liệu**.
+                </p>
+                <div class="alert">
+                    <h5>Chiến lược cốt lõi:</h5>
+                    Sử dụng mô hình **Dual-Write** (Ghi kép vào cả 2 DB) phối hợp với **Shadow-Read & Compare** (Đọc từ cả 2 DB để so khớp đối chiếu chất lượng dữ liệu ngầm) được cấu hình động thông qua hệ thống **Feature Flags (Dynamic Configuration Flags)**.
+                </div>
+            </section>
+
+            <!-- STAR Answer Template Section -->
+            <section id="star-answer" class="card">
+                <span class="badge badge-warning">Kịch bản Phỏng Vấn Mẫu (STAR Template)</span>
+                <h2>Mẫu trả lời phỏng vấn: "Hãy chia sẻ kinh nghiệm di chuyển Database (Migration) lớn nhất em từng làm?"</h2>
+                <p class="mb-20">
+                    Kịch bản mẫu giúp ứng viên/người phỏng vấn cấu trúc câu trả lời chuyên nghiệp dựa trên module <code>user_relation</code> thực tế trong <code>swag-server</code>:
+                </p>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); color: var(--text-secondary);">
+                    <h4 class="text-highlight">1. Dẫn dắt (Khẳng định vai trò)</h4>
+                    <p><em>"Dạ rồi ạ. Tại dự án trước, em đã trực tiếp thiết kế và chỉ đạo chiến dịch di chuyển dữ liệu mối quan hệ người dùng (User Relation Subsystem - gồm follow, block, bạn bè) với hơn 50 triệu bản ghi từ MongoDB sang PostgreSQL mà không có bất kỳ giây downtime nào cho dịch vụ."</em></p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-secondary); color: var(--text-secondary); margin-top: 16px;">
+                    <h4 class="text-highlight">2. Tình huống & Nhiệm vụ (Situation / Task)</h4>
+                    <p>
+                        <em>"Hệ thống ban đầu lưu dữ liệu Follow/Block trên MongoDB. Do thiếu ràng buộc khóa ngoại cứng ở tầng DB, khi hệ thống chạy lâu ngày xuất hiện các dữ liệu rác (ví dụ ID người dùng bị follow không còn tồn tại trong bảng Users). Việc truy vấn tìm kiếm bạn bè chung (Mutual follows) cũng gây tải rất nặng do MongoDB không tối ưu hóa các phép toán Join. </em>
+                    </p>
+                    <p class="mt-8">
+                        <em>Nhiệm vụ của em là di chuyển toàn bộ dữ liệu này sang PostgreSQL để áp dụng tính toàn vẹn dữ liệu và tối ưu hóa hiệu năng, đồng thời đảm bảo quá trình di chuyển hoàn toàn thông suốt, người dùng vẫn thực hiện follow/block bình thường."</em>
+                    </p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-warning); color: var(--text-secondary); margin-top: 16px;">
+                    <h4 class="text-highlight">3. Hành động Chi tiết (Action)</h4>
+                    <p class="mb-12"><em>"Em đã triển khai giải pháp di chuyển 4 bước cực kỳ chặt chẽ:"</em></p>
+                    <ul style="margin-left: 20px;">
+                        <li class="mb-8">
+                            <strong>Bước 1 - Dual-Write (Ghi kép):</strong> 
+                            <em>"Em sửa code ở module <code>user_relation</code> trong <code>swag-server</code> để khi có sự kiện ghi mới (như Follow), ứng dụng sẽ ghi đồng thời vào cả MongoDB và PostgreSQL. Trong đó, MongoDB vẫn là DB chính (Primary) để đảm bảo không lỗi ứng dụng, còn việc ghi PostgreSQL là thứ cấp (Secondary) được bọc trong khối try-catch không gây lỗi lan truyền nếu Postgres gặp sự cố hoặc timeout."</em>
+                        </li>
+                        <li class="mb-8">
+                            <strong>Bước 2 - Data Migration (Di chuyển dữ liệu cũ):</strong> 
+                            <em>"Khởi chạy một batch job độc lập để quét toàn bộ dữ liệu lịch sử từ MongoDB sang PostgreSQL. Em sử dụng phân trang Keyset Pagination để tránh kẹt I/O DB, kết hợp chống ghi đè dữ liệu cũ lên dữ liệu mới sinh ra nhờ cơ chế đối chiếu thời gian cập nhật (Timestamp comparison)."</em>
+                        </li>
+                        <li class="mb-8">
+                            <strong>Bước 3 - Shadow-Read & Dynamic Comparison (Đọc bóng & Đối chiếu động):</strong> 
+                            <em>"Khi Client gọi API lấy danh sách Follow/Block, em cho hệ thống đọc từ MongoDB và đồng thời trigger một luồng phụ (Shadow Thread) đọc từ PostgreSQL. Hệ thống sử dụng một thuật toán Deep-Compare để so khớp cấu trúc dữ liệu hai bên. Nếu phát hiện lệch, hệ thống log lỗi kèm Metric cụ thể để đội ngũ Dev sửa đổi các điểm dữ liệu không thống nhất. Toàn bộ cơ chế đọc này được quản lý qua các Dynamic Flags (Feature Flags) lưu trong Redis/Config Server để cấu hình chuyển đổi trạng thái đọc/ghi theo thời gian thực mà không cần restart server."</em>
+                        </li>
+                        <li class="mb-8">
+                            <strong>Bước 4 - Cutover (Chuyển đổi hoàn toàn):</strong> 
+                            <em>"Sau khi tỷ lệ so khớp Shadow-Read đạt 100% liên tục trong 1 tuần, em bật flag chuyển PostgreSQL làm DB chính, MongoDB làm DB thứ cấp. Sau 3 ngày chạy thử ổn định, em tắt hoàn toàn luồng ghi phụ sang MongoDB."</em>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-success); color: var(--text-secondary); margin-top: 16px;">
+                    <h4 class="text-highlight">4. Kết quả (Result)</h4>
+                    <ul style="margin-left: 20px;">
+                        <li class="mb-8"><em>"Di chuyển thành công hơn 50 triệu bản ghi quan hệ người dùng sang PostgreSQL với tỷ lệ sai lệch bằng 0."</em></li>
+                        <li class="mb-8"><em>"Tốc độ truy vấn lấy danh sách bạn bè chung tăng gấp 4 lần nhờ các phép Join tối ưu hóa của PostgreSQL."</em></li>
+                        <li class="mb-8"><em>"Loại bỏ hoàn toàn 100% dữ liệu mồ côi (dữ liệu rác khóa ngoại), đảm bảo tính toàn vẹn nghiệp vụ tuyệt đối."</em></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Part 1: Dual-Write -->
+            <section id="part1-dualwrite" class="card">
+                <span class="badge badge-danger">Phần 1: Giao dịch & Ghi</span>
+                <h2>1. Kiến trúc Dual-Write (Ghi kép an toàn)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Khi triển khai Dual-Write vào cả MongoDB (Legacy) và PostgreSQL (New), làm thế nào để đảm bảo lỗi phát sinh khi ghi xuống DB mới (PostgreSQL) không được làm gián đoạn luồng nghiệp vụ chính của người dùng đang chạy? Bạn sẽ quản lý Transaction như thế nào?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Tách biệt Transaction (Non-blocking Secondary Write):</strong> 
+                        MongoDB đóng vai trò là "Source of Truth" tạm thời. Giao dịch ghi MongoDB phải diễn ra đồng bộ và quyết định trạng thái thành công của API. Việc ghi sang PostgreSQL phải được coi là nhiệm vụ thứ cấp (Secondary Task).
+                    </li>
+                    <li>
+                        <strong>Xử lý ngoại lệ độc lập:</strong>
+                        Bọc luồng ghi PostgreSQL trong khối <code>try-catch</code> riêng biệt. Nếu PostgreSQL bị sập hoặc nghẽn, ứng dụng chỉ ghi nhận log cảnh báo hoặc đẩy id cần đồng bộ bù vào hàng đợi lỗi (DLQ/Redis Queue) để xử lý sau, **không được ném exception ra ngoài** làm rollback giao dịch ghi MongoDB.
+                    </li>
+                    <li>
+                        <strong>Xử lý bất đồng bộ:</strong> Có thể đẩy sự kiện ghi Postgres thành một tác vụ bất đồng bộ (sử dụng <code>@Async</code> hoặc Spring Event Listener phi đồng bộ) để giảm thiểu tối đa Latency của API Client.
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Cách triển khai ghi kép an toàn trong Spring Boot:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>RelationDualWriteService.java</span>
+                        <span>Java 21 / Spring Boot</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-annotation">@Slf4j</span>
+<span class="code-keyword">public class</span> <span class="code-class">RelationDualWriteService</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">MongoRelationRepository</span> mongoRepo;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">PostgresRelationRepository</span> pgRepo;
+
+    <span class="code-annotation">@Transactional("mongoTransactionManager")</span>
+    <span class="code-keyword">public void</span> followUser(<span class="code-class">String</span> followerId, <span class="code-class">String</span> followingId) {
+        <span class="code-comment">// 1. Ghi chính vào MongoDB (Đồng bộ)</span>
+        <span class="code-class">MongoRelation</span> relation = <span class="code-keyword">new</span> <span class="code-class">MongoRelation</span>(followerId, followingId, <span class="code-keyword">new</span> <span class="code-class">Date</span>());
+        mongoRepo.save(relation);
+
+        <span class="code-comment">// 2. Ghi kép vào PostgreSQL (Bọc kỹ tránh làm sập API chính)</span>
+        <span class="code-keyword">try</span> {
+            saveToPostgresAsync(followerId, followingId);
+        } <span class="code-keyword">catch</span> (<span class="code-class">Exception</span> e) {
+            <span class="code-comment">// Chỉ log cảnh báo, không ném Exception để không rollback Mongo transaction</span>
+            log.error(<span class="code-string">"Fail to write PG during Dual-Write for follower: {}, following: {}"</span>, followerId, followingId, e);
+            <span class="code-comment">// Pro-tip: Đẩy vào Redis Queue / MQ để tiến trình Reconciliation đồng bộ bù sau</span>
+            pushToReconcileQueue(followerId, followingId);
+        }
+    }
+
+    <span class="code-annotation">@Async("pgWriteExecutor")</span>
+    <span class="code-keyword">private void</span> saveToPostgresAsync(<span class="code-class">String</span> followerId, <span class="code-class">String</span> followingId) {
+        <span class="code-class">PgRelation</span> pgRelation = <span class="code-keyword">new</span> <span class="code-class">PgRelation</span>(<span class="code-class">Long</span>.parseLong(followerId), <span class="code-class">Long</span>.parseLong(followingId));
+        pgRepo.save(pgRelation);
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Part 2: Shadow-Read -->
+            <section id="part2-shadowread" class="card">
+                <span class="badge badge-danger">Phần 2: So khớp dữ liệu</span>
+                <h2>2. Cơ chế Shadow-Read & So sánh dữ liệu phi đồng bộ (Shadow-Read & Deep-Compare)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Làm thế nào để kiểm chứng dữ liệu được ghi kép vào PostgreSQL hoàn toàn khớp 100% với MongoDB dưới áp lực sử dụng thực tế của người dùng? Hãy thiết kế cơ chế Shadow-Read và so sánh dữ liệu (Data Comparison) trong Java mà không làm tăng thời gian phản hồi (Response Latency) của Client.
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Thiết kế Shadow-Read:</strong> Khi có request đọc dữ liệu (ví dụ: lấy danh sách follow của user), ứng dụng sẽ thực hiện gọi đọc chính từ MongoDB và trả kết quả ngay lập tức cho người dùng. 
+                    </li>
+                    <li>
+                        <strong>Thực thi bất đồng bộ:</strong> Trước khi trả kết quả, hệ thống bắn một tác vụ bất đồng bộ (sử dụng <code>CompletableFuture.runAsync</code> hoặc ThreadPool) để đọc dữ liệu tương ứng từ PostgreSQL.
+                    </li>
+                    <li>
+                        <strong>Deep Compare Algorithm:</strong> Tiến hành so sánh dữ liệu giữa 2 danh sách kết quả (MongoDB vs PostgreSQL). Do cấu trúc bản ghi hai bên khác nhau (MongoDB dùng String ID, BSON document; PostgreSQL dùng Long ID, Relational entity), ứng viên cần đề xuất mapping về một cấu trúc dữ liệu chung (Data Transfer Object - DTO) và thực hiện so khớp:
+                        <ul>
+                            <li>So sánh số lượng bản ghi (Size).</li>
+                            <li>So khớp chéo từng ID quan hệ (ví dụ: sắp xếp danh sách theo ID rồi so sánh, hoặc đưa vào Set để so khớp $O(N)$).</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Logging & Alerting:</strong> Nếu có bất cứ phần tử nào bị lệch hoặc thiếu, ghi nhận log dạng WARN/ERROR kèm chi tiết payload lệch để Dev phân tích.
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Cách triển khai Shadow-Read & So sánh trong Java:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>RelationShadowReadService.java</span>
+                        <span>So sánh phi đồng bộ không block Client</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-annotation">@Slf4j</span>
+<span class="code-keyword">public class</span> <span class="code-class">RelationShadowReadService</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">MongoRelationService</span> mongoService;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">PostgresRelationService</span> pgService;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">ExecutorService</span> shadowReadExecutorPool;
+
+    <span class="code-keyword">public</span> <span class="code-class">List</span>&lt;<span class="code-class">RelationDto</span>&gt; getFollowings(<span class="code-class">String</span> userId) {
+        <span class="code-comment">// 1. Đọc chính từ MongoDB (Đảm bảo tốc độ và trải nghiệm người dùng)</span>
+        <span class="code-class">List</span>&lt;<span class="code-class">RelationDto</span>&gt; mongoResult = mongoService.getFollowings(userId);
+
+        <span class="code-comment">// 2. Bắn tiến trình Shadow-Read đọc Postgres và so khớp phi đồng bộ</span>
+        <span class="code-class">CompletableFuture</span>.runAsync(() -> {
+            <span class="code-keyword">try</span> {
+                <span class="code-class">List</span>&lt;<span class="code-class">RelationDto</span>&gt; pgResult = pgService.getFollowingsFromPg(userId);
+                compareData(userId, mongoResult, pgResult);
+            } <span class="code-keyword">catch</span> (<span class="code-class">Exception</span> e) {
+                log.error(<span class="code-string">"Shadow-Read failed for user: {}"</span>, userId, e);
+            }
+        }, shadowReadExecutorPool);
+
+        <span class="code-keyword">return</span> mongoResult;
+    }
+
+    <span class="code-keyword">private void</span> compareData(<span class="code-class">String</span> userId, <span class="code-class">List</span>&lt;<span class="code-class">RelationDto</span>&gt; mongoList, <span class="code-class">List</span>&lt;<span class="code-class">RelationDto</span>&gt; pgList) {
+        <span class="code-keyword">if</span> (mongoList.size() != pgList.size()) {
+            log.warn(<span class="code-string">"[MIGRATION-MISMATCH] Size mismatch for user {}. Mongo: {}, PG: {}"</span>, userId, mongoList.size(), pgList.size());
+            <span class="code-keyword">return</span>;
+        }
+
+        <span class="code-class">Set</span>&lt;<span class="code-class">String</span>&gt; mongoIds = mongoList.stream().map(RelationDto::getFollowingId).collect(Collectors.toSet());
+        <span class="code-class">Set</span>&lt;<span class="code-class">String</span>&gt; pgIds = pgList.stream().map(RelationDto::getFollowingId).collect(Collectors.toSet());
+
+        <span class="code-keyword">if</span> (!mongoIds.equals(pgIds)) {
+            log.warn(<span class="code-string">"[MIGRATION-MISMATCH] Content mismatch for user {}. Missing in PG: {}, Missing in Mongo: {}"</span>,
+                userId, 
+                mongoIds.stream().filter(id -> !pgIds.contains(id)).toList(),
+                pgIds.stream().filter(id -> !mongoIds.contains(id)).toList()
+            );
+        }
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Part 3: Dynamic Flags -->
+            <section id="part3-dynamicflags" class="card">
+                <span class="badge badge-info">Phần 3: Flag cấu hình</span>
+                <h2>3. Hệ thống Cấu hình chuyển đổi trạng thái động (Dynamic Flags / Feature Flags)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Trong quá trình di chuyển dữ liệu kéo dài nhiều tuần, làm thế nào để bạn thay đổi trạng thái đọc/ghi (ví dụ: chuyển từ ghi Mongo sang ghi kép, hoặc chuyển từ đọc Mongo sang đọc Postgres) mà không cần build lại code hay khởi động lại hệ thống (Zero-restart)? Bạn thiết kế hệ thống cấu hình động này như thế nào?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Sử dụng Feature Flags / Dynamic Configuration:</strong> 
+                        Sử dụng một hệ thống quản lý config tập trung như Redis (lưu cấu hình dạng Hash/KeyValue), Spring Cloud Config Server, ZooKeeper, Consul hoặc một thư viện Feature Flag chuyên nghiệp (như Unleash, LaunchDarkly).
+                    </li>
+                    <li>
+                        <strong>Khai báo các Trạng thái (Migration States / State Machine):</strong>
+                        Định nghĩa các flag cấu hình trạng thái:
+                        <ul>
+                            <li><code>WRITE_MODE</code>: <code>MONGO_ONLY</code> (Chỉ ghi Mongo) &rarr; <code>DUAL_WRITE_MONGO_PRIMARY</code> (Ghi kép, Mongo chính) &rarr; <code>DUAL_WRITE_PG_PRIMARY</code> (Ghi kép, Postgres chính) &rarr; <code>PG_ONLY</code> (Chỉ ghi Postgres).</li>
+                            <li><code>READ_MODE</code>: <code>MONGO_ONLY</code> &rarr; <code>SHADOW_READ_COMPARE</code> (Đọc Mongo, shadow đọc Postgres so khớp) &rarr; <code>PG_PRIMARY_SHADOW_MONGO</code> (Đọc Postgres chính, shadow đọc Mongo) &rarr; <code>PG_ONLY</code> (Chỉ đọc Postgres).</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Cơ chế tự động Refresh Config:</strong> Ứng dụng Java lắng nghe sự kiện thay đổi từ Redis Pub/Sub hoặc sử dụng cơ chế Polling (đọc config từ Redis cache định kỳ sau mỗi 5-10 giây) để cập nhật trạng thái biến cấu hình trong bộ nhớ RAM mà không cần restart server.
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Đoạn mã điều phối luồng đọc/ghi động dựa theo Flag:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>MigrationFlagCoordinator.java</span>
+                        <span>Chuyển mạch động bằng Feature Flags</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Component</span>
+<span class="code-keyword">public class</span> <span class="code-class">MigrationFlagCoordinator</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">StringRedisTemplate</span> redisTemplate;
+    
+    <span class="code-keyword">private static final</span> <span class="code-class">String</span> MIGRATION_STATE_KEY = <span class="code-string">"config:migration:user-relation"</span>;
+
+    <span class="code-keyword">public</span> <span class="code-class">WriteMode</span> getWriteMode() {
+        <span class="code-class">String</span> val = redisTemplate.opsForValue().get(MIGRATION_STATE_KEY + <span class="code-string">":write-mode"</span>);
+        <span class="code-keyword">return</span> val != <span class="code-keyword">null</span> ? <span class="code-class">WriteMode</span>.valueOf(val) : <span class="code-class">WriteMode</span>.MONGO_ONLY;
+    }
+
+    <span class="code-keyword">public</span> <span class="code-class">ReadMode</span> getReadMode() {
+        <span class="code-class">String</span> val = redisTemplate.opsForValue().get(MIGRATION_STATE_KEY + <span class="code-string">":read-mode"</span>);
+        <span class="code-keyword">return</span> val != <span class="code-keyword">null</span> ? <span class="code-class">ReadMode</span>.valueOf(val) : <span class="code-class">ReadMode</span>.MONGO_ONLY;
+    }
+}
+
+<span class="code-comment">// Sử dụng trong Service:</span>
+<span class="code-annotation">@Autowired</span>
+<span class="code-keyword">private</span> <span class="code-class">MigrationFlagCoordinator</span> flagCoordinator;
+
+<span class="code-keyword">public void</span> createRelation(<span class="code-class">String</span> followerId, <span class="code-class">String</span> followingId) {
+    <span class="code-class">WriteMode</span> mode = flagCoordinator.getWriteMode();
+    <span class="code-keyword">switch</span> (mode) {
+        <span class="code-keyword">case</span> MONGO_ONLY -> mongoRepo.save(...);
+        <span class="code-keyword">case</span> DUAL_WRITE_MONGO_PRIMARY -> {
+            mongoRepo.save(...);
+            saveToPgAsync(followerId, followingId); <span class="code-comment">// Ghi Postgres ngầm</span>
+        }
+        <span class="code-keyword">case</span> DUAL_WRITE_PG_PRIMARY -> {
+            pgRepo.save(...);
+            saveToMongoAsync(followerId, followingId); <span class="code-comment">// Ghi Mongo ngầm</span>
+        }
+        <span class="code-keyword">case</span> PG_ONLY -> pgRepo.save(...);
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Part 4: Keyset Migration of large data -->
+            <section id="part4-batchmig" class="card">
+                <span class="badge badge-warning">Phần 4: Xử lý dữ liệu lớn</span>
+                <h2>4. Di chuyển dữ liệu cũ quy mô lớn (Initial Batch Migration)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Làm thế nào để di chuyển (Migrate) hàng chục triệu bản ghi mối quan hệ cũ từ MongoDB sang PostgreSQL mà không làm cạn kiệt bộ nhớ JVM và không gây ảnh hưởng tới DB giao dịch đang chạy? Bạn giải quyết thế nào nếu gặp bản ghi trùng lặp (Duplicate Key) do dữ liệu ghi kép sinh ra trước đó?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Sử dụng Spring Batch hoặc Custom Pagination:</strong> 
+                        Sử dụng cơ chế Chunk-oriented Processing của Spring Batch hoặc viết mã phân trang Keyset Pagination (quét Mongo sử dụng <code>_id > lastId</code>). Tuyệt đối không load toàn bộ dữ liệu vào JVM RAM (gây OutOfMemoryError).
+                    </li>
+                    <li>
+                        <strong>Xử lý xung đột Idempotent (Upsert):</strong>
+                        Trong quá trình di chuyển dữ liệu cũ, rất có thể bản ghi đó đã được cập nhật hoặc tạo mới thông qua luồng ghi kép (Dual-write) trước đó.
+                        Để tránh ném ra lỗi trùng lặp khóa (Unique Key Violation / Duplicate Key Exception) làm sập Batch Job, cần sử dụng câu lệnh ghi đè dạng **Upsert** ở Postgres:
+                        <pre style="margin-top: 6px;"><code>INSERT INTO user_relations (follower_id, following_id, created_at)
+VALUES (?, ?, ?)
+ON CONFLICT (follower_id, following_id) 
+DO UPDATE SET created_at = EXCLUDED.created_at;</code></pre>
+                    </li>
+                    <li>
+                        <strong>Rate Limiting / Throttling:</strong> Cấu hình Thread Pool giới hạn tốc độ đọc/ghi (ví dụ giới hạn ở 2000 records/giây) và chỉ chạy Batch Job vào các khung giờ thấp điểm (từ 1h đến 5h sáng) để bảo vệ hiệu năng máy chủ.
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Part 5: Reconciliation -->
+            <section id="part5-reconcile" class="card">
+                <span class="badge badge-success">Phần 5: Kiểm tra toàn vẹn</span>
+                <h2>5. Dịch vụ đối soát dữ liệu tự động (Reconciliation Service)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Sau khi đã bật chế độ Dual-Write và di chuyển dữ liệu cũ xong, làm thế nào bạn chắc chắn dữ liệu giữa hai DB khớp nhau hoàn toàn trước khi ngắt bỏ MongoDB? Thiết kế một cơ chế đối soát dữ liệu (Reconciliation Job) liên tục trong Java để sửa chữa các bản ghi lệch.
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Thiết kế Reconciliation Service chạy ngầm:</strong> 
+                        Khởi chạy một tiến trình background scheduler (sử dụng Spring <code>@Scheduled</code> hoặc Quartz Job) chạy định kỳ để so quét và đối chiếu dữ liệu giữa MongoDB và PostgreSQL.
+                    </li>
+                    <li>
+                        <strong>Giải pháp quét đối chiếu theo khoảng thời gian (Time-window Scan):</strong>
+                        Mỗi lượt quét, job sẽ đối chiếu dữ liệu được tạo ra trong một khoảng thời gian cụ thể (ví dụ: quét dữ liệu 1 giờ trước).
+                    </li>
+                    <li>
+                        <strong>Cơ chế tự động sửa lỗi (Auto-Healing):</strong>
+                        <ul>
+                            <li>Nếu bản ghi có trong MongoDB nhưng thiếu trong PostgreSQL: Thực hiện ghi bù (Insert) vào PostgreSQL.</li>
+                            <li>Nếu bản ghi có ở PostgreSQL nhưng thiếu ở MongoDB (do lỗi đồng bộ ngược): Thực hiện ghi bù vào MongoDB (tùy thuộc vào việc bên nào được chọn là nguồn chân lý tại thời điểm đó).</li>
+                            <li>Nếu bản ghi lệch các trường dữ liệu phụ (như ngày tạo): Thực hiện cập nhật (Update) để đồng bộ thông tin.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Báo cáo giám sát:</strong> Báo cáo số lượng lệch ra hệ thống giám sát (Prometheus/Grafana) để theo dõi chất lượng đồng bộ của hệ thống.
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Mã cấu trúc của Reconciliation Job trong Java:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>RelationReconciliationJob.java</span>
+                        <span>Quét đối soát và tự động sửa lỗi dữ liệu</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Component</span>
+<span class="code-annotation">@Slf4j</span>
+<span class="code-keyword">public class</span> <span class="code-class">RelationReconciliationJob</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">MongoRelationRepository</span> mongoRepo;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">PostgresRelationRepository</span> pgRepo;
+
+    <span class="code-comment">// Chạy đối soát mỗi 5 phút một lần để sửa lỗi dữ liệu 1 giờ trước</span>
+    <span class="code-annotation">@Scheduled(cron = "0 */5 * * * *")</span>
+    <span class="code-keyword">public void</span> reconcileUserRelations() {
+        <span class="code-class">Date</span> oneHourAgo = <span class="code-keyword">new</span> <span class="code-class">Date</span>(System.currentTimeMillis() - 3600000);
+        <span class="code-class">Date</span> fiveMinutesAgo = <span class="code-keyword">new</span> <span class="code-class">Date</span>(System.currentTimeMillis() - 300000);
+
+        <span class="code-comment">// 1. Quét dữ liệu trong khung thời gian từ MongoDB</span>
+        <span class="code-class">List</span>&lt;<span class="code-class">MongoRelation</span>&gt; mongoRecords = mongoRepo.findByCreatedAtBetween(oneHourAgo, fiveMinutesAgo);
+
+        <span class="code-keyword">for</span> (<span class="code-class">MongoRelation</span> mongoRecord : mongoRecords) {
+            <span class="code-keyword">long</span> follower = <span class="code-class">Long</span>.parseLong(mongoRecord.getFollowerId());
+            <span class="code-keyword">long</span> following = <span class="code-class">Long</span>.parseLong(mongoRecord.getFollowingId());
+
+            <span class="code-comment">// 2. Kiểm tra sự tồn tại bên PostgreSQL</span>
+            <span class="code-keyword">boolean</span> existsInPg = pgRepo.existsByFollowerIdAndFollowingId(follower, following);
+
+            <span class="code-keyword">if</span> (!existsInPg) {
+                log.warn(<span class="code-string">"[RECONCILE-HEAL] Found record missing in Postgres for follower: {}, following: {}. Healing now..."</span>, follower, following);
+                
+                <span class="code-comment">// Sửa lỗi bằng cách ghi bù dữ liệu thiếu</span>
+                <span class="code-class">PgRelation</span> pgRelation = <span class="code-keyword">new</span> <span class="code-class">PgRelation</span>(follower, following);
+                pgRepo.save(pgRelation);
+            }
+        }
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee phỏng vấn Senior Java</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>

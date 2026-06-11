@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Senior Java Interview Guide: Mongo-to-ES Sync - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="sync_interview.html" class="sidebar-link active">Phỏng vấn Senior: Sync Data</a>
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#overview" class="sidebar-sub-link">Tổng quan đề bài</a></li>
+                        <li><a href="#star-answer" class="sidebar-sub-link">Mẫu trả lời STAR (Kiến trúc)</a></li>
+                        <li><a href="#part1-pagination" class="sidebar-sub-link">1. Keyset Pagination</a></li>
+                        <li><a href="#part2-bulk" class="sidebar-sub-link">2. Tối ưu Bulk write</a></li>
+                        <li><a href="#part3-cdc" class="sidebar-sub-link">3. CDC & Buffer</a></li>
+                        <li><a href="#part4-resilience" class="sidebar-sub-link">4. Oplog & Checkpoint</a></li>
+                        <li><a href="#part5-zero-downtime" class="sidebar-sub-link">5. Zero-downtime & Alias</a></li>
+                    </ul>
+                </li>
+                <li class="sidebar-item">
+                    <a href="db_migration_interview.html" class="sidebar-link">Phỏng vấn Senior: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Tuyển dụng & Đánh giá</span>
+                <h1>Bộ Câu Hỏi Phỏng Vấn Senior Java <br><span class="gradient-text">Hệ Thống Đồng Bộ Dữ Liệu Mongo &rarr; ES</span></h1>
+                <p>Tài liệu phỏng vấn lập trình viên Senior Java / System Architect dựa trên kiến trúc thực tế của hệ thống <code>search_sync_worker</code> (Đồng bộ dữ liệu thời gian thực từ MongoDB sang Elasticsearch).</p>
+            </section>
+
+            <!-- Case Study Overview -->
+            <section id="overview" class="card">
+                <span class="badge badge-success">Bối cảnh hệ thống thực tế (Case Study)</span>
+                <h2>Tổng quan về Kiến trúc Đồng bộ (Sync Worker)</h2>
+                <p class="mb-16">
+                    Hệ thống cần đồng bộ dữ liệu người dùng (<code>user</code>) và tin nhắn (<code>message</code>) từ MongoDB (CSDL giao dịch chính) sang Elasticsearch (để phục vụ tìm kiếm nâng cao toàn văn). Quá trình đồng bộ chia làm 2 giai đoạn:
+                </p>
+                <ol>
+                    <li><strong>Initial Load (Đồng bộ ban đầu):</strong> Duyệt qua toàn bộ hàng triệu bản ghi cũ trong MongoDB và ghi hàng loạt (Bulk write) vào ES index mới.</li>
+                    <li><strong>Change Stream Sync (Đồng bộ thời gian thực):</strong> Lắng nghe các sự kiện thay đổi dữ liệu từ MongoDB Oplog qua Change Stream, biến đổi dữ liệu, và cập nhật tức thì sang ES.</li>
+                </ol>
+                <div class="alert">
+                    <h5>Mục tiêu của bộ câu hỏi:</h5>
+                    Đánh giá kiến thức chuyên sâu của ứng viên Senior Java về **Xử lý bất đồng bộ, tối ưu hóa I/O, quản lý trạng thái (State/Checkpoint), khả năng phục hồi lỗi (Resilience), thiết kế hệ thống phân tán** và cách dịch chuyển tư duy từ Python sang Spring Boot/Java.
+                </div>
+            </section>
+
+            <!-- STAR Answer Template Section -->
+            <section id="star-answer" class="card">
+                <span class="badge badge-warning">Kịch bản Phỏng Vấn Mẫu (STAR Template)</span>
+                <h2>Mẫu trả lời câu hỏi: "Em đã làm phần Kiến trúc Hệ thống (System Architecture) chưa?"</h2>
+                <p class="mb-20">
+                    Dưới đây là kịch bản trả lời chi tiết theo phương pháp **STAR (Situation - Task - Action - Result)** gắn liền với dự án thực tế của hệ thống đồng bộ dữ liệu để ứng viên ghi điểm tuyệt đối trước Hội đồng phỏng vấn:
+                </p>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); color: var(--text-secondary);">
+                    <h4 class="text-highlight">1. Dẫn dắt (Khẳng định quyền làm chủ thiết kế)</h4>
+                    <p><em>"Dạ rồi ạ. Ở vị trí trước, em đã trực tiếp chịu trách nhiệm thiết kế và triển khai kiến trúc cho một pipeline xử lý dữ liệu lớn (High-throughput data pipeline) đồng bộ thời gian thực cho hệ thống Live-streaming."</em></p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-secondary); color: var(--text-secondary); margin-top: 16px;">
+                    <h4 class="text-highlight">2. Bối cảnh & Thử thách (Situation / Task)</h4>
+                    <p>
+                        <em>"Hệ thống ban đầu lưu trữ dữ liệu tin nhắn chat (Message) và tài khoản người dùng (User) trên MongoDB. Khi lượng người dùng đồng thời (CCU) tăng mạnh trong các buổi live-streaming, cơ sở dữ liệu MongoDB bị quá tải CPU/RAM do lượng truy vấn tìm kiếm toàn văn (Full-text search) và kết nối đọc/ghi đồng thời quá lớn.</em>
+                    </p>
+                    <p class="mt-8">
+                        <em>Yêu cầu đặt ra là phải di chuyển và đồng bộ hơn <strong>100 triệu tin nhắn</strong> và <strong>15 triệu thông tin người dùng</strong> sang Elasticsearch (để phục vụ tìm kiếm toàn văn tốc độ cao) và PostgreSQL (để lưu trữ dữ liệu giao dịch sạch), và việc dịch chuyển này phải đạt mục tiêu <strong>Zero-downtime</strong> (không được dừng hệ thống đang chạy) và <strong>Zero-data-loss</strong>."</em>
+                    </p>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-warning); color: var(--text-secondary); margin-top: 16px;">
+                    <h4 class="text-highlight">3. Giải pháp Kiến trúc & Hành động Chi tiết (Action)</h4>
+                    <p class="mb-12"><em>"Để giải quyết bài toán này mà không làm gián đoạn dịch vụ và đảm bảo tính nhất quán cao, em đã phân chia trách nhiệm rõ ràng giữa Backend Service chính và Pipeline đồng bộ:"</em></p>
+                    <ul style="margin-left: 20px;">
+                        <li class="mb-8">
+                            <strong>Thiết lập Dual-Write và Shadow-Read tại Backend App chính (swag-server):</strong> 
+                            <em>"Để quá trình chuyển đổi traffic diễn ra an toàn, tại ứng dụng API chính (swag-server), em áp dụng cơ chế <strong>Dual-Write</strong>: Các API ghi mới sẽ lưu vào MongoDB đồng thời bắn event bất đồng bộ qua hàng đợi Celery / RabbitMQ để ghi song song vào PostgreSQL và Elasticsearch. Để kiểm chứng dữ liệu trước khi chuyển giao, em triển khai kịch bản <strong>Shadow-Read</strong>: Khi Client gọi đọc dữ liệu, hệ thống vẫn trả kết quả từ MongoDB, nhưng chạy một thread ngầm bất đồng bộ gửi truy vấn đọc tương tự sang ES để so sánh kết quả và ghi nhận lỗi chênh lệch (data discrepancy) mà không làm ảnh hưởng tới người dùng cuối. Khi tỷ lệ khớp đạt 100%, em mới chính thức switch traffic đọc hẳn sang ES."</em>
+                        </li>
+                        <li class="mb-8">
+                            <strong>Xây dựng Pipeline Đồng bộ Dữ liệu (search_sync_worker) với cơ chế Backfile & Changestream:</strong>
+                            <em>"Dịch vụ đồng bộ độc lập (search_sync_worker) được em thiết kế chạy qua hai pha tuần tự:"</em>
+                            <ul style="margin-left: 20px; margin-top: 4px;">
+                                <li><strong>Pha 1 - Backfile (Initial Load):</strong> <em>"Quét toàn bộ dữ liệu lịch sử trong MongoDB bằng phân trang Keyset (<code>_id > last_processed_id</code>, không dùng Skip/Limit để giữ tốc độ $O(\log N)$) và ghi bulk vào Elasticsearch. Ở pha này, em cấu hình tạm thời tắt <code>refresh_interval</code> và <code>replicas</code> của ES index để tối ưu Ingestion Rate."</em></li>
+                                <li><strong>Pha 2 - Changestream (Real-time Sync):</strong> <em>"Ngay sau khi Backfile hoàn tất, sync pipeline chuyển sang lắng nghe các sự kiện thay đổi trực tiếp từ MongoDB Oplog qua <strong>Change Streams (CDC)</strong>. Dữ liệu thay đổi được đưa vào bộ đệm (Buffering) và thực hiện flush bulk tự động khi đạt 500 bản ghi hoặc sau tối đa 2 giây."</em></li>
+                            </ul>
+                        </li>
+                        <li class="mb-8">
+                            <strong>Chống mất mát dữ liệu & checkpoint phục hồi:</strong> 
+                            <em>"Em sử dụng Redis để quản lý checkpoint (ObjectId đối với Backfile và Resume Token đối với Changestream). Nếu Oplog của MongoDB bị ghi đè hoàn toàn (Oplog Rollover) làm resume token hết hạn, hệ thống tự động bắt exception, xóa checkpoint trên Redis và trigger chạy lại Backfile để đồng bộ bù đắp, tránh mất mát dữ liệu."</em>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-success); color: var(--text-secondary); margin-top: 16px;">
+                    <h4 class="text-highlight">4. Kết quả Đạt được (Result)</h4>
+                    <ul style="margin-left: 20px;">
+                        <li class="mb-8"><em>"Đồng bộ thành công và trơn tru toàn bộ 100M+ tin nhắn và 15M+ users sang ES và PostgreSQL mà không gây ra bất kỳ một giây downtime nào cho hệ thống đang chạy."</em></li>
+                        <li class="mb-8"><em>"Tốc độ truy vấn tìm kiếm toàn văn giảm từ trung bình 2.5 giây (khi scan regex trên MongoDB) xuống còn <strong>dưới 40 mili-giây</strong> trên Elasticsearch."</em></li>
+                        <li class="mb-8"><em>"Giảm tải được <strong>65% CPU</strong> cho hệ thống cơ sở dữ liệu MongoDB giao dịch chính, giúp hệ thống Live-streaming hoạt động ổn định ngay cả trong các khung giờ cao điểm có lượng CCU lớn nhất."</em></li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Part 1: Keyset Pagination -->
+            <section id="part1-pagination" class="card">
+                <span class="badge badge-danger">Phần 1: Cốt lõi</span>
+                <h2>1. Phân trang tải lớn trong MongoDB (Initial Load Pagination)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Khi quét hàng chục triệu document từ MongoDB để thực hiện Initial Load, tại sao chúng ta không nên dùng phân trang kiểu Offset (<code>skip()</code> và <code>limit()</code>)? Giải pháp thay thế là gì và cài đặt nó như thế nào trong Spring Data MongoDB?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Điểm nghẽn của Skip/Limit:</strong> Bản chất của <code>skip(M)</code> trong MongoDB là duyệt qua tuần tự $M$ bản ghi trên disk rồi mới lấy ra các bản ghi tiếp theo. Khi quét đến cuối collection (ví dụ trang thứ 100.000), cơ sở dữ liệu sẽ bị nghẽn I/O và CPU nghiêm trọng, tốc độ đồng bộ giảm dần về 0.
+                    </li>
+                    <li>
+                        <strong>Giải pháp thay thế (Keyset/Cursor Pagination):</strong> Sử dụng giá trị khóa chính tự tăng hoặc tăng dần (như <code>_id</code> dạng ObjectId của MongoDB). Truy vấn trang tiếp theo bằng cách lấy các bản ghi có <code>_id > last_processed_id</code> kết hợp với sắp xếp <code>_id ASC</code> và <code>limit(batch_size)</code>. Truy vấn này chạy cực nhanh nhờ chỉ mục mặc định trên cột <code>_id</code> ($O(\log N)$).
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Cách triển khai trong Spring Data MongoDB (Java):</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>MongoSyncRepository.java</span>
+                        <span>Spring Boot / Java 21</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Repository</span>
+<span class="code-keyword">public class</span> <span class="code-class">MongoSyncRepository</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">MongoTemplate</span> mongoTemplate;
+
+    <span class="code-keyword">public</span> <span class="code-class">List</span>&lt;<span class="code-class">Document</span>&gt; fetchNextBatch(<span class="code-class">ObjectId</span> lastId, <span class="code-keyword">int</span> batchSize, <span class="code-class">String</span> collectionName) {
+        <span class="code-class">Query</span> query = <span class="code-keyword">new</span> <span class="code-class">Query</span>();
+        <span class="code-keyword">if</span> (lastId != <span class="code-keyword">null</span>) {
+            <span class="code-comment">// Sử dụng toán tử lớn hơn ($gt) trên chỉ mục _id thay vì skip()</span>
+            query.addCriteria(<span class="code-class">Criteria</span>.where(<span class="code-string">"_id"</span>).gt(lastId));
+        }
+        query.with(<span class="code-class">Sort</span>.by(<span class="code-class">Sort</span>.Direction.ASC, <span class="code-string">"_id"</span>));
+        query.limit(batchSize);
+        
+        <span class="code-comment">// Chỉ lấy các trường cần thiết để tiết kiệm RAM và băng thông mạng (Projection)</span>
+        query.fields().include(<span class="code-string">"username"</span>).include(<span class="code-string">"display_name"</span>).include(<span class="code-string">"tags"</span>).include(<span class="code-string">"profile.biography"</span>);
+
+        <span class="code-keyword">return</span> mongoTemplate.find(query, <span class="code-class">Document</span>.class, collectionName);
+    }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Thang điểm đánh giá:</h5>
+                    <ul>
+                        <li><strong>Junior:</strong> Chỉ biết dùng Skip/Limit. Không nhận ra vấn đề suy giảm hiệu năng khi dữ liệu tăng lớn.</li>
+                        <li><strong>Middle:</strong> Nhận ra Skip/Limit chậm nhưng không rõ nguyên lý cơ bản của MongoDB, đề xuất dùng Keyset Pagination nhưng chưa biết viết code Java Spring Data MongoDB tối ưu.</li>
+                        <li><strong>Senior:</strong> Giải thích rõ cơ chế hoạt động của MongoDB index khi skip, đề xuất Keyset Pagination qua <code>ObjectId</code>, cấu hình projection tối giản hóa các trường dữ liệu cần fetch.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Part 2: High-Speed Bulk Loading -->
+            <section id="part2-bulk" class="card">
+                <span class="badge badge-danger">Phần 2: Tối ưu hóa I/O</span>
+                <h2>2. Tối ưu hóa tốc độ ghi (Elasticsearch Ingestion Rate Optimization)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Khi thực hiện Initial Load hàng triệu bản ghi vào Elasticsearch (ES), làm thế nào để đạt tốc độ ghi (Ingestion Rate) lớn nhất? Trong Java, bạn sẽ cấu hình ES index và viết mã xử lý đa luồng như thế nào?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Tạm thời tắt các cơ chế an toàn và lập chỉ mục thời gian thực của ES:</strong>
+                        <ol>
+                            <li>Đặt <code>refresh_interval</code> về <code>-1</code> (tắt tự động làm mới index, tránh việc tạo ra quá nhiều segment nhỏ liên tục).</li>
+                            <li>Đặt <code>number_of_replicas</code> về <code>0</code> (tắt nhân bản, tránh việc ES phải sao chép dữ liệu sang các node khác ngay lập tức khi đang bulk).</li>
+                        </ol>
+                    </li>
+                    <li>
+                        <strong>Khôi phục cấu hình sau khi hoàn tất Bulk:</strong> Cần đổi lại <code>refresh_interval: "1s"</code> và <code>number_of_replicas: 1</code> để đảm bảo dữ liệu sẵn sàng tìm kiếm và có độ dự phòng an toàn.
+                    </li>
+                    <li>
+                        <strong>Sử dụng Bulk API và Đa luồng:</strong> Trong Java, sử dụng <code>BulkProcessor</code> (ES Java Client) hoặc triển khai lập trình song song bằng <code>CompletableFuture</code> kết hợp với <code>ThreadPoolExecutor</code> tùy chỉnh để gửi dữ liệu song song qua nhiều kết nối REST.
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Mã cấu hình Index & Bulk ghi song song trong Java:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>ElasticsearchBulkService.java</span>
+                        <span>Sử dụng Elasticsearch Java Client</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">ElasticsearchBulkService</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">ElasticsearchClient</span> esClient;
+
+    <span class="code-comment">// 1. Tối ưu hóa Settings cho chế độ Bulk</span>
+    <span class="code-keyword">public void</span> setIndexForBulkLoad(<span class="code-class">String</span> indexName) <span class="code-keyword">throws</span> <span class="code-class">IOException</span> {
+        esClient.indices().putSettings(s -> s
+            .index(indexName)
+            .settings(settings -> settings
+                .refreshInterval(r -> r.time(<span class="code-string">"-1"</span>))
+                .numberOfReplicas(<span class="code-string">"0"</span>)
+            )
+        );
+    }
+
+    <span class="code-comment">// 2. Đưa Index về trạng thái Production</span>
+    <span class="code-keyword">public void</span> restoreIndexSettings(<span class="code-class">String</span> indexName) <span class="code-keyword">throws</span> <span class="code-class">IOException</span> {
+        esClient.indices().putSettings(s -> s
+            .index(indexName)
+            .settings(settings -> settings
+                .refreshInterval(r -> r.time(<span class="code-string">"1s"</span>))
+                .numberOfReplicas(<span class="code-string">"1"</span>)
+            )
+        );
+    }
+
+    <span class="code-comment">// 3. Xử lý Bulk request bất đồng bộ đa luồng</span>
+    <span class="code-keyword">public</span> <span class="code-class">CompletableFuture</span>&lt;<span class="code-class">BulkResponse</span>&gt; executeBulkAsync(<span class="code-class">BulkRequest</span> bulkRequest, <span class="code-class">ExecutorService</span> executor) {
+        <span class="code-keyword">return</span> <span class="code-class">CompletableFuture</span>.supplyAsync(() -> {
+            <span class="code-keyword">try</span> {
+                <span class="code-keyword">return</span> esClient.bulk(bulkRequest);
+            } <span class="code-keyword">catch</span> (<span class="code-class">IOException</span> e) {
+                <span class="code-keyword">throw</span> <span class="code-keyword">new</span> <span class="code-class">RuntimeException</span>(<span class="code-string">"Bulk write failed"</span>, e);
+            }
+        }, executor);
+    }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Thang điểm đánh giá:</h5>
+                    <ul>
+                        <li><strong>Junior:</strong> Chỉ biết dùng hàm save() đơn lẻ của Spring Data Elasticsearch (cực kỳ chậm).</li>
+                        <li><strong>Middle:</strong> Biết dùng Bulk API để gộp gói tin gửi đi. Chưa biết tối ưu <code>refresh_interval</code> và <code>replicas</code> của ES index.</li>
+                        <li><strong>Senior:</strong> Nêu rõ việc tắt replicas và refresh_interval, cấu hình thread pool độc lập để tránh nghẽn luồng ứng dụng chính, biết cách sử dụng Bulk API phi đồng bộ trong Java.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Part 3: CDC & Buffering -->
+            <section id="part3-cdc" class="card">
+                <span class="badge badge-danger">Phần 3: Đồng bộ Thời gian thực</span>
+                <h2>3. CDC (Change Data Capture) và Kỹ thuật Trì hoãn Gom lô (Buffering)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Trong giai đoạn đồng bộ thời gian thực (Real-time Sync), chúng ta lắng nghe các sự kiện thay đổi dữ liệu từ MongoDB. Làm thế nào để implement luồng này trong Java Spring Boot? Để tránh việc gửi hàng nghìn request ghi lẻ tẻ đến Elasticsearch gây quá tải, bạn thiết kế bộ đệm gom lô (Buffer & Flush) như thế nào trong môi trường đa luồng?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Lắng nghe Change Stream trong Spring:</strong> Sử dụng <code>MessageListenerContainer</code> của Spring Data MongoDB để tạo một daemon thread lắng nghe các event thay đổi (insert, update, delete).
+                    </li>
+                    <li>
+                        <strong>Thiết kế bộ đệm Gom Lô (Batching Buffer):</strong> 
+                        <ul>
+                            <li>Cách 1 (Sử dụng Spring Reactor / WebFlux): Sử dụng <code>Flux</code> từ reactive change streams và áp dụng toán tử <code>bufferTimeout(batchSize, Duration.ofSeconds(pollInterval))</code>. Đây là giải pháp tối ưu và thanh lịch nhất của Java hiện đại.</li>
+                            <li>Cách 2 (Sử dụng BlockingQueue): Đẩy các thay đổi vào một <code>LinkedBlockingQueue</code>. Khởi chạy một tiến trình ngầm (Scheduler hoặc Loop Thread) để pull dữ liệu từ queue ra bulk khi số lượng đạt <code>batch_size</code> hoặc quá thời gian <code>poll_interval</code>.</li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Cài đặt bộ đệm gom lô bằng Project Reactor (Spring WebFlux / Reactive MongoDB):</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>ReactiveChangeStreamSync.java</span>
+                        <span>Giải pháp tối ưu và kháng nghẽn</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">ReactiveChangeStreamSync</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">ReactiveMongoTemplate</span> mongoTemplate;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">ElasticsearchClient</span> esClient;
+
+    <span class="code-class">private</span> <span class="code-keyword">final</span> <span class="code-keyword">int</span> BATCH_SIZE = 500;
+    <span class="code-class">private</span> <span class="code-keyword">final</span> <span class="code-class">Duration</span> TIMEOUT = <span class="code-class">Duration</span>.ofSeconds(2);
+
+    <span class="code-annotation">@PostConstruct</span>
+    <span class="code-keyword">public void</span> startSyncStream() {
+        mongoTemplate.changeStream(<span class="code-string">"user"</span>, <span class="code-class">ChangeStreamOptions</span>.empty(), <span class="code-class">Document</span>.class)
+            .map(changeEvent -> transformToEsAction(changeEvent))
+            .filter(Objects::nonNull)
+            <span class="code-comment">// Kỹ thuật bufferTimeout giúp gom lô: gửi khi đạt BATCH_SIZE hoặc sau mỗi TIMEOUT</span>
+            .bufferTimeout(BATCH_SIZE, TIMEOUT)
+            .subscribe(
+                batchActions -> executeEsBulk(batchActions),
+                error -> log.error(<span class="code-string">"Error in change stream sync: "</span>, error)
+            );
+    }
+
+    <span class="code-keyword">private</span> <span class="code-class">BulkOperation</span> transformToEsAction(<span class="code-class">ChangeStreamEvent</span>&lt;<span class="code-class">Document</span>&gt; event) {
+        <span class="code-comment">// Logic chuyển đổi event (insert, update, delete) sang ES action</span>
+        ...
+    }
+
+    <span class="code-keyword">private</span> <span class="code-keyword">void</span> executeEsBulk(<span class="code-class">List</span>&lt;<span class="code-class">BulkOperation</span>&gt; actions) {
+        <span class="code-keyword">if</span> (actions.isEmpty()) <span class="code-keyword">return</span>;
+        <span class="code-keyword">try</span> {
+            esClient.bulk(b -> b.operations(actions));
+            log.info(<span class="code-string">"Successfully flushed "</span> + actions.size() + <span class="code-string">" changes to Elasticsearch"</span>);
+        } <span class="code-keyword">catch</span> (<span class="code-class">IOException</span> e) {
+            log.error(<span class="code-string">"Failed to execute ES bulk"</span>, e);
+        }
+    }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Thang điểm đánh giá:</h5>
+                    <ul>
+                        <li><strong>Junior:</strong> Đề xuất cứ mỗi sự kiện thay đổi lại gọi API Elasticsearch ngay lập tức (phá hỏng hiệu năng ES dưới tải cao).</li>
+                        <li><strong>Middle:</strong> Biết cách tạo queue và dùng Scheduler chạy định kỳ để flush dữ liệu. Chưa có tư duy xử lý luồng phản ứng (Reactive) hoặc backpressure.</li>
+                        <li><strong>Senior:</strong> Đề xuất phương án dùng Project Reactor với <code>bufferTimeout</code> hoặc thiết kế Thread-safe Queue phối hợp cùng TaskScheduler chuẩn xác, đảm bảo thread-safety và tránh nghẽn bộ nhớ đệm.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Part 4: Resilience & Checkpointing -->
+            <section id="part4-resilience" class="card">
+                <span class="badge badge-danger">Phần 4: Độ bền bỉ & Khắc phục thảm họa</span>
+                <h2>4. Quản lý trạng thái (Checkpointing) và Xử lý lỗi oplog rolled over</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    Để đảm bảo hệ thống có thể tiếp tục đồng bộ chính xác sau khi sập nguồn (Crash/Restart), bạn lưu trữ trạng thái đồng bộ (Checkpoint) như thế nào? Nếu gặp lỗi Resume Token của MongoDB bị hết hạn hoặc bị ghi đè (Oplog Rollover), mã nguồn Java của bạn cần xử lý tự động như thế nào để phục hồi dữ liệu?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Lưu checkpoint vào Redis:</strong>
+                        <ul>
+                            <li>Trong quá trình *Initial Load*: Lưu checkpoint là giá trị <code>ObjectId</code> cuối cùng được xử lý.</li>
+                            <li>Trong quá trình *Change Stream*: Lưu checkpoint là giá trị <code>ResumeToken</code> hoặc <code>clusterTime</code> (BSON Timestamp) của sự kiện mới nhất được flush thành công.</li>
+                        </ul>
+                    </li>
+                    <li>
+                        <strong>Xử lý lỗi Oplog Rollover (Resume Token Invalid):</strong> 
+                        Khi sync worker ngắt kết nối quá lâu, lượng ghi của MongoDB quá lớn khiến Oplog cũ bị dọn dẹp, Resume Token lưu ở Redis trở nên vô hiệu. MongoDB sẽ ném lỗi (ví dụ mã lỗi 136 hoặc lỗi liên quan đến resume token).
+                    </li>
+                    <li>
+                        <strong>Chiến lược tự phục hồi (Automatic Failover):</strong>
+                        Bắt sự kiện lỗi này trong mã Java, xóa Checkpoint lưu ở Redis và tự động kích hoạt tiến trình chạy lại **Initial Load** từ đầu (đồng bộ mới lại) rồi mới chuyển tiếp sang Change Stream mới.
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Mã xử lý phục hồi lỗi trong Java:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>ChangeStreamErrorHandler.java</span>
+                        <span>Tự động bắt lỗi và fallback về Initial Load</span>
+                    </div>
+                    <pre><code><span class="code-keyword">try</span> {
+    <span class="code-comment">// Thử mở change stream từ checkpoint lưu trong Redis</span>
+    <span class="code-class">BsonDocument</span> resumeToken = redisService.getResumeToken(RESUME_TOKEN_KEY);
+    openMongoChangeStream(resumeToken);
+} <span class="code-keyword">catch</span> (<span class="code-class">MongoCommandException</span> e) {
+    <span class="code-comment">// Mã lỗi 136 hoặc chứa cụm từ liên quan tới invalid resume token</span>
+    <span class="code-keyword">if</span> (e.getErrorCode() == 136 || e.getMessage().contains(<span class="code-string">"resume token"</span>)) {
+        log.warn(<span class="code-string">"Resume token expired or oplog rolled over. Re-initializing..."</span>);
+        
+        <span class="code-comment">// 1. Xóa checkpoint lỗi trong Redis</span>
+        redisService.deleteKey(RESUME_TOKEN_KEY);
+        redisService.deleteKey(INITIAL_LOAD_OFFSET_KEY);
+        
+        <span class="code-comment">// 2. Chạy lại tiến trình Initial Load đầy đủ</span>
+        runInitialLoad();
+        
+        <span class="code-comment">// 3. Đăng ký lại Change Stream mới sau khi Initial Load hoàn tất</span>
+        openMongoChangeStream(<span class="code-keyword">null</span>);
+    } <span class="code-keyword">else</span> {
+        <span class="code-keyword">throw</span> e; <span class="code-comment">// Lỗi khác thì ném ra ngoài để theo dõi</span>
+    }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Thang điểm đánh giá:</h5>
+                    <ul>
+                        <li><strong>Junior:</strong> Không nghĩ tới việc lưu checkpoint. Server tắt đi bật lại là đồng bộ lại từ đầu hoặc bị mất dữ liệu.</li>
+                        <li><strong>Middle:</strong> Biết dùng Redis để lưu checkpoint. Tuy nhiên, khi gặp lỗi Oplog bị đè thì app bị crash liên tục, không biết cách viết code tự phục hồi tự động.</li>
+                        <li><strong>Senior:</strong> Thiết kế phân tách rõ ràng checkpoint giữa Initial Load (ObjectId) và Change Stream (Resume Token). Nêu rõ nguyên nhân Oplog Rollover và cài đặt cơ chế bắt exception để tự động xóa checkpoint và chạy lại tiến trình Initial Load để đồng bộ bù đắp.</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Part 5: Idempotency & Zero-Downtime -->
+            <section id="part5-zero-downtime" class="card">
+                <span class="badge badge-danger">Phần 5: Tính nhất quán & Vận hành</span>
+                <h2>5. Tính nhất quán (Idempotency) và Thay đổi Schema không gián đoạn (Zero-Downtime Deployment)</h2>
+                
+                <div class="alert alert-error">
+                    <h5>Câu hỏi dành cho Ứng viên:</h5>
+                    1. Làm thế nào để đảm bảo tính Idempotent (không bị ghi trùng lặp dữ liệu) khi mạng bị chập chờn và các message Change Stream bị gửi lặp lại?<br>
+                    2. Khi cần cập nhật cấu hình ánh xạ (ES Mapping) hoặc deploy nâng cấp mã nguồn, làm thế nào để thực hiện đồng bộ lại toàn bộ dữ liệu (Reindexing) mà không làm gián đoạn tính năng tìm kiếm của người dùng đang sử dụng hệ thống (Zero-Downtime)?
+                </div>
+
+                <h3 class="mt-24 mb-12">Đáp án kỳ vọng từ ứng viên Senior:</h3>
+                <ul>
+                    <li>
+                        <strong>Đảm bảo Idempotency:</strong> 
+                        Sử dụng trường khóa chính <code>_id</code> của MongoDB làm ID cho tài liệu tương ứng trong Elasticsearch (<code>_id</code> trong ES). Khi ES thực hiện ghi, hành vi <code>index</code> (ghi đè dựa theo ID) sẽ hoạt động như một phép cập nhật idempotent (upsert). Nếu tin nhắn bị lặp, dữ liệu trong ES vẫn nhất quán tuyệt đối.
+                    </li>
+                    <li>
+                        <strong>Zero-Downtime Reindexing (ES Aliases):</strong>
+                        <ol>
+                            <li>Hệ thống tìm kiếm của Client không kết nối trực tiếp đến index vật lý (ví dụ: <code>users_v1</code>) mà kết nối qua một **Alias** đại diện (ví dụ: <code>users_alias</code>).</li>
+                            <li>Khi cần cập nhật mapping, tạo một index vật lý mới: <code>users_v2</code>.</li>
+                            <li>Chạy tiến trình Initial Load đồng bộ toàn bộ dữ liệu từ MongoDB sang index <code>users_v2</code>. Trong thời gian này, Client vẫn tìm kiếm bình thường trên <code>users_v1</code> qua <code>users_alias</code>.</li>
+                            <li>Khi <code>users_v2</code> đã sync xong, thực hiện một thao tác nguyên tử (Atomic Action) trên ES để chuyển <code>users_alias</code> từ <code>users_v1</code> sang <code>users_v2</code>. Xóa index <code>users_v1</code> đi.</li>
+                        </ol>
+                    </li>
+                </ul>
+
+                <h4 class="mb-12">Ví dụ mã Java chuyển Alias nguyên tử trong Elasticsearch:</h4>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>ElasticsearchAliasService.java</span>
+                        <span>Thao tác Switch Alias nguyên tử</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">ElasticsearchAliasService</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">ElasticsearchClient</span> esClient;
+
+    <span class="code-keyword">public void</span> switchAlias(<span class="code-class">String</span> aliasName, <span class="code-class">String</span> oldIndex, <span class="code-class">String</span> newIndex) <span class="code-keyword">throws</span> <span class="code-class">IOException</span> {
+        esClient.indices().updateAliases(a -> a
+            .actions(actions -> actions
+                <span class="code-comment">// Loại bỏ index cũ khỏi alias và thêm index mới vào alias trong cùng 1 request nguyên tử</span>
+                .remove(r -> r.index(oldIndex).alias(aliasName))
+                .add(add -> add.index(newIndex).alias(aliasName))
+            )
+        );
+        log.info(<span class="code-string">"Atomically switched alias "</span> + aliasName + <span class="code-string">" from "</span> + oldIndex + <span class="code-string">" to "</span> + newIndex);
+    }
+}</code></pre>
+                </div>
+
+                <div class="alert alert-success mt-20">
+                    <h5>Thang điểm đánh giá:</h5>
+                    <ul>
+                        <li><strong>Junior:</strong> Sử dụng ID ngẫu nhiên của ES khi lưu tài liệu. Khi đổi cấu hình index thì tắt server, drop index cũ, tạo index mới rồi chạy sync lại (gây sập tính năng tìm kiếm của người dùng trong nhiều giờ).</li>
+                        <li><strong>Middle:</strong> Biết dùng Mongo ID làm ES ID. Biết đến khái niệm Alias nhưng chưa có kinh nghiệm thực thi kịch bản chuyển đổi index nguyên tử (Atomic Switch) qua code Java.</li>
+                        <li><strong>Senior:</strong> Khẳng định dùng ID trùng khớp để tự động xử lý trùng lặp (Idempotent write). Thiết kế quy trình Reindexing chi tiết sử dụng ES Alias Update Actions nguyên tử, đảm bảo 0% thời gian gián đoạn dịch vụ (Zero-Downtime).</li>
+                    </ul>
+                </div>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee phỏng vấn Senior Java</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>
