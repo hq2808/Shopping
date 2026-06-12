@@ -180,7 +180,8 @@ function generateSidebar() {
         {
             title: "Tổng quan",
             items: [
-                { text: "Trang chủ cổng tài liệu", file: "index.html", path: rootPath, id: "nav-index" }
+                { text: "Trang chủ cổng tài liệu", file: "index.html", path: rootPath, id: "nav-index" },
+                { text: "Kiến trúc Hệ thống", file: "architecture.html", path: prefix + "architecture.html", id: "nav-architecture" }
             ]
         },
         {
@@ -206,12 +207,14 @@ function generateSidebar() {
                 { text: "Giải pháp chịu tải cực hạn", file: "concurrency_solution.html", path: devPrefix + "concurrency_solution.html", id: "nav-concurrency" },
                 { text: "Phỏng vấn: Sync Data", file: "sync_interview.html", path: devPrefix + "sync_interview.html", id: "nav-sync-interview" },
                 { text: "Phỏng vấn: Migrate DB", file: "db_migration_interview.html", path: devPrefix + "db_migration_interview.html", id: "nav-db-migration" },
+                { text: "Kiến trúc: Search Pipeline", file: "main_feature_search.html", path: devPrefix + "main_feature_search.html", id: "nav-main-feature-search" },
+                { text: "☕ Java: Code Lại Pipeline Search", file: "java_sync_pipeline_implementation.html", path: devPrefix + "java_sync_pipeline_implementation.html", id: "nav-java-sync-pipeline" },
                 { text: "☕ Java Core & JVM Internals", file: "java_core_jvm.html", path: devPrefix + "java_core_jvm.html", id: "nav-java-core" },
                 { text: "✨ Clean Code & Refactoring", file: "dev_clean_code.html", path: devPrefix + "dev_clean_code.html", id: "nav-java-clean" },
                 { text: "🌐 HTTP & Spring Security", file: "http_spring_security.html", path: devPrefix + "http_spring_security.html", id: "nav-java-http" },
                 { text: "💾 Database & JPA/Mongo", file: "database_mongodb_jpa.html", path: devPrefix + "database_mongodb_jpa.html", id: "nav-java-db" },
                 { text: "⚡ Async & Task Queues", file: "async_message_queues.html", path: devPrefix + "async_message_queues.html", id: "nav-java-async" },
-                { text: "🚀 Swag Business Flows", file: "swag_business_flows.html", path: devPrefix + "swag_business_flows.html", id: "nav-java-swag" }
+                { text: "🚀 Main Business Flows", file: "main_business_flows.html", path: devPrefix + "main_business_flows.html", id: "nav-java-main" }
             ]
         }
     ];
@@ -319,7 +322,7 @@ function initializePage() {
             'http_spring_security.html',
             'database_mongodb_jpa.html',
             'async_message_queues.html',
-            'swag_business_flows.html'
+            'main_business_flows.html'
         ];
         
         const globalStats = document.getElementById('global-progress-stats');
@@ -332,7 +335,7 @@ function initializePage() {
             'http_spring_security.html': 8,
             'database_mongodb_jpa.html': 7,
             'async_message_queues.html': 6,
-            'swag_business_flows.html': 8
+            'main_business_flows.html': 8
         };
 
         let total = 0;

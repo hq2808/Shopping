@@ -142,12 +142,30 @@
                 <a href="dev/concurrency_solution.html" class="btn-portal">Truy cập Giải pháp Chịu tải cực hạn &rarr;</a>
             </section>
 
+            <!-- Guide 7: Search Indexing Pipeline Architecture -->
+            <section class="card">
+                <span class="badge badge-info">Dành cho System Architect</span>
+                <h2>7. Phân tích Kiến trúc Pipeline Tìm kiếm (Search Indexing Pipeline)</h2>
+                <p>
+                    Tài liệu phân tích chuyên sâu về kiến trúc đồng bộ dữ liệu thời gian thực từ MongoDB sang Elasticsearch của cấu phần <code>main-feature-search</code>:
+                </p>
+                <ul>
+                    <li>Chiến lược Initial Load (Backfile) tối ưu hóa cài đặt index và keyset pagination.</li>
+                    <li>Chiến lược Change Stream CDC thời gian thực, buffering và checkpointing trên Redis.</li>
+                    <li>Cơ chế tự động khôi phục dữ liệu chống mất mát khi Oplog của MongoDB bị rollover.</li>
+                    <li>Quy trình tiền xử lý, trích xuất tag giới tính và index hashtags tự động bằng UUIDv5.</li>
+                    <li>Hướng dẫn chi tiết từng bước lập trình và code lại pipeline bằng Java Spring Boot (Spring Reactor, Redis State, ES Java Client).</li>
+                </ul>
+                <a href="dev/main_feature_search.html" class="btn-portal">Xem Kiến trúc Pipeline &rarr;</a>
+                <a href="dev/java_sync_pipeline_implementation.html" class="btn-portal" style="margin-left: 10px;">Hướng dẫn code Java &rarr;</a>
+            </section>
+
             <!-- Java Senior Interview Prep -->
             <section class="card">
                 <span class="badge badge-info">Dành cho Java Developer</span>
-                <h2>7. Lộ trình ôn tập phỏng vấn Java Senior (Java Prep Hub)</h2>
+                <h2>8. Lộ trình ôn tập phỏng vấn Java Senior (Java Prep Hub)</h2>
                 <p>
-                    Tài liệu chuyển đổi dự án Swag Server sang Java/Spring Boot để củng cố kiến thức System Design nâng cao phục vụ ôn phỏng vấn:
+                    Tài liệu chuyển đổi dự án Main Server sang Java/Spring Boot để củng cố kiến thức System Design nâng cao phục vụ ôn phỏng vấn:
                 </p>
                 <ul>
                     <li>Tái cấu trúc mã nguồn (Refactoring & Clean Code) với Strategy + Autowired Map.</li>

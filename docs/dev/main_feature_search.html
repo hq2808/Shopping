@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture: main-feature-search - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../sidebar.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar"></aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Cẩm Nang Phỏng Vấn</span>
+                <h1>Kiến Trúc main-feature-search & Bộ Câu Hỏi Phỏng Vấn Senior<br><span class="gradient-text">High-Throughput Elasticsearch Sync Pipeline</span></h1>
+                <p>Khảo sát sâu cấu trúc mã nguồn, thiết kế hệ thống chịu lỗi, và bộ câu hỏi System Design thực tế chuyên sâu để phỏng vấn Senior Java / Python Architect.</p>
+            </section>
+
+            <!-- General Overview Alert -->
+            <div class="alert">
+                <h5>Bối Cảnh Thiết Kế:</h5>
+                <code>main-feature-search</code> chịu trách nhiệm đồng bộ dữ liệu người dùng (<code>user</code>) và tin nhắn (<code>message</code>) từ MongoDB (Primary DB) sang Elasticsearch. Hệ thống được chia làm hai pha chính: **Initial Load (Backfile)** cho dữ liệu lịch sử và **Change Stream (CDC)** cho dữ liệu thời gian thực.
+            </div>
+
+            <!-- Pipeline Flow Diagram -->
+            <section id="pipeline-diagram" class="card">
+                <span class="badge badge-success">Sơ đồ Luồng Đi Dữ Liệu</span>
+                <h2>Kiến trúc Phân tầng & Luồng Đi</h2>
+                <div class="arch-container">
+                    <div class="arch-flow">
+                        <!-- Row 1: Source Database -->
+                        <div class="arch-row">
+                            <div style="width: 230px;"></div>
+                            <div class="arch-box highlight-warning">
+                                <h4>MongoDB (Source DB)</h4>
+                                <p>Bộ sưu tập: <code>user</code> & <code>message</code></p>
+                            </div>
+                            <div style="width: 230px;"></div>
+                        </div>
+
+                        <!-- Connector V -->
+                        <div class="arch-connector-v"></div>
+
+                        <!-- Row 2: Sync Engine & State Manager -->
+                        <div class="arch-row">
+                            <div class="arch-box highlight-secondary">
+                                <h4>Redis State Manager</h4>
+                                <p>Lưu checkpoints:<br>- Backfile: ObjectId<br>- CDC: Timestamp</p>
+                            </div>
+                            <div class="arch-connector-h arrow-right active-arrow">
+                                <span class="arch-label">1. Check / Save State</span>
+                            </div>
+                            <div class="arch-box highlight-primary">
+                                <h4>search_sync_worker (Core Engine)</h4>
+                                <p>Điều hành 2 pha: BaseSync<br>Initial Load & Change Stream</p>
+                            </div>
+                            <div class="arch-connector-h arrow-left active-arrow">
+                                <span class="arch-label">2. Read Oplog / Keyset Cursor</span>
+                            </div>
+                            <div class="arch-box highlight-warning">
+                                <h4>MongoDB Change Stream</h4>
+                                <p>CDC qua <code>db.watch()</code> lắng nghe Oplog</p>
+                            </div>
+                        </div>
+
+                        <!-- Connector V -->
+                        <div class="arch-connector-v"></div>
+
+                        <!-- Row 3: Transformation & Routing -->
+                        <div class="arch-row">
+                            <div style="width: 230px;"></div>
+                            <div class="arch-box highlight-primary">
+                                <h4>Transform & Map Layer</h4>
+                                <p>Tiền xử lý tags, gender, badge_count, UUIDv5 hashtag</p>
+                            </div>
+                            <div style="width: 230px;"></div>
+                        </div>
+
+                        <!-- Connector V -->
+                        <div class="arch-connector-v"></div>
+
+                        <!-- Row 4: Destination Indexes -->
+                        <div class="arch-row">
+                            <div class="arch-box highlight-success">
+                                <h4>user-index (ES)</h4>
+                                <p>Chứa tài khoản người dùng, tag giới tính, trạng thái active</p>
+                            </div>
+                            <div class="arch-connector-h arrow-left active-arrow">
+                                <span class="arch-label">Bulk Flush</span>
+                            </div>
+                            <div class="arch-box highlight-success">
+                                <h4>message-index (ES)</h4>
+                                <p>Chứa nội dung tin nhắn quảng bá công khai (broadcast)</p>
+                            </div>
+                            <div class="arch-connector-h arrow-right active-arrow">
+                                <span class="arch-label">Bulk Flush</span>
+                            </div>
+                            <div class="arch-box highlight-success">
+                                <h4>message-hashtag-index (ES)</h4>
+                                <p>Chức năng tìm kiếm hashtag flix bằng khóa UUIDv5</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Technical Specification Details -->
+            <section id="tech-details" class="card">
+                <span class="badge badge-info">Thông số kỹ thuật</span>
+                <h2>1. Chi tiết thiết kế lớp và Kỹ thuật tối ưu</h2>
+                
+                <h3 class="mt-20 mb-8">Pha 1: Initial Load (Backfile)</h3>
+                <p class="mb-16">
+                    Mục tiêu của pha này là di chuyển hàng chục triệu bản ghi lịch sử một cách nhanh nhất.
+                </p>
+                <ul>
+                    <li class="mb-8"><strong>Keyset Pagination (Phân trang con trỏ)</strong>: Quét MongoDB sử dụng chỉ mục trên trường <code>_id</code> với điều kiện <code>{_id: {'$gt': last_id}}</code>. Phương pháp này giữ tốc độ ổn định ở mức $O(\log N)$ thay vì dùng <code>skip()</code> vốn có độ phức tạp $O(N)$ tăng dần theo độ sâu trang.</li>
+                    <li class="mb-8"><strong>Tắt Refresh & Replica</strong>: Trước khi import, hệ thống gửi cấu hình <code>refresh_interval: -1</code> và <code>number_of_replicas: 0</code> sang Elasticsearch. Việc này giúp tắt tính năng commit segment liên tục và tắt nhân bản đồng bộ, tăng tốc độ ghi lên 300%. Sau khi import xong, các thông số này được khôi phục về trạng thái sản xuất (<code>1s</code> và <code>1</code> replica).</li>
+                    <li class="mb-8"><strong>Parallel Bulk Write</strong>: Gom lô 1000 bản ghi và sử dụng đa luồng (ví dụ <code>parallel_bulk</code> trong Python) để tối ưu băng thông I/O.</li>
+                </ul>
+
+                <h3 class="mt-24 mb-8">Pha 2: Real-time CDC (Change Stream)</h3>
+                <p class="mb-16">
+                    Sau khi hoàn thành Backfile, hệ thống chuyển sang chế độ Change Stream lắng nghe Oplog:
+                </p>
+                <ul>
+                    <li class="mb-8"><strong>State Checkpointing</strong>: Checkpoint được lưu vào Redis. Đối với pha Backfile, đó là <code>_id</code> (ObjectId) của bản ghi cuối. Đối với pha Change Stream, đó là <code>clusterTime</code> (BSON Timestamp) của Oplog.</li>
+                    <li class="mb-8"><strong>Buffering & Flush</strong>: Nhằm giảm tải cho Elasticsearch, các sự kiện cập nhật không được ghi lẻ tẻ mà được lưu tạm vào hàng đợi bộ đệm. Sự kiện sẽ được flush hàng loạt khi đạt 1000 items hoặc sau tối đa 2 giây.</li>
+                </ul>
+            </section>
+
+            <!-- Comprehensive Interview Q&A Section -->
+            <section id="interview-qa" class="card">
+                <span class="badge badge-danger">Góc Phỏng Vấn Senior</span>
+                <h2>2. Bộ Câu Hỏi Phỏng Vấn Chuyên Sâu (System Design Q&A)</h2>
+                <p class="mb-20">
+                    Dưới đây là các câu hỏi tình huống thực tế và câu trả lời ở cấp độ Senior/System Architect liên quan trực tiếp đến thiết kế của hệ thống:
+                </p>
+
+                <!-- Q1: Idempotency -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Làm thế nào để đảm bảo tính Idempotency (Không trùng lặp dữ liệu) khi mạng bị chập chờn hoặc khi hệ thống phải chạy lại pha Initial Load?
+                    </div>
+                    <div class="qa-answer">
+                        <p>
+                            Tính Idempotency được đảm bảo nhờ việc kiểm soát cách sinh khóa chính (<code>_id</code>) trên Elasticsearch:
+                        </p>
+                        <ul class="mt-8">
+                            <li><strong>user-index và message-index</strong>: Sử dụng chính <code>_id</code> (dạng chuỗi hex đại diện cho MongoDB ObjectId) của document nguồn để làm ID tài liệu trên Elasticsearch. Khi chạy lại, thao tác ghi sẽ chuyển thành <code>index</code> (ghi đè/upsert) thay vì <code>create</code> (tạo mới sinh ID ngẫu nhiên), giúp loại bỏ hoàn toàn nguy cơ trùng lặp.</li>
+                            <li><strong>message-hashtag-index</strong>: Vì một tin nhắn có thể chứa nhiều hashtag và cần được index tách biệt, chúng tôi sử dụng thuật toán <strong>UUIDv5</strong> dựa trên namespace tĩnh và tên định danh dạng <code>{message_id}-{hashtag}</code> để sinh ID tài liệu. Khóa này có tính nhất quán 100% qua các lần chạy, đảm bảo ghi đè chính xác bản ghi cũ khi có trùng lặp.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Q2: Oplog Rollover -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        MongoDB Oplog là gì? Hiện tượng "Oplog Rollover" xảy ra khi nào và làm sao thiết kế hệ thống tự phục hồi (Self-Healing) khi gặp lỗi này?
+                    </div>
+                    <div class="qa-answer">
+                        <p>
+                            Oplog (Operations Log) là một <strong>Capped Collection</strong> trong MongoDB lưu trữ lịch sử tất cả các thao tác sửa đổi dữ liệu.
+                        </p>
+                        <p class="mt-8">
+                            <strong>Oplog Rollover</strong> xảy ra khi tốc độ ghi của hệ thống quá nhanh hoặc dịch vụ đồng bộ bị sập quá lâu, khiến dữ liệu mới ghi đè lên các bản ghi Oplog cũ. Khi worker khởi động lại và cố gắng resume bằng <code>clusterTime</code> cũ, MongoDB sẽ trả về lỗi do Token không còn tồn tại (Mã lỗi 136 hoặc invalid resume token).
+                        </p>
+                        <p class="mt-8">
+                            <strong>Thiết kế tự phục hồi:</strong> Trong lớp <code>BaseSync</code> (phương thức <code>watch_change_stream</code>), chúng tôi bọc mã nguồn trong khối <code>try-except OperationFailure</code>. Khi phát hiện mã lỗi liên quan đến resume token lỗi thời:
+                        </p>
+                        <ol class="mt-8" style="margin-left: 20px;">
+                            <li>Hệ thống log cảnh báo lỗi nghiêm trọng.</li>
+                            <li>Gọi <code>state_manager.clear_state(self.state_key)</code> để xóa checkpoint cũ trên Redis.</li>
+                            <li>Tự động kích hoạt lại phương thức <code>initial_load()</code> để thực hiện đồng bộ lại dữ liệu lịch sử từ đầu (Backfile) bằng Keyset Pagination. Quá trình này giúp tái cấu trúc tính nhất quán dữ liệu mà không cần con người can thiệp.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Q3: HTTP 429 Backpressure -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Trong pha Initial Load, nếu Elasticsearch bị quá tải và trả về lỗi HTTP 429 (Too Many Requests), bạn sẽ xử lý thế nào để không làm sập pipeline?
+                    </div>
+                    <div class="qa-answer">
+                        <p>
+                            Đây là bài toán về kiểm soát áp lực ngược (Backpressure) và quá tải tài nguyên. Chúng tôi giải quyết bằng các cơ chế:
+                        </p>
+                        <ul class="mt-8">
+                            <li><strong>Retry Policy với Exponential Backoff</strong>: Cấu hình Elasticsearch client thực hiện thử lại tự động khi gặp lỗi 429 hoặc kết nối. Thời gian chờ tăng dần theo cấp số nhân (ví dụ: 1s, 2s, 4s, 8s...) kèm theo độ nhiễu ngẫu nhiên (Jitter) để tránh hiện tượng nghẽn do các luồng đồng loạt thử lại cùng lúc (Thundering Herd).</li>
+                            <li><strong>Giới hạn hàng đợi (Queue Size & Queue Limit)</strong>: Trong <code>parallel_bulk</code>, chúng tôi giới hạn <code>queue_size</code> và số luồng song song (<code>thread_count</code>). Khi hàng đợi đầy, luồng chính đọc dữ liệu từ MongoDB sẽ bị block (Blocked Thread) tự nhiên, ngăn không cho đọc thêm dữ liệu lên bộ nhớ cho đến khi ES giải phóng bớt tác vụ ghi.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Q4: Blue-Green Index Mapping change -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Khi cần thay đổi cấu trúc Mapping (Schema) trên Elasticsearch (ví dụ: đổi kiểu dữ liệu trường từ text sang keyword) của một index đang chạy live, làm thế nào để thực hiện Zero-Downtime?
+                    </div>
+                    <div class="qa-answer">
+                        <p>
+                            Chúng tôi sử dụng chiến lược <strong>Blue-Green Index Deployment</strong> kết hợp với <strong>Elasticsearch Index Aliases</strong>:
+                        </p>
+                        <ol class="mt-8" style="margin-left: 20px;">
+                            <li class="mb-4"><strong>Sử dụng Alias</strong>: Ứng dụng client đọc dữ liệu thông qua tên Alias (ví dụ: <code>user-index</code>) thay vì truy cập trực tiếp tên index vật lý (ví dụ: <code>user-index-v1</code>).</li>
+                            <li class="mb-4"><strong>Tạo Index mới</strong>: Tạo một index vật lý mới với cấu hình Mapping đã cập nhật (ví dụ: <code>user-index-v2</code>).</li>
+                            <li class="mb-4"><strong>Reindex/Sync</strong>: Kích hoạt pipeline đồng bộ chạy Initial Load từ MongoDB sang index mới <code>user-index-v2</code>. Trong suốt quá trình này, Alias <code>user-index</code> vẫn trỏ vào <code>user-index-v1</code> giúp client đọc bình thường.</li>
+                            <li class="mb-4"><strong>Atomic Switch</strong>: Khi index mới đã đồng bộ kịp thời gian thực (CDC bắt kịp), chúng tôi thực hiện đổi hướng Alias bằng API <code>_aliases</code> một cách nguyên tử (atomic):
+                                <pre class="mt-8"><code>POST /_aliases
+{
+  "actions": [
+    { "remove": { "index": "user-index-v1", "alias": "user-index" } },
+    { "add":    { "index": "user-index-v2", "alias": "user-index" } }
+  ]
+}</code></pre>
+                            </li>
+                            <li class="mb-4"><strong>Xóa Index cũ</strong>: Xóa index cũ <code>user-index-v1</code> sau một khoảng thời gian giám sát an toàn.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Q5: Data Drift -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Làm thế nào để phát hiện và khắc phục hiện tượng chênh lệch dữ liệu (Data Drift / Discrepancy) giữa MongoDB và Elasticsearch sau thời gian dài vận hành?
+                    </div>
+                    <div class="qa-answer">
+                        <p>
+                            Để đảm bảo tính nhất quán tuyệt đối của dữ liệu tìm kiếm, chúng tôi áp dụng chiến lược kết hợp:
+                        </p>
+                        <ul class="mt-8">
+                            <li class="mb-8">
+                                <strong>Shadow-Read & Deep-Compare (Đọc đối soát thời gian thực)</strong>: 
+                                Khi client gọi API đọc, hệ thống kích hoạt một thread bất đồng bộ thực hiện truy vấn tương tự sang Elasticsearch và MongoDB. So khớp chi tiết các trường quan trọng (ví dụ: trạng thái active, badge_count). Nếu phát hiện mismatch, hệ thống sẽ bắn log cảnh báo kèm thông tin định danh và tự động trigger ghi đè bản ghi đó từ Mongo sang ES để vá lỗi ngay lập tức.
+                            </li>
+                            <li class="mb-8">
+                                <strong>Reconciliation Batch Job (Đối soát định kỳ ngầm)</strong>: 
+                                Chạy một tác vụ ngầm vào khung giờ thấp điểm (đêm muộn). Job này sẽ so sánh số lượng tài liệu (Count Check) và kiểm tra checksum hoặc hash của từng cụm dữ liệu giữa MongoDB và ES index. Cụm nào có chênh lệch sẽ được quét sâu hơn để tìm ra document bị thiếu/sai lệch và thực hiện đồng bộ bù.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transforming code to Java/Spring Boot -->
+            <section id="java-porting" class="card">
+                <span class="badge badge-success">Dịch chuyển tư duy</span>
+                <h2>3. Định hướng chuyển đổi sang Spring Boot (Java)</h2>
+                <p class="mb-20">
+                    Khi phỏng vấn Java Senior, bạn cần chuyển dịch các thuật ngữ Python/Node.js sang hệ sinh thái Spring Enterprise:
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Khái niệm / Thành phần</th>
+                            <th>Triển khai Python hiện tại</th>
+                            <th>Triển khai tương đương trong Spring Boot</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ORM & Client Connection</strong></td>
+                            <td>pymongo & elasticsearch-py</td>
+                            <td><code>Spring Data MongoDB</code> & <code>Spring Data Elasticsearch</code> (sử dụng <code>MongoTemplate</code> và <code>ElasticsearchOperations</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Change Stream CDC</strong></td>
+                            <td><code>db.collection.watch()</code> trong vòng lặp vô hạn.</td>
+                            <td>Sử dụng <code>MessageListenerContainer</code> của Spring Data MongoDB hoặc tích hợp công cụ chuyên dụng như <strong>Debezium</strong> để push Oplog sang Kafka.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Multi-threading & Bulk</strong></td>
+                            <td><code>helpers.parallel_bulk</code> (ThreadPool)</td>
+                            <td>Cấu hình <code>ThreadPoolTaskExecutor</code> kết hợp với <code>BulkRequest</code> của Elasticsearch Java API Client. Ghi bất đồng bộ dùng <code>CompletableFuture</code> hoặc reactive stream với <code>WebClient</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>State Checkpoint</strong></td>
+                            <td>state.py (Redis client)</td>
+                            <td><code>Spring Data Redis</code> (sử dụng <code>StringRedisTemplate</code> hoặc <code>RedisRepository</code>).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee - Main Architecture Portal</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>

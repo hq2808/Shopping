@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Sync Pipeline Implementation - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../sidebar.js" defer></script>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar"></aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-danger">Lập Trình Thực Hành</span>
+                <h1>Hướng Dẫn Code Lại Pipeline Tìm Kiếm Bằng Java<br><span class="gradient-text">HLD, LLD & Implementation Blueprint</span></h1>
+                <p>Khảo sát sâu lý thuyết nền tảng, thiết kế mức cao (HLD), thiết kế chi tiết (LLD), cấu trúc lớp và cách lập trình chuyển đổi hệ thống sang Spring Boot.</p>
+            </section>
+
+            <!-- Guide Intro Alert -->
+            <div class="alert">
+                <h5>Đặc tả thiết kế:</h5>
+                Tài liệu này bao gồm <strong>Lý thuyết thiết kế nền tảng</strong>, <strong>Thiết kế mức cao (HLD)</strong>, <strong>Thiết kế mức chi tiết (LLD)</strong> và <strong>Mã nguồn Java đầy đủ</strong> để triển khai hệ thống đồng bộ dữ liệu MongoDB sang Elasticsearch.
+            </div>
+
+            <!-- Theory Section -->
+            <section id="theory" class="card">
+                <span class="badge badge-success">Lý Thuyết Nền Tảng</span>
+                <h2>1. Cơ sở Lý thuyết Thiết kế Hệ thống</h2>
+                
+                <h3 class="mt-20 mb-8">A. Keyset Pagination vs Offset Pagination</h3>
+                <p class="mb-16">
+                    Trong phân trang kiểu Offset truyền thống (<code>LIMIT M OFFSET N</code>), để lấy dữ liệu trang thứ $K$, database bắt buộc phải duyệt qua toàn bộ $N$ bản ghi trước đó, sắp xếp và vứt chúng đi, chỉ trả về $M$ bản ghi cuối cùng. Độ phức tạp thuật toán là $O(N)$. Khi dữ liệu đạt hàng triệu bản ghi, I/O của database sẽ bị quá tải nghiêm trọng.
+                </p>
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-success); color: var(--text-secondary);">
+                    <strong>Giải pháp Keyset Pagination (Cursor-based):</strong> 
+                    Thay vì bỏ qua $N$ bản ghi, chúng ta sử dụng cột khóa chính có tính chất tuần tự (như <code>_id</code> ObjectId trong MongoDB) làm điểm neo (Cursor). Câu truy vấn trở thành <code>WHERE _id > last_id ORDER BY _id ASC LIMIT M</code>. Cơ sở dữ liệu sẽ nhảy trực tiếp tới điểm bắt đầu bằng chỉ mục B-Tree trong thời gian $O(\log N)$, loại bỏ hoàn toàn việc scan đĩa cứng lãng phí.
+                </div>
+
+                <h3 class="mt-24 mb-8">B. Change Data Capture (CDC) vs Database Polling</h3>
+                <p class="mb-16">
+                    Để đồng bộ thời gian thực, nếu dùng phương pháp Polling (quét định kỳ bảng dữ liệu dựa theo cột <code>updated_at</code>), hệ thống sẽ gây nghẽn lock và tiêu tốn CPU của database ngay cả khi không có dữ liệu thay đổi.
+                </p>
+                <p class="mb-16">
+                    <strong>Giải pháp CDC (lắng nghe Oplog):</strong> MongoDB ghi lại tất cả các hoạt động thay đổi dữ liệu vào một tệp nhật ký giao dịch tuần tự gọi là <strong>Oplog (Operations Log)</strong>. Change Stream cho phép ứng dụng đăng ký lắng nghe tệp tin này dưới dạng luồng sự kiện (Event-driven CDC). Cơ chế này giúp tối ưu tài nguyên database chính gần như về mức $O(1)$ đối với các giao dịch đọc, và chỉ trigger xử lý khi có sự kiện ghi thực tế phát sinh.
+                </p>
+
+                <h3 class="mt-24 mb-8">C. Project Reactor & Reactive Buffering</h3>
+                <p class="mb-16">
+                    Trong Java Spring Boot, việc ghi lẻ tẻ từng bản ghi Change Stream lên Elasticsearch sẽ phá hủy hiệu năng ghi (Ingestion rate) của công cụ tìm kiếm. Chúng ta sử dụng luồng phản ứng (Reactive Streams) của <strong>Project Reactor (Spring WebFlux)</strong>.
+                </p>
+                <p class="mb-16">
+                    Toán tử <code>bufferTimeout(batchSize, timeout)</code> cung cấp một bộ đệm thread-safe trong bộ nhớ JVM. Nó gom các phần tử từ Change Stream và flush hàng loạt dưới dạng Bulk Operation khi:
+                </p>
+                <ul>
+                    <li>Số lượng sự kiện trong hàng đợi đạt ngưỡng tối đa (ví dụ 1000 docs).</li>
+                    <li>Hoặc khoảng thời gian chờ tối đa trôi qua kể từ phần tử đầu tiên (ví dụ 2 giây).</li>
+                </ul>
+            </section>
+
+            <!-- HLD Section -->
+            <section id="hld" class="card">
+                <span class="badge badge-info">High-Level Design (HLD)</span>
+                <h2>2. Thiết Kế Mức Cao (HLD)</h2>
+                
+                <h3 class="mt-20 mb-8">A. Sơ đồ Kiến trúc Thành phần (System Architecture)</h3>
+                <p class="mb-16">Mô hình phân tầng tương tác giữa các thành phần trong hệ thống đồng bộ hóa:</p>
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); color: var(--text-secondary);">
+                    <strong>Luồng chạy tổng thể:</strong>
+                    <br>
+                    <code>[Runner / CLI] &rarr; [BaseSyncService] &rarr; [StateService / Redis] (Đọc Checkpoint)</code>
+                    <br>
+                    <code>&rarr; [Initial Load] (Quét MongoDB qua Cursor &rarr; Ghi Bulk song song ES)</code>
+                    <br>
+                    <code>&rarr; [Change Stream] (CDC Event &rarr; Reactive Buffer Timeout &rarr; ES Bulk)</code>
+                </div>
+
+                <h3 class="mt-24 mb-8">B. Sơ đồ Lớp (Class Diagram)</h3>
+                <p class="mb-16">Mối quan hệ kế thừa và tiêm phụ thuộc (Dependency Injection) trong mã nguồn Java:</p>
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-secondary); color: var(--text-secondary); font-family: var(--font-mono); font-size: 13px; line-height: 1.5;">
+                    +-------------------------------------------------------------+<br>
+                    |                      BaseSyncService&lt;T&gt;                    |<br>
+                    +-------------------------------------------------------------+<br>
+                    | - mongoTemplate: MongoTemplate                              |<br>
+                    | - reactiveMongoTemplate: ReactiveMongoTemplate              |<br>
+                    | - esClient: ElasticsearchClient                             |<br>
+                    | - stateService: StateService                                |<br>
+                    +-------------------------------------------------------------+<br>
+                    | + runSync(): void                                           |<br>
+                    | # runInitialLoad(): void                                    |<br>
+                    | # startChangeStream(startAt: Instant): void                 |<br>
+                    | * getIndexName(): String                                    |<br>
+                    | * getCollectionName(): String                               |<br>
+                    | * transformToBulkAction(doc: Document): BulkOperation       |<br>
+                    +-------------------------------------------------------------+<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;^<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+-----------+-----------+<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;|                       |<br>
+                    +-----------------------+   +-----------------------+<br>
+                    |    UserSyncService    |   |   MessageSyncService  |<br>
+                    +-----------------------+   +-----------------------+<br>
+                    | + transformToBulk()   |   | + transformToBulk()   |<br>
+                    +-----------------------+   +-----------------------+
+                </div>
+
+                <h3 class="mt-24 mb-8">C. Sơ đồ Trình tự Xử lý (Sequence Diagram)</h3>
+                <p class="mb-16">Tiến trình bắt đầu đồng bộ và xử lý phục hồi lỗi tự động:</p>
+                
+                <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-warning); color: var(--text-secondary); font-family: var(--font-mono); font-size: 13px; line-height: 1.5;">
+                    Runner          BaseSyncService         MongoDB          Redis          Elasticsearch<br>
+                      |                   |                    |               |                  |<br>
+                      |--- runSync() ---->|                    |               |                  |<br>
+                      |                   |--- getStateKey() ----------------->|                  |<br>
+                      |                   |&lt;-- checkpoint --------------------|                  |<br>
+                      |                   |                    |               |                  |<br>
+                      |                   |-- [Nếu checkpoint rỗng/ObjectId]                      |<br>
+                      |                   |--- runInitialLoad()|               |                  |<br>
+                      |                   |--- Query Keyset --&gt;|               |                  |<br>
+                      |                   |&lt;-- Document batch -|               |                  |<br>
+                      |                   |--- Bulk Write ---------------------------------------&gt;|<br>
+                      |                   |--- Save Checkpoint ----------------&gt;|                  |<br>
+                      |                   |                    |               |                  |<br>
+                      |                   |-- [Chuyển sang CDC Change Stream]                     |<br>
+                      |                   |--- watch() -------&gt;|               |                  |<br>
+                      |                   |&lt;-- stream event ---|               |                  |<br>
+                      |                   |-- bufferTimeout()  |               |                  |<br>
+                      |                   |--- Bulk Flush ---------------------------------------&gt;|<br>
+                      |                   |--- Save clusterTime --------------&gt;|                  |
+                </div>
+            </section>
+
+            <!-- LLD Section -->
+            <section id="lld" class="card">
+                <span class="badge badge-warning">Low-Level Design (LLD)</span>
+                <h2>3. Thiết Kế Mức Chi Tiết (LLD)</h2>
+                
+                <h3 class="mt-20 mb-8">A. Đặc tả cấu trúc Redis Checkpoints (Redis Keys)</h3>
+                <p class="mb-12">Hệ thống quản lý trạng thái đồng bộ thông qua các key trong Redis dưới dạng chuỗi (String):</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Key Name (Redis)</th>
+                            <th>Data Type</th>
+                            <th>Value Format</th>
+                            <th>Mô tả chức năng</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>checkpoint:users</code></td>
+                            <td>String</td>
+                            <td>MongoDB ObjectId (Ví dụ: <code>64f21b7e9f3b1021bc8201a2</code>) hoặc Oplog clusterTime (Unix Timestamp - Long)</td>
+                            <td>Lưu điểm neo cuối cùng của tiến trình đồng bộ Users.</td>
+                        </tr>
+                        <tr>
+                            <td><code>checkpoint:messages</code></td>
+                            <td>String</td>
+                            <td>MongoDB ObjectId hoặc Oplog clusterTime (Unix Timestamp - Long)</td>
+                            <td>Lưu điểm neo cuối cùng của tiến trình đồng bộ Messages.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3 class="mt-24 mb-8">B. Cấu hình đa luồng ghi song song (ThreadPool Configurations)</h3>
+                <p class="mb-16">
+                    Để pha Initial Load (Backfile) đạt hiệu năng tối đa mà không gây tràn bộ nhớ (Out Of Memory - OOM), cấu hình <code>ThreadPoolExecutor</code> sử dụng chiến lược áp lực ngược như sau:
+                </p>
+                <ul>
+                    <li class="mb-8"><code>corePoolSize</code>: 4 (Số lượng luồng xử lý core cố định).</li>
+                    <li class="mb-8"><code>maxPoolSize</code>: 8 (Số lượng luồng tối đa khi hàng đợi quá tải).</li>
+                    <li class="mb-8"><code>queueCapacity</code>: 50 (Giới hạn số lượng lô dữ liệu nằm chờ trong RAM).</li>
+                    <li class="mb-8"><strong>RejectedExecutionHandler</strong>: <code>CallerRunsPolicy</code>.
+                        <div class="alert alert-error mt-8 mb-8" style="padding: 12px 16px; margin: 8px 0;">
+                            <strong>Tại sao dùng CallerRunsPolicy?</strong> 
+                            Khi Elasticsearch ghi chậm dẫn đến hàng đợi ThreadPool (capacity=50) bị đầy, chính thread chính (luồng đọc dữ liệu từ MongoDB) sẽ đứng ra thực thi tác vụ ghi đó. Việc này tự động dừng luồng đọc Mongo lại, tạo cơ chế giảm tốc tự nhiên (Backpressure), ngăn chặn OOM trên JVM.
+                        </div>
+                    </li>
+                </ul>
+
+                <h3 class="mt-24 mb-8">C. Ánh xạ Dữ liệu Chi tiết (Mongo BSON to ES Document Mapping)</h3>
+                <p class="mb-12">Đặc tả các quy tắc chuyển dịch trường thông tin (Field Transformation Rules):</p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>MongoDB Field (Source)</th>
+                            <th>Elasticsearch Field (Target)</th>
+                            <th>Transform Rule / Algorithm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>_id</code> (ObjectId)</td>
+                            <td><code>_id</code> (String)</td>
+                            <td>Chuyển thành dạng Hex String (Đảm bảo tính Idempotency).</td>
+                        </tr>
+                        <tr>
+                            <td><code>username</code> (String)</td>
+                            <td><code>username</code> (String)</td>
+                            <td>Chuyển thành chữ thường: <code>doc.getString("username").toLowerCase()</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tags</code> (Array)</td>
+                            <td><code>active</code> (Integer)</td>
+                            <td>Mặc định = 1 nếu có username. Nếu tags chứa <code>banned</code> hoặc <code>hidden</code> &rarr; active = 0.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tags</code> (Array)</td>
+                            <td><code>creator</code> (Integer)</td>
+                            <td>Nếu tags chứa <code>signed</code> hoặc <code>stats</code> &rarr; creator = 1, ngược lại = 0.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tags</code> (Array)</td>
+                            <td><code>badge_count</code> (Integer)</td>
+                            <td>Đếm số lượng tag trùng khớp với Regex: <code>auto-follow|badge|event|famous|featured|lang|signed|stats</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><code>tags</code> (Array)</td>
+                            <td><code>gender</code> (Array)</td>
+                            <td>Lọc các phần tử mảng bắt đầu bằng tiền tố <code>gender:</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Dependencies & Configuration -->
+            <section id="setup" class="card">
+                <span class="badge badge-success">Bước 1: Thiết lập</span>
+                <h2>4. Thư viện Maven (pom.xml) & Cấu hình</h2>
+                <p class="mb-16">Thêm các thư viện Spring Boot Starter cần thiết vào dự án Java:</p>
+                
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>pom.xml</span>
+                        <span>Maven Dependencies</span>
+                    </div>
+                    <pre><code><span class="code-keyword">&lt;dependencies&gt;</span>
+    <span class="code-comment">&lt;!-- Spring Boot Starter WebFlux (Cho Project Reactor) --&gt;</span>
+    <span class="code-keyword">&lt;dependency&gt;</span>
+        <span class="code-keyword">&lt;groupId&gt;</span>org.springframework.boot<span class="code-keyword">&lt;/groupId&gt;</span>
+        <span class="code-keyword">&lt;artifactId&gt;</span>spring-boot-starter-webflux<span class="code-keyword">&lt;/artifactId&gt;</span>
+    <span class="code-keyword">&lt;/dependency&gt;</span>
+
+    <span class="code-comment">&lt;!-- Spring Data MongoDB (Hỗ trợ Reactive và Sync) --&gt;</span>
+    <span class="code-keyword">&lt;dependency&gt;</span>
+        <span class="code-keyword">&lt;groupId&gt;</span>org.springframework.boot<span class="code-keyword">&lt;/groupId&gt;</span>
+        <span class="code-keyword">&lt;artifactId&gt;</span>spring-boot-starter-data-mongodb-reactive<span class="code-keyword">&lt;/artifactId&gt;</span>
+    <span class="code-keyword">&lt;/dependency&gt;</span>
+
+    <span class="code-comment">&lt;!-- Spring Data Redis (Lưu checkpoint) --&gt;</span>
+    <span class="code-keyword">&lt;dependency&gt;</span>
+        <span class="code-keyword">&lt;groupId&gt;</span>org.springframework.boot<span class="code-keyword">&lt;/groupId&gt;</span>
+        <span class="code-keyword">&lt;artifactId&gt;</span>spring-boot-starter-data-redis<span class="code-keyword">&lt;/artifactId&gt;</span>
+    <span class="code-keyword">&lt;/dependency&gt;</span>
+
+    <span class="code-comment">&lt;!-- Elasticsearch Java Client --&gt;</span>
+    <span class="code-keyword">&lt;dependency&gt;</span>
+        <span class="code-keyword">&lt;groupId&gt;</span>co.elastic.clients<span class="code-keyword">&lt;/groupId&gt;</span>
+        <span class="code-keyword">&lt;artifactId&gt;</span>elasticsearch-java<span class="code-keyword">&lt;/artifactId&gt;</span>
+        <span class="code-keyword">&lt;version&gt;</span>8.11.1<span class="code-keyword">&lt;/version&gt;</span>
+    <span class="code-keyword">&lt;/dependency&gt;</span>
+<span class="code-keyword">&lt;/dependencies&gt;</span></code></pre>
+                </div>
+
+                <h3 class="mt-24 mb-12">Cấu hình tham số (application.yml)</h3>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>application.yml</span>
+                    </div>
+                    <pre><code><span class="code-keyword">spring</span>:
+  <span class="code-keyword">data</span>:
+    <span class="code-keyword">mongodb</span>:
+      <span class="code-keyword">uri</span>: mongodb://localhost:27017/main_database
+    <span class="code-keyword">redis</span>:
+      <span class="code-keyword">host</span>: localhost
+      <span class="code-keyword">port</span>: 6379
+
+<span class="code-keyword">sync</span>:
+  <span class="code-keyword">batch-size</span>: 1000
+  <span class="code-keyword">poll-interval-ms</span>: 2000
+  <span class="code-keyword">elasticsearch</span>:
+    <span class="code-keyword">uris</span>: http://localhost:9200
+    <span class="code-keyword">thread-count</span>: 4</code></pre>
+                </div>
+            </section>
+
+            <!-- State Manager implementation -->
+            <section id="state-manager" class="card">
+                <span class="badge badge-warning">Bước 2: Checkpoints</span>
+                <h2>5. Lớp Quản Lý Trạng Thái Redis (StateService.java)</h2>
+                <p class="mb-16">Dùng Redis để lưu trữ offset dạng ObjectId cho Backfile hoặc clusterTime (Timestamp) cho Change Stream:</p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>StateService.java</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">StateService</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">StringRedisTemplate</span> redisTemplate;
+
+    <span class="code-keyword">public</span> <span class="code-class">String</span> getState(<span class="code-class">String</span> key) {
+        <span class="code-keyword">return</span> redisTemplate.opsForValue().get(key);
+    }
+
+    <span class="code-keyword">public void</span> setState(<span class="code-class">String</span> key, <span class="code-class">String</span> value) {
+        redisTemplate.opsForValue().set(key, value);
+    }
+
+    <span class="code-keyword">public void</span> clearState(<span class="code-class">String</span> key) {
+        redisTemplate.delete(key);
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Base Sync Engine -->
+            <section id="base-sync-engine" class="card">
+                <span class="badge badge-danger">Bước 3: Engine Cốt Lõi</span>
+                <h2>6. Bộ Khung Đồng Bộ Hóa Trừu Tượng (BaseSyncService.java)</h2>
+                <p class="mb-16">
+                    Sử dụng thiết kế lớp trừu tượng kết hợp Spring Data và Reactive Streams (Project Reactor) để tự động hóa quá trình chuyển đổi giữa pha nạp lịch sử (Backfile) và CDC (Change Stream):
+                </p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>BaseSyncService.java</span>
+                        <span>Generic Core Processing Logic</span>
+                    </div>
+                    <pre><code><span class="code-keyword">public abstract class</span> <span class="code-class">BaseSyncService</span>&lt;<span class="code-class">T</span>&gt; {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">protected</span> <span class="code-class">MongoTemplate</span> mongoTemplate;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">protected</span> <span class="code-class">ReactiveMongoTemplate</span> reactiveMongoTemplate;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">protected</span> <span class="code-class">ElasticsearchClient</span> esClient;
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">protected</span> <span class="code-class">StateService</span> stateService;
+
+    <span class="code-keyword">protected abstract</span> <span class="code-class">String</span> getIndexName();
+    <span class="code-keyword">protected abstract</span> <span class="code-class">String</span> getCollectionName();
+    <span class="code-keyword">protected abstract</span> <span class="code-class">String</span> getStateKey();
+    <span class="code-keyword">protected abstract</span> <span class="code-class">BulkOperation</span> transformToBulkAction(<span class="code-class">Document</span> doc);
+    <span class="code-keyword">protected abstract</span> <span class="code-class">List</span>&lt;<span class="code-class">BulkOperation</span>&gt; processChangeStreamEvent(<span class="code-class">ChangeStreamEvent</span>&lt;<span class="code-class">Document</span>&gt; event);
+
+    <span class="code-keyword">public void</span> runSync() {
+        boolean indexCreated = ensureIndex();
+        <span class="code-keyword">if</span> (indexCreated) {
+            stateService.clearState(getStateKey());
+        }
+
+        <span class="code-class">String</span> checkpoint = stateService.getState(getStateKey());
+        <span class="code-keyword">if</span> (checkpoint == <span class="code-keyword">null</span>) {
+            log.info(<span class="code-string">"Bắt đầu đồng bộ mới (Fresh Initial Load)..."</span>);
+            <span class="code-class">Instant</span> startTime = <span class="code-class">Instant</span>.now();
+            runInitialLoad();
+            startChangeStream(startTime);
+        } <span class="code-keyword">else if</span> (isObjectId(checkpoint)) {
+            log.info(<span class="code-string">"Tiếp tục chạy Initial Load từ ID: "</span> + checkpoint);
+            <span class="code-class">Instant</span> startTime = <span class="code-class">Instant</span>.now();
+            resumeInitialLoad(new ObjectId(checkpoint));
+            startChangeStream(startTime);
+        } <span class="code-keyword">else</span> {
+            log.info(<span class="code-string">"Tiếp tục chạy Change Stream từ Timestamp: "</span> + checkpoint);
+            resumeChangeStream(Long.parseLong(checkpoint));
+        }
+    }
+
+    <span class="code-comment">// Pha 1: Initial Load (Quét Keyset)</span>
+    <span class="code-keyword">protected void</span> runInitialLoad() {
+        optimizeIndexSettings();
+        <span class="code-class">ObjectId</span> lastId = <span class="code-keyword">null</span>;
+        <span class="code-keyword">int</span> batchSize = 1000;
+        
+        <span class="code-keyword">while</span> (<span class="code-keyword">true</span>) {
+            <span class="code-class">Query</span> query = <span class="code-keyword">new</span> <span class="code-class">Query</span>();
+            <span class="code-keyword">if</span> (lastId != <span class="code-keyword">null</span>) {
+                query.addCriteria(<span class="code-class">Criteria</span>.where(<span class="code-string">"_id"</span>).gt(lastId));
+            }
+            query.with(<span class="code-class">Sort</span>.by(<span class="code-class">Sort</span>.Direction.ASC, <span class="code-string">"_id"</span>)).limit(batchSize);
+
+            <span class="code-class">List</span>&lt;<span class="code-class">Document</span>&gt; docs = mongoTemplate.find(query, <span class="code-class">Document</span>.class, getCollectionName());
+            <span class="code-keyword">if</span> (docs.isEmpty()) <span class="code-keyword">break</span>;
+
+            executeParallelBulk(docs);
+            lastId = docs.get(docs.size() - 1).getObjectId(<span class="code-string">"_id"</span>);
+            stateService.setState(getStateKey(), lastId.toHexString());
+        }
+        
+        restoreIndexSettings();
+    }
+
+    <span class="code-comment">// Pha 2: Lắng nghe CDC với bufferTimeout</span>
+    <span class="code-keyword">protected void</span> startChangeStream(<span class="code-class">Instant</span> startAt) {
+        <span class="code-class">ChangeStreamOptions</span> options = <span class="code-class">ChangeStreamOptions</span>.builder()
+            .resumeAt(startAt)
+            .build();
+
+        reactiveMongoTemplate.changeStream(getCollectionName(), options, <span class="code-class">Document</span>.class)
+            .flatMapIterable(event -> processChangeStreamEvent(event))
+            .bufferTimeout(500, <span class="code-class">Duration</span>.ofSeconds(2))
+            .subscribe(
+                actions -> flushBulk(actions),
+                error -> handleStreamError(error)
+            );
+    }
+
+    <span class="code-keyword">protected void</span> flushBulk(<span class="code-class">List</span>&lt;<span class="code-class">BulkOperation</span>&gt; actions) {
+        <span class="code-keyword">if</span> (actions.isEmpty()) <span class="code-keyword">return</span>;
+        <span class="code-keyword">try</span> {
+            esClient.bulk(b -> b.operations(actions));
+        } <span class="code-keyword">catch</span> (<span class="code-class">IOException</span> e) {
+            log.error(<span class="code-string">"Lỗi ghi bulk lên Elasticsearch"</span>, e);
+        }
+    }
+
+    <span class="code-keyword">private void</span> handleStreamError(<span class="code-class">Throwable</span> error) {
+        <span class="code-keyword">if</span> (error <span class="code-keyword">instanceof</span> <span class="code-class">MongoCommandException</span> ex) {
+            <span class="code-keyword">if</span> (ex.getErrorCode() == 136) {
+                log.warn(<span class="code-string">"Oplog rollover detected! Re-triggering Initial Load..."</span>);
+                stateService.clearState(getStateKey());
+                runSync(); <span class="code-comment">// Chạy lại từ đầu</span>
+                <span class="code-keyword">return</span>;
+            }
+        }
+        log.error(<span class="code-string">"Lỗi Change Stream không xác định: "</span>, error);
+    }
+
+    <span class="code-comment">// Đổi cấu hình ghi tốc độ cao</span>
+    <span class="code-keyword">private void</span> optimizeIndexSettings() { ... }
+    <span class="code-keyword">private void</span> restoreIndexSettings() { ... }
+    <span class="code-keyword">private boolean</span> ensureIndex() { ... }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- User Sync Implementation -->
+            <section id="user-sync-impl" class="card">
+                <span class="badge badge-success">Bước 4: User Sync</span>
+                <h2>7. Triển Khai Cụ Thể Cho User (UserSyncService.java)</h2>
+                <p class="mb-16">
+                    Kế thừa <code>BaseSyncService</code>, thực hiện trích xuất dữ liệu, định cấu hình cờ creator, tính toán badge_count và xử lý tag giới tính:
+                </p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>UserSyncService.java</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">UserSyncService</span> <span class="code-keyword">extends</span> <span class="code-class">BaseSyncService</span>&lt;<span class="code-class">Document</span>&gt; {
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected</span> <span class="code-class">String</span> getIndexName() { <span class="code-keyword">return</span> <span class="code-string">"user-index"</span>; }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected</span> <span class="code-class">String</span> getCollectionName() { <span class="code-keyword">return</span> <span class="code-string">"user"</span>; }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected</span> <span class="code-class">String</span> getStateKey() { <span class="code-keyword">return</span> <span class="code-string">"checkpoint:users"</span>; }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected</span> <span class="code-class">BulkOperation</span> transformToBulkAction(<span class="code-class">Document</span> doc) {
+        <span class="code-class">String</span> userId = doc.getObjectId(<span class="code-string">"_id"</span>).toHexString();
+        <span class="code-class">String</span> username = doc.getString(<span class="code-string">"username"</span>);
+        <span class="code-class">String</span> displayName = doc.getString(<span class="code-string">"display_name"</span>);
+        <span class="code-class">List</span>&lt;<span class="code-class">String</span>&gt; tags = doc.getList(<span class="code-string">"tags"</span>, <span class="code-class">String</span>.class, <span class="code-class">Collections</span>.emptyList());
+
+        <span class="code-class">Map</span>&lt;<span class="code-class">String</span>, <span class="code-class">Object</span>&gt; source = <span class="code-keyword">new</span> <span class="code-class">HashMap</span>&lt;&gt;();
+        source.put(<span class="code-string">"user_id"</span>, userId);
+        source.put(<span class="code-string">"username"</span>, username != <span class="code-keyword">null</span> ? username.toLowerCase() : <span class="code-keyword">null</span>);
+        source.put(<span class="code-string">"display_name"</span>, displayName);
+
+        <span class="code-keyword">int</span> active = username != <span class="code-keyword">null</span> ? 1 : 0;
+        <span class="code-keyword">int</span> creator = 0;
+        <span class="code-keyword">int</span> badgeCount = 0;
+        <span class="code-class">List</span>&lt;<span class="code-class">String</span>&gt; gender = <span class="code-keyword">new</span> <span class="code-class">ArrayList</span>&lt;&gt;();
+
+        <span class="code-keyword">for</span> (<span class="code-class">String</span> tag : tags) {
+            <span class="code-keyword">if</span> (tag.startsWith(<span class="code-string">"gender:"</span>)) {
+                gender.add(tag);
+            }
+            <span class="code-keyword">if</span> (tag.matches(<span class="code-string">"auto-follow|badge|event|famous|featured|lang|signed|stats"</span>)) {
+                badgeCount++;
+            }
+            <span class="code-keyword">if</span> (tag.equals(<span class="code-string">"banned"</span>) || tag.equals(<span class="code-string">"hidden"</span>)) {
+                active = 0;
+            }
+            <span class="code-keyword">if</span> (tag.equals(<span class="code-string">"signed"</span>) || tag.equals(<span class="code-string">"stats"</span>)) {
+                creator = 1;
+            }
+        }
+
+        source.put(<span class="code-string">"active"</span>, active);
+        source.put(<span class="code-string">"creator"</span>, creator);
+        source.put(<span class="code-string">"badge_count"</span>, badgeCount);
+        source.put(<span class="code-string">"gender"</span>, gender.isEmpty() ? <span class="code-keyword">null</span> : gender);
+
+        <span class="code-keyword">return</span> <span class="code-keyword">new</span> <span class="code-class">BulkOperation</span>.Builder()
+            .index(i -> i.index(getIndexName()).id(userId).document(source))
+            .build();
+    }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected</span> <span class="code-class">List</span>&lt;<span class="code-class">BulkOperation</span>&gt; processChangeStreamEvent(<span class="code-class">ChangeStreamEvent</span>&lt;<span class="code-class">Document</span>&gt; event) {
+        <span class="code-class">String</span> operation = event.getOperationType().getValue();
+        <span class="code-class">String</span> docId = event.getDocumentKey().getObjectId(<span class="code-string">"_id"</span>).toHexString();
+
+        <span class="code-keyword">if</span> (operation.equals(<span class="code-string">"delete"</span>)) {
+            <span class="code-keyword">return</span> <span class="code-class">List</span>.of(<span class="code-keyword">new</span> <span class="code-class">BulkOperation</span>.Builder()
+                .delete(d -> d.index(getIndexName()).id(docId))
+                .build());
+        }
+
+        <span class="code-class">Document</span> fullDoc = event.getBody();
+        <span class="code-keyword">if</span> (fullDoc != <span class="code-keyword">null</span>) {
+            <span class="code-keyword">return</span> <span class="code-class">List</span>.of(transformToBulkAction(fullDoc));
+        }
+        <span class="code-keyword">return</span> <span class="code-class">Collections</span>.emptyList();
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- CLI entrypoint to run the app -->
+            <section id="runner" class="card">
+                <span class="badge badge-info">Bước 5: Khởi Chạy</span>
+                <h2>8. Trình Khởi Chạy CLI (SyncApplication.java)</h2>
+                <p class="mb-16">
+                    Sử dụng <code>CommandLineRunner</code> để cấu hình tham số truyền vào giúp bạn dễ dàng chạy file JAR phân tách tiến trình cho users hoặc messages:
+                </p>
+                <div class="code-container">
+                    <div class="code-header">
+                        <span>SyncApplication.java</span>
+                    </div>
+                    <pre><code><span class="code-annotation">@SpringBootApplication</span>
+<span class="code-keyword">public class</span> <span class="code-class">SyncApplication</span> <span class="code-keyword">implements</span> <span class="code-class">CommandLineRunner</span> {
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">private</span> <span class="code-class">UserSyncService</span> userSyncService;
+
+    <span class="code-keyword">public static void</span> main(<span class="code-class">String</span>[] args) {
+        <span class="code-class">SpringApplication</span>.run(<span class="code-class">SyncApplication</span>.class, args);
+    }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">public void</span> run(<span class="code-class">String</span>... args) <span class="code-keyword">throws</span> <span class="code-class">Exception</span> {
+        <span class="code-keyword">if</span> (args.length > 0 && args[0].equals(<span class="code-string">"users"</span>)) {
+            userSyncService.runSync();
+        } <span class="code-keyword">else</span> {
+            System.out.println(<span class="code-string">"Vui lòng chạy với đối số: 'users' hoặc 'messages'"</span>);
+        }
+    }
+}</code></pre>
+                </div>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee - Main Architecture Portal</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>
