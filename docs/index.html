@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Shopee - Documentation Portal Dashboard</title>
     <link rel="stylesheet" href="style.css">
+    <script src="sidebar.js" defer></script>
 </head>
 <body>
 
@@ -18,82 +19,7 @@
     <div class="layout-wrapper">
         <!-- Left Sidebar Navigation (Unified Single Source of Truth) -->
                         <!-- Left Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="sidebar-title">Tổng quan</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="index.html" class="sidebar-link" class="sidebar-link active" id="nav-index">Trang chủ cổng tài liệu</a>
-                </li>
-            </ul>
-
-            <div class="sidebar-title">Dành cho QA / Tester</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="qa/run_guide.html" class="sidebar-link" id="nav-run">1. Hướng dẫn khởi chạy</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/project_spec.html" class="sidebar-link" id="nav-project-spec">2. Tài liệu đặc tả dự án</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/test_cases.html" class="sidebar-link" id="nav-test-cases">3. Danh sách Test Cases</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">4. Quản lý Test Data</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/testing_guide.html" class="sidebar-link" id="nav-testing">5. Hướng dẫn kiểm thử</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/postman_guide.html" class="sidebar-link" id="nav-postman">6. Postman Collection</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">7. Kiểm thử kiến trúc SA</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/automation_guide.html" class="sidebar-link" id="nav-automation">8. Automation Testing Setup</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">9. Performance Benchmark</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">10. Mẫu Bug Report chuẩn</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">11. Checklist trước Release</a>
-                </li>
-            </ul>
-
-            <div class="sidebar-title">Dành cho Dev / Architect</div>
-            <ul class="sidebar-menu">
-                <li class="sidebar-item">
-                    <a href="dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/dev_clean_code.html" class="sidebar-link" id="nav-java-clean">✨ Clean Code & Refactoring</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/http_spring_security.html" class="sidebar-link" id="nav-java-http">🌐 HTTP & Spring Security</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/database_mongodb_jpa.html" class="sidebar-link" id="nav-java-db">💾 Database & JPA/Mongo</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/async_message_queues.html" class="sidebar-link" id="nav-java-async">⚡ Async & Task Queues</a>
-                </li>
-                <li class="sidebar-item">
-                    <a href="dev/swag_business_flows.html" class="sidebar-link" id="nav-java-swag">🚀 Swag Business Flows</a>
-                </li>
-            </ul>
-        </aside>
+        <aside class="sidebar"></aside>
 
         <!-- Right Main Content Area -->
         <main class="content-wrapper">

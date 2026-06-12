@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Senior Prep - Java Core & JVM Internals</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../sidebar.js" defer></script>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">
+                <span>Java Senior Prep</span>
+            </a>
+            <div class="header-tagline">Java Core & JVM Internals</div>
+        </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar"></aside>
+
+        <!-- Content Area -->
+        <main class="content-wrapper">
+            <div class="hero-section">
+                <h1>Java Core & JVM Internals <span class="gradient-text">chuyên sâu</span></h1>
+                <p>Cẩm nang cấu trúc dữ liệu cốt lõi, quản lý tài nguyên, và tối ưu hóa bộ nhớ cấp độ Principal Architect cho các đợt phỏng vấn Global/Remote.</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="card">
+                <h3>📈 Tiến độ ôn tập chủ đề</h3>
+                <p id="progress-stats" class="text-highlight">Tiến trình: 0% hoàn thành</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Topic 1 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>1. Hợp đồng equals()/hashCode() & Kiến trúc HashMap/ConcurrentHashMap nâng cao</h2>
+                <span class="badge badge-info">Java Collections</span>
+            </div>
+            
+            <h3>1.1. Hợp đồng bất biến (The Contract)</h3>
+            <p>Trong Java, sự nhất quán giữa <code>equals()</code> và <code>hashCode()</code> là nền tảng để các Collections dựa trên mã băm hoạt động đúng đắn. Quy tắc cốt lõi:</p>
+            <ul>
+                <li>Nếu <code>obj1.equals(obj2) == true</code>, thì bắt buộc <code>obj1.hashCode() == obj2.hashCode()</code>.</li>
+                <li>Nếu hai đối tượng có cùng giá trị băm (hashCode), chúng <em>không nhất thiết</em> phải bằng nhau qua <code>equals()</code>. Hiện tượng này gọi là <strong>Va chạm mã băm (Hash Collision)</strong>.</li>
+            </ul>
+
+            <h3>1.2. Cơ chế Treeify (Đỏ-Đen hóa) của HashMap</h3>
+            <p>HashMap lưu trữ dữ liệu dưới dạng một mảng các node (gọi là các buckets). Khi xảy ra va chạm băm:</p>
+            <ul>
+                <li><strong>Java 7:</strong> Node mới được chèn vào đầu một danh sách liên kết đơn (Linked List). Khi độ dài danh sách quá lớn, thao tác tìm kiếm bị suy giảm hiệu năng xuống <code>O(N)</code>.</li>
+                <li><strong>Java 8+:</strong> Khi số lượng phần tử trong một bucket vượt qua ngưỡng <code>TREEIFY_THRESHOLD = 8</code> và đồng thời tổng dung lượng mảng bucket tối thiểu phải đạt <code>MIN_TREEIFY_CAPACITY = 64</code>, Java sẽ tự động chuyển đổi Linked List này thành một <strong>Cây Đỏ-Đen (Red-Black Tree)</strong>.</li>
+                <li>Lúc này, độ phức tạp tìm kiếm được giảm từ <code>O(N)</code> xuống <code>O(log N)</code>. Nếu số lượng phần tử trong bucket giảm xuống còn <code>UNTREEIFY_THRESHOLD = 6</code> (do bị xóa hoặc rehash), cấu trúc cây sẽ quay trở lại dạng Linked List để tiết kiệm chi phí vận hành.</li>
+            </ul>
+
+            <h3>1.3. Tiến hóa của ConcurrentHashMap: Java 7 Segment Locks vs Java 8+ CAS & Synchronized</h3>
+            <p>Đối với hệ thống đa luồng, <code>HashMap</code> thông thường sẽ bị lỗi vòng lặp vô hạn (Infinite Loop) hoặc mất dữ liệu khi rehash đồng thời. <code>ConcurrentHashMap</code> giải quyết vấn đề này qua hai thế hệ kiến trúc:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Đặc tính</th>
+                        <th>Java 7 (Segment Locking)</th>
+                        <th>Java 8+ (CAS & Node Locking)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Cơ chế khóa</strong></td>
+                        <td>Sử dụng một mảng các <code>Segment</code> độc lập, mỗi segment kế thừa <code>ReentrantLock</code>. Khóa phân đoạn riêng biệt.</td>
+                        <td>Không dùng Segment. Dùng cơ chế khóa nguyên tử <strong>CAS (Compare-And-Swap)</strong> kết hợp <code>synchronized</code> trực tiếp trên Node đầu của bucket.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Độ mịn khóa (Concurrency Level)</strong></td>
+                        <td>Độ mịn cố định (mặc định 16). Muốn tăng phải cấu hình thủ công lúc khởi tạo. Luồng ghi đụng segment sẽ bị chặn.</td>
+                        <td>Độ mịn cực cao bằng số bucket thực tế. Chỉ khóa duy nhất bucket xảy ra tranh chấp ghi, các bucket khác chạy hoàn toàn độc lập.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Hiệu năng đọc</strong></td>
+                        <td>Không bị khóa nhờ biến <code>volatile</code>.</td>
+                        <td>Không bị khóa nhờ đọc qua volatile Node, hiệu năng đọc cực đại.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h4 class="text-warning">Tại sao ConcurrentHashMap không cho phép Key hoặc Value bằng Null?</h4>
+            <p>Đây là một thiết kế có chủ đích của tác giả <em>Doug Lea</em> để tránh hiện tượng mập mờ (ambiguity) trong môi trường phân tán/đa luồng. Nếu cho phép trả về <code>null</code>, khi ta gọi <code>map.get(key)</code> nhận được <code>null</code>, ta không thể biết chắc chắn:</p>
+            <ol>
+                <li>Key đó không tồn tại trong map.</li>
+                <li>Key đó có tồn tại nhưng giá trị của nó được gán bằng <code>null</code>.</li>
+            </ol>
+            <p>Trong Map thông thường (như HashMap), ta có thể kiểm tra bằng <code>map.containsKey(key)</code>. Tuy nhiên, trong hệ thống đa luồng, giữa thời điểm gọi <code>get()</code> và <code>containsKey()</code>, một luồng khác có thể đã xóa hoặc sửa đổi key đó, dẫn đến sai lệch trạng thái cuộc đua (race condition).</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>AdvancedMapUsage.java</span>
+                    <span>Java 17/21</span>
+                </div>
+                <pre><code><span class="code-keyword">import</span> java.util.Objects;
+<span class="code-keyword">import</span> java.util.concurrent.ConcurrentHashMap;
+
+<span class="code-keyword">public class</span> <span class="code-class">AdvancedMapUsage</span> {
+
+    <span class="code-keyword">public static final class</span> <span class="code-class">ApiKey</span> {
+        <span class="code-keyword">private final</span> <span class="code-class">String</span> clientId;
+        <span class="code-keyword">private final</span> <span class="code-class">String</span> secretHash;
+
+        <span class="code-keyword">public</span> <span class="code-class">ApiKey</span>(<span class="code-class">String</span> clientId, <span class="code-class">String</span> secretHash) {
+            <span class="code-keyword">this</span>.clientId = Objects.requireNonNull(clientId);
+            <span class="code-keyword">this</span>.secretHash = Objects.requireNonNull(secretHash);
+        }
+
+        <span class="code-annotation">@Override</span>
+        <span class="code-keyword">public boolean</span> equals(<span class="code-class">Object</span> o) {
+            <span class="code-keyword">if</span> (<span class="code-keyword">this</span> == o) <span class="code-keyword">return true</span>;
+            <span class="code-keyword">if</span> (o == <span class="code-keyword">null</span> || getClass() != o.getClass()) <span class="code-keyword">return false</span>;
+            <span class="code-class">ApiKey</span> apiKey = (<span class="code-class">ApiKey</span>) o;
+            <span class="code-keyword">return</span> Objects.equals(clientId, apiKey.clientId) && 
+                   Objects.equals(secretHash, apiKey.secretHash);
+        }
+
+        <span class="code-annotation">@Override</span>
+        <span class="code-keyword">public int</span> hashCode() {
+            <span class="code-comment">// Sử dụng nhân tử số nguyên tố 31 để phân phối hash tối ưu nhất</span>
+            <span class="code-keyword">int</span> result = clientId.hashCode();
+            result = <span class="code-number">31</span> * result + secretHash.hashCode();
+            <span class="code-keyword">return</span> result;
+        }
+    }
+
+    <span class="code-keyword">private final</span> <span class="code-class">ConcurrentHashMap</span>&lt;<span class="code-class">ApiKey</span>, <span class="code-class">String</span>&gt; tokenCache = <span class="code-keyword">new</span> <span class="code-class">ConcurrentHashMap</span>&lt;&gt;();
+
+    <span class="code-keyword">public</span> <span class="code-class">String</span> getOrGenerateToken(<span class="code-class">ApiKey</span> key) {
+        <span class="code-comment">// Dùng computeIfAbsent để chạy Thread-Safe, chỉ băm và tính toán nếu key chưa tồn tại</span>
+        <span class="code-keyword">return</span> tokenCache.computeIfAbsent(key, k -> {
+            System.out.println(<span class="code-string">"Generating secure token for Client: "</span> + k.clientId);
+            <span class="code-keyword">return</span> <span class="code-class">Long</span>.toHexString(<span class="code-class">Double</span>.doubleToLongBits(<span class="code-class">Math</span>.random()));
+        });
+    }
+}</code></pre>
+            </div>
+
+            <!-- Topic 2 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>2. Java Concurrency & Multi-threading trên Production</h2>
+                <span class="badge badge-info">Concurrency</span>
+            </div>
+
+            <h3>2.1. Vận hành ThreadPoolExecutor trên Production</h3>
+            <p>Một lỗi cực kỳ phổ biến của Java Developer là khởi tạo Thread Pool bằng các method mặc định như <code>Executors.newCachedThreadPool()</code> hay <code>Executors.newFixedThreadPool()</code>. Cơ chế hoạt động của ThreadPoolExecutor:</p>
+            <p class="text-highlight">Khi có task mới đến: 
+                <br>1. Nếu số luồng đang chạy nhỏ hơn <code>corePoolSize</code> -> Tạo luồng mới lập tức.
+                <br>2. Nếu đạt đến <code>corePoolSize</code> -> Đẩy task vào hàng đợi <code>BlockingQueue</code>.
+                <br>3. Nếu hàng đợi bị đầy và số luồng hiện tại nhỏ hơn <code>maximumPoolSize</code> -> Tạo luồng tạm thời mới (được giải phóng sau thời gian <code>keepAliveTime</code>).
+                <br>4. Nếu hàng đợi đầy và số luồng đã đạt tối đa -> Kích hoạt <code>RejectedExecutionHandler</code>.
+            </p>
+            <p><strong>Cảnh báo OOM:</strong> <code>Executors.newFixedThreadPool()</code> sử dụng một <code>LinkedBlockingQueue</code> không giới hạn kích thước (Unbounded - mặc định dung lượng là <code>Integer.MAX_VALUE</code>). Khi luồng làm việc không xử lý kịp hoặc DB bị nghẽn, các task chờ xếp hàng liên tục trong hàng đợi cho đến khi bộ nhớ Heap cạn kiệt, dẫn đến lỗi <code>java.lang.OutOfMemoryError: Java heap space</code>.</p>
+
+            <h3>2.2. Lập trình bất đồng bộ không nghẽn với CompletableFuture</h3>
+            <p>Khi cần tổng hợp dữ liệu từ nhiều nguồn API độc lập (ví dụ: lấy thông tin User, ví điện tử, và lịch sử đơn hàng), việc gọi tuần tự (blocking) sẽ làm tăng đáng kể độ trễ (latency). Ta kết hợp nhiều task không nghẽn như sau:</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>AsyncPipelineDemo.java</span>
+                    <span>Java 17</span>
+                </div>
+                <pre><code><span class="code-keyword">import</span> java.util.concurrent.*;
+
+<span class="code-keyword">public class</span> <span class="code-class">AsyncPipelineDemo</span> {
+
+    <span class="code-keyword">private final</span> <span class="code-class">ExecutorService</span> customPool = <span class="code-keyword">new</span> <span class="code-class">ThreadPoolExecutor</span>(
+            <span class="code-number">10</span>, <span class="code-number">50</span>, <span class="code-number">60L</span>, <span class="code-class">TimeUnit</span>.SECONDS,
+            <span class="code-keyword">new</span> <span class="code-class">LinkedBlockingQueue</span>&lt;&gt;(<span class="code-number">1000</span>), <span class="code-comment">// Giới hạn queue tránh OOM</span>
+            <span class="code-keyword">new</span> <span class="code-class">ThreadPoolExecutor</span>.<span class="code-class">CallerRunsPolicy</span>() <span class="code-comment">// Quá tải tự chạy trên Thread gọi</span>
+    );
+
+    <span class="code-keyword">public record</span> <span class="code-class">UserProfile</span>(<span class="code-class">String</span> name, <span class="code-type">double</span> balance, <span class="code-class">String</span> lastOrder) {}
+
+    <span class="code-keyword">public</span> <span class="code-class">UserProfile</span> fetchFullProfile(<span class="code-class">String</span> userId) {
+        <span class="code-comment">// 1. Khởi chạy song song 3 tác vụ độc lập</span>
+        <span class="code-class">CompletableFuture</span>&lt;<span class="code-class">String</span>&gt; nameFuture = <span class="code-class">CompletableFuture</span>.supplyAsync(
+                () -> callUserService(userId), customPool);
+        
+        <span class="code-class">CompletableFuture</span>&lt;<span class="code-class">Double</span>&gt; balanceFuture = <span class="code-class">CompletableFuture</span>.supplyAsync(
+                () -> callWalletService(userId), customPool);
+                
+        <span class="code-class">CompletableFuture</span>&lt;<span class="code-class">String</span>&gt; orderFuture = <span class="code-class">CompletableFuture</span>.supplyAsync(
+                () -> callOrderService(userId), customPool);
+
+        <span class="code-comment">// 2. Gộp kết quả không chặn (Non-blocking Join)</span>
+        <span class="code-class">CompletableFuture</span>&lt;<span class="code-class">Void</span>&gt; combinedFuture = <span class="code-class">CompletableFuture</span>.allOf(
+                nameFuture, balanceFuture, orderFuture);
+
+        <span class="code-comment">// Đợi cả 3 luồng hoàn tất</span>
+        combinedFuture.join(); 
+
+        <span class="code-keyword">try</span> {
+            <span class="code-keyword">return new</span> <span class="code-class">UserProfile</span>(nameFuture.get(), balanceFuture.get(), orderFuture.get());
+        } <span class="code-keyword">catch</span> (<span class="code-class">InterruptedException</span> | <span class="code-class">ExecutionException</span> e) {
+            <span class="code-keyword">throw new</span> <span class="code-class">RuntimeException</span>(<span class="code-string">"Failed to aggregate profile data"</span>, e);
+        }
+    }
+
+    <span class="code-keyword">private</span> <span class="code-class">String</span> callUserService(<span class="code-class">String</span> id) { <span class="code-keyword">return</span> <span class="code-string">"John Doe"</span>; }
+    <span class="code-keyword">private double</span> callWalletService(<span class="code-class">String</span> id) { <span class="code-keyword">return</span> <span class="code-number">1500.50</span>; }
+    <span class="code-keyword">private</span> <span class="code-class">String</span> callOrderService(<span class="code-class">String</span> id) { <span class="code-keyword">return</span> <span class="code-string">"MacBook Pro M3"</span>; }
+}</code></pre>
+            </div>
+
+            <h3>2.3. Project Loom - Virtual Threads (Java 21 LTS)</h3>
+            <p>Trước Java 21, mô hình xử lý là <strong>Thread-per-request</strong>. Mỗi Thread trong Java là một <strong>Platform Thread</strong>, liên kết trực tiếp tỉ lệ <code>1:1</code> với một luồng hệ điều hành vật lý (OS Thread). Điều này gây ra hạn chế cực lớn:</p>
+            <ul>
+                <li>Mỗi Platform Thread tiêu tốn khoảng <strong>1MB bộ nhớ ngoài heap</strong> cho call stack. Hệ thống không thể scale lên vượt quá vài ngàn luồng đồng thời.</li>
+                <li>Khi thực hiện các tác vụ nghẽn I/O (I/O Bound) như truy vấn SQL hoặc gọi API từ xa, luồng OS vật lý bị đưa vào trạng thái ngủ (Waiting), gây lãng phí tài nguyên CPU nghiêm trọng.</li>
+            </ul>
+
+            <h4 class="text-success">Kiến trúc Virtual Threads (Luồng ảo) hoạt động ra sao?</h4>
+            <p>Virtual Thread là một thực thể nhẹ chạy trong vùng nhớ Heap của JVM chứ không phải luồng OS. JVM quản lý việc chạy hàng triệu luồng ảo trên một số ít các Platform Threads (gọi là <strong>Carrier Threads</strong> - thường bằng số nhân CPU vật lý).</p>
+            <ul>
+                <li><strong>Cơ chế Continuation:</strong> Khi một Virtual Thread chạy đến lệnh I/O block (ví dụ: gửi một request HTTP), JVM sẽ tự động ngắt thực thi luồng ảo đó, chụp lại toàn bộ ngăn xếp trạng thái (Execution Frame State) và lưu trữ nó vào Heap (gọi là cơ chế <em>Yield</em>).</li>
+                <li>Carrier Thread lúc này được giải phóng ngay lập tức để thực thi các tác vụ khác.</li>
+                <li>Khi dữ liệu I/O phản hồi thành công, JVM sẽ lên lịch đưa trạng thái cũ từ Heap quay trở lại một Carrier Thread trống để tiếp tục chạy (gọi là cơ chế <em>Resume</em>).</li>
+            </ul>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>VirtualThreadsDemo.java</span>
+                    <span>Java 21</span>
+                </div>
+                <pre><code><span class="code-keyword">import</span> java.net.URI;
+<span class="code-keyword">import</span> java.net.http.HttpClient;
+<span class="code-keyword">import</span> java.net.http.HttpRequest;
+<span class="code-keyword">import</span> java.net.http.HttpResponse;
+<span class="code-keyword">import</span> java.util.concurrent.Executors;
+<span class="code-keyword">import</span> java.util.stream.IntStream;
+
+<span class="code-keyword">public class</span> <span class="code-class">VirtualThreadsDemo</span> {
+
+    <span class="code-keyword">public void</span> runConcurrently() {
+        <span class="code-comment">// Sử dụng ExecutorService tự tạo một luồng ảo trên mỗi Task (Không cần Thread Pool để tái sử dụng luồng)</span>
+        <span class="code-keyword">try</span> (var executor = <span class="code-class">Executors</span>.newVirtualThreadPerTaskExecutor()) {
+            <span class="code-class">HttpClient</span> client = <span class="code-class">HttpClient</span>.newHttpClient();
+            
+            <span class="code-comment">// Kích hoạt 10,000 requests song song không làm nghẽn luồng OS</span>
+            <span class="code-class">IntStream</span>.range(<span class="code-number">0</span>, <span class="code-number">10000</span>).forEach(i -> {
+                executor.submit(() -> {
+                    <span class="code-class">HttpRequest</span> request = <span class="code-class">HttpRequest</span>.newBuilder()
+                            .uri(<span class="code-class">URI</span>.create(<span class="code-string">"https://httpbin.org/delay/1"</span>))
+                            .build();
+                    <span class="code-comment">// Khối lệnh blocking I/O dưới đây sẽ tự động kích hoạt Yield giải phóng Carrier Thread</span>
+                    <span class="code-class">HttpResponse</span>&lt;<span class="code-class">String</span>&gt; response = client.send(
+                            request, <span class="code-class">HttpResponse</span>.<span class="code-class">BodyHandlers</span>.ofString());
+                    System.out.println(<span class="code-string">"Task "</span> + i + <span class="code-string">" status: "</span> + response.statusCode());
+                    <span class="code-keyword">return</span> response.body();
+                });
+            });
+        } <span class="code-comment">// Tự động đóng executor và đợi toàn bộ tác vụ ảo hoàn tất</span>
+    }
+}</code></pre>
+            </div>
+
+            <!-- Topic 3 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>3. Bộ bộ nhớ JVM (Stack vs Heap, String Pool) & Các kịch bản Troubleshoot lỗi hệ thống</h2>
+                <span class="badge badge-info">Memory Tuning</span>
+            </div>
+
+            <h3>3.1. Sơ đồ tham chiếu Bộ nhớ JVM</h3>
+            <p>Mô hình biểu diễn mối liên kết giữa Stack Frame, Metaspace, Heap thường và vùng String Pool đặc biệt dưới nền JVM:</p>
+            <pre class="code-comment" style="font-family: monospace; line-height: 1.3; font-size: 13px;">
+[Stack Memory (Thread-local)]           [Heap Memory (Shared among all threads)]
+=============================           ========================================
++---------------------------+           +--------------------------------------+
+| Main Thread Stack Frame   |           | JVM Heap Space                       |
+|                           |           |                                      |
+| String s1 ----------------------------+---> [String Object "Hello"]          |
+|                           |           |     (Literal - Stored in Pool)       |
+| String s2 ----------------------------+       ^                              |
+|                           |           |       | (Reference sharing)          |
+| String s3 ----------------------------+---.   |                              |
+|                           |           |   |   |                              |
+| User userRef -------------+---.       |   v   |                              |
+|                           |   |       | [String Object "Hello"]              |
++---------------------------+   |       | (Created with "new" keyword)         |
+                                |       |                                      |
+                                `-------+---> [User Object Instance]           |
+                                        |     (Fields: String name, int id)    |
+                                        +--------------------------------------+
+                                        
+[Metaspace (Off-heap Memory)]
+=============================
++-------------------------------------------------------------+
+| Class metadata: User.class, String.class, bytecode, vtables |
++-------------------------------------------------------------+
+            </pre>
+
+            <h3>3.2. String.intern() & Bẫy hiệu năng với StringTableSize</h3>
+            <p>Khi gọi <code>s.intern()</code>, JVM kiểm tra xem chuỗi có nội dung tương đương đã tồn tại trong String Pool chưa. Nếu có, nó trả về tham chiếu của đối tượng trong pool. Nếu chưa, đối tượng String đó được đưa vào pool.</p>
+            <ul>
+                <li><strong>Cơ chế hoạt động:</strong> String Pool bản chất là một cấu trúc bảng băm (String Table) dạng mở (Open Addressing Hash Map) có kích thước cố định được cấu hình thông qua tham số khởi động: <code>-XX:StringTableSize</code>.</li>
+                <li><strong>Bẫy hiệu năng:</strong> Nếu hệ thống thực hiện `intern()` hàng triệu chuỗi khác nhau mà không nâng kích thước bảng này (mặc định trong Java 8-17 khoảng 60,013 buckets), số lượng va chạm mã băm sẽ cực kỳ cao. Lúc này mỗi bucket sẽ chứa các danh sách liên kết cực kỳ dài, biến thao tác tìm kiếm từ <code>O(1)</code> thành tuần tự <code>O(N)</code>. Điều này làm gia tăng mạnh thời gian dừng ứng dụng để dọn rác (GC pauses) và làm chậm toàn bộ hệ thống.</li>
+                <li><strong>Giải pháp Senior:</strong> Nếu bắt buộc phải lưu cache dữ liệu dạng chuỗi lớn, hãy nâng kích thước bằng tham số: <code>-XX:StringTableSize=1000003</code> (sử dụng một số nguyên tố lớn để giảm va chạm).</li>
+            </ul>
+
+            <h3>3.3. Quy trình điều tra rò rỉ bộ nhớ (Memory Leak)</h3>
+            <p>Rò rỉ bộ nhớ trong Java xảy ra khi các đối tượng không còn được sử dụng trong nghiệp vụ nhưng vẫn được giữ tham chiếu bởi các đối tượng sống lâu dài khác (như biến static, luồng chạy nền), khiến bộ thu gom rác (GC) không thể dọn dẹp.</p>
+
+            <h4>Các nguyên nhân gây Memory Leak phổ biến:</h4>
+            <ol>
+                <li><strong>Lạm dụng biến Static:</strong> Biến static tồn tại cùng tuổi thọ với ClassLoader. Một <code>static Map</code> lưu cache dữ liệu nếu không có cơ chế dọn dẹp (TTL, LRU) sẽ phình to liên tục.</li>
+                <li><strong>ThreadLocal không gọi <code>remove()</code>:</strong> Trong Spring Boot/Tomcat, các luồng (Thread) trong Thread Pool được tái sử dụng liên tục cho các request khác nhau. Nếu ghi dữ liệu vào <code>ThreadLocal</code> mà không gọi <code>remove()</code> trong khối <code>finally</code>, dữ liệu của request cũ sẽ bị giữ mãi trên luồng đó.</li>
+                <li><strong>Không đóng tài nguyên (Unclosed resources):</strong> Các kết nối Database, HTTP client streams, file handles không được bao bọc trong khối <code>try-with-resources</code>.</li>
+            </ol>
+
+            <h4>Quy trình điều tra thực tế sử dụng Eclipse MAT (Memory Analyzer Tool):</h4>
+            <ol>
+                <li><strong>Xuất Heap Dump khi hệ thống sắp sập (OOM):</strong> Cấu hình JVM tham số: <code>-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/var/logs/app.hprof</code>. Hoặc chủ động chụp thủ công bằng lệnh: <code>jcmd &lt;pid&gt; GC.heap_dump /tmp/heap.hprof</code>.</li>
+                <li><strong>Nạp file Dump vào Eclipse MAT:</strong> Chạy phân tích "Leak Suspects Report".</li>
+                <li><strong>Kiểm tra Histogram và Dominator Tree:</strong> Xác định Class nào đang chiếm dụng số lượng byte lớn nhất trong bộ nhớ Heap.</li>
+                <li><strong>Tra cứu đường dẫn GC Roots (Exclude Weak/Soft References):</strong> Nhấp chuột phải vào class nghi ngờ -> <code>Path To GC Roots</code> -> <code>exclude all phantom/weak/soft references</code>. MAT sẽ hiển thị sơ đồ đường dẫn tham chiếu trực tiếp đến đối tượng sống nào đang kìm giữ không cho GC dọn dẹp. Từ đó phát hiện ra dòng code lỗi.</li>
+            </ol>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>ThreadLocalLeakPrevention.java</span>
+                    <span>Java 17 / Spring Best Practice</span>
+                </div>
+                <pre><code><span class="code-keyword">import</span> javax.servlet.*;
+<span class="code-keyword">import</span> java.io.IOException;
+
+<span class="code-keyword">public class</span> <span class="code-class">ThreadLocalLeakPrevention</span> <span class="code-keyword">implements</span> <span class="code-class">Filter</span> {
+
+    <span class="code-keyword">public static final class</span> <span class="code-class">RequestContext</span> {
+        <span class="code-keyword">private final</span> <span class="code-class">String</span> transactionId;
+
+        <span class="code-keyword">public</span> <span class="code-class">RequestContext</span>(<span class="code-class">String</span> transactionId) {
+            <span class="code-keyword">this</span>.transactionId = transactionId;
+        }
+    }
+
+    <span class="code-comment">// Biến ThreadLocal lưu trữ thông tin request trên từng luồng</span>
+    <span class="code-keyword">private static final</span> <span class="code-class">ThreadLocal</span>&lt;<span class="code-class">RequestContext</span>&gt; CONTEXT_HOLDER = <span class="code-keyword">new</span> <span class="code-class">ThreadLocal</span>&lt;&gt;();
+
+    <span class="code-keyword">public static void</span> setContext(<span class="code-class">RequestContext</span> context) {
+        CONTEXT_HOLDER.set(context);
+    }
+
+    <span class="code-keyword">public static</span> <span class="code-class">RequestContext</span> getContext() {
+        <span class="code-keyword">return</span> CONTEXT_HOLDER.get();
+    }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">public void</span> doFilter(<span class="code-class">ServletRequest</span> request, <span class="code-class">ServletResponse</span> response, <span class="code-class">FilterChain</span> chain)
+            <span class="code-keyword">throws</span> <span class="code-class">IOException</span>, <span class="code-class">ServletException</span> {
+        <span class="code-keyword">try</span> {
+            <span class="code-class">String</span> txnId = request.getParameter(<span class="code-string">"transaction_id"</span>);
+            setContext(<span class="code-keyword">new</span> <span class="code-class">RequestContext</span>(txnId));
+            
+            <span class="code-comment">// Thực thi luồng xử lý tiếp theo</span>
+            chain.doFilter(request, response);
+        } <span class="code-keyword">finally</span> {
+            <span class="code-comment">// [BẮT BUỘC] Giải phóng ThreadLocal ở khối finally để tránh rò rỉ khi luồng quay về Thread Pool</span>
+            CONTEXT_HOLDER.remove();
+        }
+    }
+}</code></pre>
+            </div>
+
+            <!-- Topic 4 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>4. JVM Garbage Collection (GC) & Tuning hiệu năng</h2>
+                <span class="badge badge-success">Garbage Collection</span>
+            </div>
+
+            <h3>4.1. Nguyên lý phân chia vùng nhớ thế hệ (Generational Hypothesis)</h3>
+            <p>JVM chia bộ nhớ Heap thành hai phân vùng chính dựa trên giả định thực tế: hầu hết các đối tượng chỉ tồn tại trong thời gian ngắn ngủi rồi chết đi nhanh chóng.</p>
+            <ul>
+                <li><strong>Young Generation:</strong> Chứa các đối tượng mới sinh. Chia thành 3 vùng nhỏ: **Eden**, **Survivor S0**, và **Survivor S1** (tỉ lệ mặc định <code>8:1:1</code>).
+                    <ul>
+                        <li>Đối tượng mới khởi tạo nằm ở Eden. Khi Eden đầy, <strong>Minor GC</strong> diễn ra. Các đối tượng còn sống được chuyển sang S0 (hoặc S1), độ tuổi (Tenuring Threshold) tăng lên 1.</li>
+                        <li>Quá trình lặp lại, luân phiên dọn dẹp giữa S0 và S1. Mỗi lần sống sót qua Minor GC, tuổi của đối tượng tăng lên 1.</li>
+                    </ul>
+                </li>
+                <li><strong>Old Generation (Tenuring Promotion):</strong> Khi độ tuổi đạt ngưỡng tối đa (cấu hình qua <code>-XX:MaxTenuringThreshold</code>, mặc định là 15), đối tượng được chuyển hẳn (promote) sang vùng Old Generation để lưu giữ lâu dài. Khi Old Generation đầy, **Major GC** (hoặc Full GC) sẽ được kích hoạt để dọn dẹp.</li>
+            </ul>
+
+            <h3>4.2. So sánh các thuật toán GC thế hệ mới trên Production</h3>
+            <p>Hệ thống chịu tải thực tế cần cấu hình GC tối ưu hóa giữa băng thông (Throughput) và độ trễ dừng thế giới (STW - Stop-The-World Latency):</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thuật toán GC</th>
+                        <th>Cơ chế hoạt động</th>
+                        <th>Ưu điểm</th>
+                        <th>Nhược điểm & Ngữ cảnh sử dụng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>G1GC (Garbage-First)</strong></td>
+                        <td>Chia bộ nhớ Heap thành hàng ngàn phân vùng nhỏ độc lập (Regions). Nó thống kê phân vùng nào chứa nhiều rác nhất để gom trước nhằm đạt mục tiêu giới hạn thời gian trễ do người dùng cài đặt.</td>
+                        <td>Hạn chế thời gian Stop-The-World tối đa theo cấu hình. Phù hợp cho Heap tầm trung (từ 4GB đến 64GB).</td>
+                        <td>Độ trễ STW vẫn rơi vào khoảng từ 50ms đến 200ms tùy kích thước heap. Cấu hình khởi động: <code>-XX:+UseG1GC -XX:MaxGCPauseMillis=200</code>.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>ZGC (Zero Garbage Collector - Java 21)</strong></td>
+                        <td>Sử dụng cơ chế <strong>Colored Pointers</strong> (con trỏ màu) kết hợp <strong>Load Barriers</strong> (rào cản tải). Nó thực hiện việc đánh dấu và di dời đối tượng dọn dẹp song song (concurrent) với các luồng ứng dụng mà không cần dừng hệ thống.</td>
+                        <td>Độ trễ dừng hệ thống cực kỳ nhỏ (luôn <strong>nhỏ hơn 1ms</strong>), không phụ thuộc vào kích thước của Heap. Hỗ trợ Heap từ 16GB lên tới hàng Terabyte.</td>
+                        <td>Tiêu thụ thêm năng lượng CPU của hệ thống để chạy dọn rác nền song song. Khuyên dùng từ Java 21 cho các API yêu cầu phản hồi siêu tốc. Kích hoạt: <code>-XX:+UseZGC</code>.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>4.3. Cách đọc log GC & Tuning cơ bản</h3>
+            <p>Khi bật log GC bằng tham số <code>-Xlog:gc*,gc+phases=debug:file=/var/log/gc.log:time,uptime,pid:filecount=5,filesize=100M</code>, ta cần quan sát:</p>
+            <ul>
+                <li><strong>GC (Allocation Failure):</strong> Cho biết GC bị kích hoạt vì cạn kiệt bộ nhớ không thể cấp phát thêm đối tượng mới.</li>
+                <li><strong>Pause Young (Normal) (G1 Evacuation Pause):</strong> Thời gian dừng để dọn vùng Young Gen. Nếu vượt quá mong đợi, cần tối ưu hóa lại tham số.</li>
+                <li><strong>[GC concurrent-mark]:</strong> Thời gian đánh dấu rác chạy ngầm song song với code của bạn (không block app).</li>
+            </ul>
+
+            <!-- Topic 5 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>5. Lớp Tiện ích (Wrapper Classes), Đa hình Runtime & Cơ chế Reflection API</h2>
+                <span class="badge badge-success">Java Core Internals</span>
+            </div>
+
+            <h3>5.1. Cơ chế Autoboxing/Unboxing & Bẫy Integer Cache</h3>
+            <p>Autoboxing là cơ chế tự động chuyển đổi từ kiểu dữ liệu nguyên thủy (Primitive) sang đối tượng Wrapper tương ứng (ví dụ: <code>int</code> thành <code>Integer</code>). Quá trình này được JVM thực thi bằng cách gọi ngầm phương thức <code>Integer.valueOf(int)</code>.</p>
+            <ul>
+                <li><strong>Integer Cache:</strong> Để tối ưu hóa tài nguyên, JVM duy trì một bộ nhớ đệm chứa các đối tượng Integer có giá trị từ <strong>-128 đến 127</strong>. Khi ta gọi <code>Integer.valueOf(x)</code> với giá trị nằm trong khoảng này, JVM sẽ trả về tham chiếu đến đối tượng có sẵn trong bộ nhớ đệm mà không tạo đối tượng mới.</li>
+                <li><strong>Tác hại hiệu năng:</strong> Khi xử lý dữ liệu lớn (ví dụ: vòng lặp duyệt qua hàng triệu bản ghi), việc tính toán trực tiếp trên các biến Wrapper sẽ ép JVM thực hiện Autoboxing liên tục, tạo ra hàng triệu đối tượng rác ngắn hạn trên Heap, làm tăng áp lực dọn rác lên GC và tiêu tốn bộ nhớ gấp 4 lần so với kiểu nguyên thủy.</li>
+            </ul>
+
+            <h3>5.2. Đa hình lúc Runtime: Virtual Method Table (vtable) & Dynamic Binding</h3>
+            <p>Khi ta gọi một phương thức bị ghi đè (Overridden Method) thông qua một tham chiếu lớp cha, làm thế nào JVM xác định chính xác phiên bản phương thức của lớp con để chạy tại runtime? Cơ chế thực thi:</p>
+            <ol>
+                <li>Khi một lớp (Class) được tải vào bộ nhớ Metaspace, JVM sẽ xây dựng một <strong>Bảng Phương thức Ảo (vtable - Virtual Method Table)</strong> cho lớp đó.</li>
+                <li>Bảng vtable chứa danh sách các con trỏ trỏ trực tiếp đến mã máy thực thi của từng phương thức mà lớp đó sở hữu hoặc kế thừa từ lớp cha.</li>
+                <li>Nếu lớp con ghi đè một phương thức của lớp cha, địa chỉ con trỏ tương ứng trong vtable của lớp con sẽ được cập nhật trỏ thẳng đến mã của lớp con thay vì mã lớp cha.</li>
+                <li>Tại thời điểm runtime (Dynamic Binding), khi luồng chạy đến lệnh gọi hàm, JVM sẽ dựa vào kiểu đối tượng thực tế trên Heap (chứ không phải kiểu khai báo của biến ở Stack) để tra cứu trong bảng vtable và nhảy thẳng đến mã thực thi chính xác. Quá trình tra cứu vtable có độ phức tạp là <code>O(1)</code>.</li>
+            </ol>
+
+            <h3>5.3. Reflection API & Cơ chế Spring @Transactional Proxy</h3>
+            <p>Reflection API cho phép kiểm tra cấu trúc class, đọc annotation, truy cập các biến private lúc runtime. Tuy nhiên, thao tác này có tốc độ chậm hơn gọi code trực tiếp vì JVM không thể áp dụng các cơ chế tối ưu hóa mã hóa (JIT Compiler optimization).</p>
+            <p><strong>Cơ chế hoạt động của @Transactional trong Spring:</strong> Spring Framework sử dụng Proxy Pattern kết hợp Reflection để quản lý giao dịch:</p>
+            <pre class="code-comment" style="font-family: monospace; line-height: 1.3; font-size: 13px;">
+Client Code ---> [ Spring Generated Proxy Object ] ---> Target Service class (@Transactional)
+                        |                                       |
+                        |-- 1. Mở Transaction                   |
+                        |-- 2. Gọi Method của Target ---------> | (Thực thi Business Logic)
+                        |                                       |
+                        |-- 3. Commit (Nếu thành công)          |
+                        |-- 4. Rollback (Nếu xảy ra RuntimeException)
+            </pre>
+            <ul>
+                <li>Khi một Bean được đánh dấu <code>@Transactional</code>, Spring sẽ bọc Bean đó lại bên trong một đối tượng Proxy động (sử dụng JDK Dynamic Proxy hoặc CGLIB).</li>
+                <li>Khi Client gọi method, nó thực chất đang gọi method của đối tượng Proxy.</li>
+                <li>Proxy mở kết nối CSDL và bắt đầu Transaction. Tiếp theo, nó sử dụng Reflection để gọi phương thức nghiệp vụ thực tế của Target Bean.</li>
+                <li>Nếu phương thức chạy thành công, Proxy thực hiện <code>commit()</code>. Nếu ném ra một <code>RuntimeException</code>, Proxy tự động gọi <code>rollback()</code> để bảo toàn dữ liệu.</li>
+            </ul>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>ReflectionProxySimulation.java</span>
+                    <span>Java Custom Transaction Simulator</span>
+                </div>
+                <pre><code><span class="code-keyword">import</span> java.lang.annotation.*;
+<span class="code-keyword">import</span> java.lang.reflect.InvocationHandler;
+<span class="code-keyword">import</span> java.lang.reflect.Method;
+<span class="code-keyword">import</span> java.lang.reflect.Proxy;
+
+<span class="code-keyword">public class</span> <span class="code-class">ReflectionProxySimulation</span> {
+
+    <span class="code-annotation">@Retention</span>(RetentionPolicy.RUNTIME)
+    <span class="code-annotation">@Target</span>(ElementType.METHOD)
+    <span class="code-keyword">public @interface</span> <span class="code-class">CustomTransaction</span> {}
+
+    <span class="code-keyword">public interface</span> <span class="code-class">PaymentService</span> {
+        <span class="code-keyword">void</span> processPayment(<span class="code-type">double</span> amount);
+    }
+
+    <span class="code-keyword">public static class</span> <span class="code-class">PaymentServiceImpl</span> <span class="code-keyword">implements</span> <span class="code-class">PaymentService</span> {
+        <span class="code-annotation">@Override</span>
+        <span class="code-annotation">@CustomTransaction</span>
+        <span class="code-keyword">public void</span> processPayment(<span class="code-type">double</span> amount) {
+            System.out.println(<span class="code-string">"Executing database write for amount: "</span> + amount);
+        }
+    }
+
+    <span class="code-keyword">public static class</span> <span class="code-class">TransactionInvocationHandler</span> <span class="code-keyword">implements</span> <span class="code-class">InvocationHandler</span> {
+        <span class="code-keyword">private final</span> <span class="code-class">Object</span> target;
+
+        <span class="code-keyword">public</span> <span class="code-class">TransactionInvocationHandler</span>(<span class="code-class">Object</span> target) {
+            <span class="code-keyword">this</span>.target = target;
+        }
+
+        <span class="code-annotation">@Override</span>
+        <span class="code-keyword">public Object</span> invoke(<span class="code-class">Object</span> proxy, <span class="code-class">Method</span> method, <span class="code-class">Object</span>[] args) <span class="code-keyword">throws</span> <span class="code-class">Throwable</span> {
+            <span class="code-comment">// Tìm kiếm xem method ở lớp thực thi thực tế có chứa annotation hay không</span>
+            <span class="code-class">Method</span> targetMethod = target.getClass().getMethod(method.getName(), method.getParameterTypes());
+            
+            <span class="code-keyword">if</span> (targetMethod.isAnnotationPresent(<span class="code-class">CustomTransaction</span>.class)) {
+                System.out.println(<span class="code-string">"[Proxy] >>> START Transaction"</span>);
+                <span class="code-keyword">try</span> {
+                    <span class="code-class">Object</span> result = method.invoke(target, args); <span class="code-comment">// Sử dụng Reflection để chạy method thực tế</span>
+                    System.out.println(<span class="code-string">"[Proxy] >>> COMMIT Transaction"</span>);
+                    <span class="code-keyword">return</span> result;
+                } <span class="code-keyword">catch</span> (<span class="code-class">Exception</span> e) {
+                    System.out.println(<span class="code-string">"[Proxy] >>> ROLLBACK Transaction due to: "</span> + e.getCause());
+                    <span class="code-keyword">throw</span> e.getCause();
+                }
+            }
+            <span class="code-keyword">return</span> method.invoke(target, args);
+        }
+    }
+
+    <span class="code-keyword">public static void</span> main(<span class="code-class">String</span>[] args) {
+        <span class="code-class">PaymentService</span> target = <span class="code-keyword">new</span> <span class="code-class">PaymentServiceImpl</span>();
+        <span class="code-class">PaymentService</span> proxyInstance = (<span class="code-class">PaymentService</span>) <span class="code-class">Proxy</span>.newProxyInstance(
+                <span class="code-class">PaymentService</span>.class.getClassLoader(),
+                <span class="code-keyword">new</span> <span class="code-class">Class</span>&lt;?&gt;[]{<span class="code-class">PaymentService</span>.class},
+                <span class="code-keyword">new</span> <span class="code-class">TransactionInvocationHandler</span>(target)
+        );
+
+        proxyInstance.processPayment(<span class="code-number">99.99</span>);
+    }
+}</code></pre>
+            </div>
+
+            <!-- Topic 6 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>6. Bộ câu hỏi phỏng vấn Q&A thực chiến cấp độ Senior / Architect</h2>
+                <span class="badge badge-success">Global Prep Q&A</span>
+            </div>
+
+            <!-- Question 1 -->
+            <div class="qa-block">
+                <div class="qa-question">
+                    Thiết kế một giải pháp lưu bộ nhớ đệm (Caching System) có tốc độ phản hồi cực cao, chịu tải hàng triệu lượt ghi đồng thời trên một node đơn lẻ. Bạn sẽ lựa chọn ConcurrentHashMap, Redis cục bộ hay thư viện Caffeine Cache? Hãy phân tích các khía cạnh về mặt bộ nhớ và chi phí CPU.
+                </div>
+                <div class="qa-answer">
+                    Đây là bài toán so sánh giữa cache trực tiếp trong Heap Java với cache ngoài tiến trình (out-of-process) và cache có cơ chế dọn dẹp:
+                    <ul>
+                        <li><strong>Redis cục bộ:</strong> Đảm bảo dữ liệu không bị mất khi ứng dụng Java khởi động lại, nhưng gặp điểm nghẽn về hiệu năng do chi phí truyền tải qua mạng (Network I/O) và tuần tự hóa dữ liệu (Serialization/Deserialization) giữa Java App và Redis. Không tối ưu nhất cho hiệu năng tính bằng microsecond trên một node đơn lẻ.</li>
+                        <li><strong>ConcurrentHashMap:</strong> Tốc độ truy xuất nhanh nhất vì dữ liệu nằm trực tiếp trong bộ nhớ Heap của JVM dưới dạng Object gốc. Tuy nhiên, nó không hỗ trợ cơ chế tự động dọn dẹp khi đầy (Eviction Policy như LRU, LFU) và không hỗ trợ thời hạn hết hạn (TTL). Nếu dữ liệu ghi vào liên tục không kiểm soát, nó sẽ phình to gây lỗi tràn bộ nhớ (OOM).</li>
+                        <li><strong>Caffeine Cache:</strong> Đây là lựa chọn tối ưu nhất cho bài toán này. Caffeine là một thư viện In-memory cache hiệu năng cực cao viết bằng Java. Nó sử dụng cấu trúc dữ liệu băm kết hợp với thuật toán **Window TinyLFU** (thuật toán lọc tần suất xuất hiện tối ưu hơn LRU thông thường) để duy trì kích thước cache cố định và loại bỏ phần tử cực kỳ thông minh. caffeine sử dụng các bộ đệm ghi vòng (Ring Buffers) không khóa để tối thiểu hóa tranh chấp luồng ghi, cho phép scale tuyến tính theo số nhân CPU.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Question 2 -->
+            <div class="qa-block">
+                <div class="qa-question">
+                    Trong Java 21, khi sử dụng Virtual Threads để tối ưu hóa tác vụ I/O, điều gì xảy ra nếu đoạn code nghiệp vụ của bạn chứa khối lệnh "synchronized" và gọi truy vấn xuống Cơ sở dữ liệu? Bạn sẽ xử lý lỗi này thế nào để hệ thống không bị nghẽn?
+                </div>
+                <div class="qa-answer">
+                    Khi một luồng ảo (Virtual Thread) thực thi bên trong một khối hoặc phương thức có từ khóa <code>synchronized</code>, hoặc khi nó gọi một hàm native bên ngoài JVM, hiện tượng <strong>Thread Pinning (Ghim luồng)</strong> sẽ xảy ra.
+                    <ul>
+                        <li><strong>Hậu quả:</strong> Khi luồng ảo bị ghim, JVM không thể nhấc trạng thái của nó ra để cất vào Heap khi gặp lệnh chặn I/O nữa. Lúc này, luồng OS vật lý bên dưới (Carrier Thread) sẽ bị khóa cứng hoàn toàn trong trạng thái ngủ. Nếu tất cả các Carrier Threads của JVM đều bị ghim do đụng độ synchronized, hệ thống sẽ rơi vào trạng thái nghẽn cổ chai hoàn toàn, làm mất sạch lợi thế về hiệu năng của Virtual Threads.</li>
+                        <li><strong>Giải pháp khắc phục:</strong> Ta phải thay thế toàn bộ các khối khóa tĩnh <code>synchronized</code> bằng <strong>ReentrantLock</strong> của gói thư viện <code>java.util.concurrent.locks</code>. Khóa ReentrantLock được viết bằng mã Java thuần túy và được JVM tối ưu hóa để tương tác mượt mà với Virtual Threads. Khi luồng ảo gặp khóa <code>ReentrantLock</code> đang bị giữ, nó vẫn nhường (yield) Carrier Thread cho luồng khác chạy bình thường mà không gây ra hiện tượng ghim luồng.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Question 3 -->
+            <div class="qa-block">
+                <div class="qa-question">
+                    Hãy đề xuất cấu hình JVM cụ thể cho hai hệ thống sau: (1) Hệ thống Pipeline xử lý Batch đồng bộ dữ liệu khối lượng cực lớn, ưu tiên lưu lượng xử lý tối đa (Throughput); và (2) Hệ thống REST API phục vụ thanh toán tiền tệ, yêu cầu thời gian phản hồi siêu tốc, độ trễ cực thấp (Low Latency).
+                </div>
+                <div class="qa-answer">
+                    Đây là bài toán điều chỉnh (tuning) JVM tùy thuộc vào mục tiêu nghiệp vụ:
+                    <ol>
+                        <li><strong>Hệ thống xử lý Batch đồng bộ dữ liệu (Throughput-oriented):</strong>
+                            <ul>
+                                <li><strong>Thuật toán GC:</strong> Sử dụng **Parallel GC** (kích hoạt bằng <code>-XX:+UseParallelGC</code>). Thuật toán này sử dụng toàn bộ CPU để thực hiện việc thu gom rác một cách song song nhanh nhất có thể. Dù thời gian dừng STW dài hơn, nhưng tổng thời gian CPU dành cho tính toán nghiệp vụ (Throughput) là lớn nhất.</li>
+                                <li><strong>Cấu hình bộ nhớ:</strong> Đặt kích thước Heap lớn và cố định ngay từ đầu để tránh chi phí co giãn Heap: <code>-Xms16g -Xmx16g</code>. Cài đặt tỉ lệ vùng New Gen lớn để chứa các đối tượng trung gian: <code>-XX:NewRatio=2</code> (Young Gen chiếm 1/3 tổng Heap).</li>
+                            </ul>
+                        </li>
+                        <li><strong>Hệ thống REST API thanh toán (Latency-oriented):</strong>
+                            <ul>
+                                <li><strong>Thuật toán GC:</strong> Sử dụng **ZGC** (kích hoạt bằng <code>-XX:+UseZGC</code>, và bật tính năng Generational ZGC của Java 21 bằng <code>-XX:+ZGenerational</code>). ZGC đảm bảo thời gian tạm dừng của luồng ứng dụng nhỏ hơn 1ms, loại bỏ hoàn toàn hiện tượng nghẽn mạng do GC tạm dừng ứng dụng.</li>
+                                <li><strong>Cấu hình bộ nhớ:</strong> Đặt <code>-Xms12g -Xmx12g</code>. Cấu hình kích thước tạm dừng mục tiêu cực thấp: <code>-XX:MaxGCPauseMillis=10</code>. Khóa toàn bộ bộ nhớ Heap vật lý để hệ điều hành không swap bộ nhớ xuống ổ đĩa ảo bằng tham số: <code>-XX:+AlwaysPreTouch</code>.</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Question 4 -->
+            <div class="qa-block">
+                <div class="qa-question">
+                    Một hệ thống xử lý đa khách hàng (Multi-tenant) lưu giữ hàng triệu thông tin cấu hình của các tenant trong một ConcurrentHashMap toàn cục. Qua phân tích Heap Dump, bạn nhận thấy dung lượng bộ nhớ bị phình to bất thường, và GC liên tục chạy Full GC làm chậm hệ thống. Hãy chỉ ra các lỗi thiết kế có thể có và cách tái cấu trúc hệ thống này.
+                </div>
+                <div class="qa-answer">
+                    Lưu trữ dữ liệu phi cấu trúc vô hạn trong một map tĩnh toàn cục là một thiết kế phản mẫu (anti-pattern) kinh điển dẫn đến Memory Leak và cạn kiệt tài nguyên. Các lỗi thiết kế cụ thể:
+                    <ul>
+                        <li><strong>Không có cơ chế dọn dẹp (Eviction Policy):</strong> Bản chất ConcurrentHashMap giữ tham chiếu mạnh (Strong References) đến các key và value. Nếu một khách hàng (tenant) không còn hoạt động, dữ liệu cấu hình của họ vẫn nằm mãi trong map và không bao giờ được giải phóng.</li>
+                        <li><strong>Cách tái cấu trúc hệ thống:</strong>
+                            <ol>
+                                <li>Thay thế ConcurrentHashMap bằng một thư viện cache chuyên dụng hỗ trợ giới hạn dung lượng và thời gian sống của phần tử, ví dụ **Caffeine Cache** cấu hình thời gian hết hạn hợp lý: <code>expireAfterAccess(30, TimeUnit.MINUTES)</code> hoặc <code>maximumSize(5000)</code>.</li>
+                                <li>Nếu vẫn bắt buộc dùng cấu trúc thô sơ, ta có thể bao bọc các đối tượng cấu hình bằng **WeakReference** hoặc **SoftReference** thông qua lớp <code>WeakHashMap</code>. Tuy nhiên, ConcurrentHashMap không hỗ trợ Weak Keys trực tiếp, nên ta phải tự tạo một Thread-Safe Weak Wrapper hoặc sử dụng Cache ngoài tiến trình như **Redis** để lưu trữ cấu hình nếu dung lượng quá lớn vượt quá giới hạn RAM của một JVM đơn lẻ.</li>
+                            </ol>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Question 5 -->
+            <div class="qa-block">
+                <div class="qa-question">
+                    Khi kiểm thử chịu tải (Load Test) một dịch vụ Spring Boot xử lý JSON Payload lớn, bạn quan sát thấy CPU của server bị spike lên 100%, thời gian phản hồi tăng vọt từ 20ms lên 5000ms. Sử dụng công cụ giám sát, bạn thấy tiến trình Java liên tục chạy Minor GC và thỉnh thoảng có Major GC. Hãy giải thích nguyên nhân sâu xa ở cấp độ quản lý bộ nhớ JVM và cách tối ưu hóa ở cả code và JVM.
+                </div>
+                <div class="qa-answer">
+                    Đây là hiện tượng **GC Thrashing** (Quá tải dọn rác).
+                    <ul>
+                        <li><strong>Nguyên nhân sâu xa:</strong> Khi xử lý các JSON Payload lớn, thư viện ObjectMapper (Jackson) hoặc mã ứng dụng liên tục phân tích và sinh ra hàng loạt các đối tượng String, Map, List trung gian ngắn hạn. Do tốc độ request gửi đến cực lớn, tốc độ sinh đối tượng rác ở vùng **Eden** (Young Gen) vượt xa tốc độ dọn dẹp của Minor GC. Eden nhanh chóng bị lấp đầy liên tục.</li>
+                        <li>Điều này ép JVM phải chạy Minor GC dồn dập. Vì Minor GC chạy liên tục, các đối tượng chưa kịp chết hoàn toàn đã đạt độ tuổi khuyến mãi và bị đẩy (promote) cưỡng bức lên **Old Gen** sớm hơn thời hạn (hiện tượng *Premature Promotion*). Khi vùng Old Gen bị lấp đầy bởi các đối tượng rác chưa kịp dọn này, JVM bắt buộc phải kích hoạt tiến trình nặng nề nhất là **Full GC (Stop-The-World)** làm đóng băng toàn bộ các luồng xử lý nghiệp vụ, gây nghẽn cổ chai và tăng vọt độ trễ phản hồi của API.</li>
+                        <li><strong>Giải pháp khắc phục:</strong>
+                            <ol>
+                                <li><strong>Code-level:</strong> Tận dụng cơ chế đọc luồng (Streaming API của Jackson) thay vì đọc toàn bộ JSON Payload vào bộ nhớ cùng lúc. Tái sử dụng các cấu trúc mảng đệm bằng cách sử dụng các Object Pools nếu cần thiết. Tránh thực hiện các phép cộng chuỗi lớn trong vòng lặp, thay thế bằng <code>StringBuilder</code>.</li>
+                                <li><strong>JVM Tuning:</strong> Tăng kích thước vùng bộ nhớ New Gen để đảm bảo các đối tượng ngắn hạn có đủ thời gian và không gian để chết hẳn ở vùng Young Gen trước khi bị đẩy lên Old Gen: sử dụng tham số <code>-XX:NewRatio=1</code> hoặc tăng tổng Heap <code>-Xmx</code>. Chuyển đổi sang sử dụng **ZGC** để giảm thời gian tạm dừng dọn rác xuống dưới 1ms, tránh bị nghẽn tắc luồng xử lý do Full GC gây ra.</li>
+                            </ol>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <footer>
+                <p>&copy; 2026 Java Senior Interview Preparation Roadmap.</p>
+            </footer>
+        </main>
+
+    </div>
+
+</body>
+</html>
