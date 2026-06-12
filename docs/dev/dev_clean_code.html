@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Senior Prep - Clean Code & Refactoring</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <span>Java Senior Prep</span>
+            </a>
+            <div class="header-tagline">Clean Code & Refactoring</div>
+        </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">1. Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">2. Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">3. Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">4. Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">5. Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">6. Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">7. Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">8. Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">9. Performance Benchmark</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">10. Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">11. Checklist trước Release</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="dev_clean_code.html" class="sidebar-link active" id="nav-java-clean">✨ Clean Code & Refactoring</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="http_spring_security.html" class="sidebar-link" id="nav-java-http">🌐 HTTP & Spring Security</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="database_mongodb_jpa.html" class="sidebar-link" id="nav-java-db">💾 Database & JPA/Mongo</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="async_message_queues.html" class="sidebar-link" id="nav-java-async">⚡ Async & Task Queues</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="swag_business_flows.html" class="sidebar-link" id="nav-java-swag">🚀 Swag Business Flows</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-wrapper">
+            <div class="hero-section">
+                <h1>Clean Code & Refactoring <span class="gradient-text">trong Java</span></h1>
+                <p>Nâng cao tư duy thiết kế, làm sạch mã nguồn và xử lý các loại Bad Code Smells theo tiêu chuẩn lập trình viên Senior.</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="card">
+                <h3>📈 Tiến độ ôn tập chủ đề</h3>
+                <p id="progress-stats" class="text-highlight">Tiến trình: 0% hoàn thành</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Checklist & Study Material -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>1. Refactoring & Code Smells phổ biến</h2>
+            </div>
+            
+            <p>Ở cấp độ Senior, việc nhận diện và cấu trúc lại các đoạn mã phức tạp (Refactoring) là vô cùng quan trọng. Dưới đây là cách ánh xạ các lỗi viết code phổ biến sang Java:</p>
+            
+            <ul>
+                <li><strong>Bloaters (Mã phình to):</strong>
+                    <ul>
+                        <li><em>Long Method (> 15 lines):</em> Khắc phục bằng cách sử dụng <code>Extract Method</code>, hoặc chuyển đổi biến tạm thành truy vấn (<code>Replace Temp with Query</code>).</li>
+                        <li><em>Long Parameter List:</em> Gộp các tham số liên quan thành một đối tượng chứa cấu hình (<code>Introduce Parameter Object</code> hoặc áp dụng <strong>Builder Pattern</strong> trong Java).</li>
+                    </ul>
+                </li>
+                <li><strong>Object-Orientation Abusers:</strong>
+                    <ul>
+                        <li><em>Switch Statements:</em> Thay thế các khối <code>switch-case</code> phức tạp bằng tính đa hình (<code>Replace Conditional with Polymorphism</code>) kết hợp với <strong>Strategy Pattern</strong>.</li>
+                    </ul>
+                </li>
+                <li><strong>Change Preventers (Ngăn cản thay đổi):</strong>
+                    <ul>
+                        <li><em>Shotgun Surgery:</em> Khi thay đổi một tính năng yêu cầu sửa đổi quá nhiều Class nhỏ lẻ khác nhau. Lỗi này vi phạm nghiêm trọng nguyên lý Single Responsibility Principle (SRP).</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>2. Thực tế Java Refactoring: Thay thế Switch bằng Strategy + Spring Map Injection</h2>
+            </div>
+            <p>Trong các dự án lớn, việc lạm dụng khối <code>switch-case</code> (hoặc một chuỗi <code>if-else if</code> kéo dài) để phân loại xử lý logic theo điều kiện là lỗi thiết kế cực kỳ phổ biến (Switch Statements smell). Nó vi phạm nguyên lý <strong>Open/Closed Principle (OCP)</strong> của SOLID vì mỗi khi thêm một loại nghiệp vụ mới, ta buộc phải mở mã nguồn cũ của lớp điều phối ra để chỉnh sửa.</p>
+            
+            <p><strong>Giải pháp chuẩn Senior:</strong> Sử dụng <strong>Strategy Pattern</strong> kết hợp cơ chế <strong>Dependency Injection</strong> mạnh mẽ của Spring Framework để tự động nạp các Strategy Beans vào một Map lưu trữ tập trung.</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>PaymentStrategy.java & PaymentService.java (Production Ready)</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-keyword">import</span> java.math.<span class="code-class">BigDecimal</span>;
+
+<span class="code-comment">/**
+ * Strategy Interface định nghĩa hành vi chung cho tất cả các cổng thanh toán.
+ */</span>
+<span class="code-keyword">public interface</span> <span class="code-class">PaymentStrategy</span> {
+    <span class="code-type">void</span> processPayment(<span class="code-class">String</span> orderId, <span class="code-class">BigDecimal</span> amount);
+    <span class="code-class">String</span> getPaymentType(); <span class="code-comment">// Trả về định danh duy nhất của Strategy</span>
+}
+
+<span class="code-comment">/**
+ * Implementation xử lý thanh toán qua thẻ tín dụng.
+ */</span>
+<span class="code-annotation">@Component</span>
+<span class="code-keyword">public class</span> <span class="code-class">CreditCardPayment</span> <span class="code-keyword">implements</span> <span class="code-class">PaymentStrategy</span> {
+    <span class="code-annotation">@Override</span>
+    <span class="code-type">void</span> processPayment(<span class="code-class">String</span> orderId, <span class="code-class">BigDecimal</span> amount) {
+        <span class="code-comment">// Logic kết nối cổng Visa/MasterCard</span>
+    }
+    
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">public</span> <span class="code-class">String</span> getPaymentType() {
+        <span class="code-keyword">return</span> <span class="code-string">"CREDIT_CARD"</span>;
+    }
+}
+
+<span class="code-comment">/**
+ * Implementation xử lý thanh toán qua Apple Pay.
+ */</span>
+<span class="code-annotation">@Component</span>
+<span class="code-keyword">public class</span> <span class="code-class">ApplePayPayment</span> <span class="code-keyword">implements</span> <span class="code-class">PaymentStrategy</span> {
+    <span class="code-annotation">@Override</span>
+    <span class="code-type">void</span> processPayment(<span class="code-class">String</span> orderId, <span class="code-class">BigDecimal</span> amount) {
+        <span class="code-comment">// Logic mã hóa mã token Apple Pay</span>
+    }
+    
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">public</span> <span class="code-class">String</span> getPaymentType() {
+        <span class="code-keyword">return</span> <span class="code-string">"APPLE_PAY"</span>;
+    }
+}
+
+<span class="code-comment">/**
+ * Service điều phối (Context) sử dụng cơ chế Constructor Injection 
+ * để tự động gom toàn bộ các Bean triển khai PaymentStrategy.
+ */</span>
+<span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">PaymentService</span> {
+    <span class="code-comment">// Immutable Map làm registry lưu trữ các Strategy</span>
+    <span class="code-keyword">private final</span> <span class="code-class">Map</span>&lt;<span class="code-class">String</span>, <span class="code-class">PaymentStrategy</span>&gt; paymentRegistry;
+
+    <span class="code-comment">/**
+     * Spring sẽ tự động quét classpath, tìm kiếm tất cả các class được đánh dấu
+     * @Component/Service triển khai PaymentStrategy và nạp vào List.
+     */</span>
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">public</span> <span class="code-class">PaymentService</span>(<span class="code-class">List</span>&lt;<span class="code-class">PaymentStrategy</span>&gt; strategies) {
+        <span class="code-class">Map</span>&lt;<span class="code-class">String</span>, <span class="code-class">PaymentStrategy</span>&gt; tempMap = <span class="code-keyword">new</span> <span class="code-class">HashMap</span>&lt;&gt;();
+        strategies.forEach(strategy -> {
+            <span class="code-class">PaymentStrategy</span> duplicate = tempMap.put(strategy.getPaymentType(), strategy);
+            <span class="code-keyword">if</span> (duplicate != <span class="code-keyword">null</span>) {
+                <span class="code-keyword">throw new</span> <span class="code-class">IllegalStateException</span>(<span class="code-string">"Trùng lặp cổng thanh toán: "</span> + strategy.getPaymentType());
+            }
+        });
+        <span class="code-comment">// Chuyển sang Map không thể sửa đổi (Unmodifiable) sau khi khởi động để đảm bảo Thread-safe</span>
+        <span class="code-keyword">this</span>.paymentRegistry = <span class="code-class">Collections</span>.unmodifiableMap(tempMap);
+    }
+
+    <span class="code-keyword">public void</span> executePayment(<span class="code-class">String</span> paymentType, <span class="code-class">String</span> orderId, <span class="code-class">BigDecimal</span> amount) {
+        <span class="code-class">PaymentStrategy</span> strategy = paymentRegistry.get(paymentType);
+        <span class="code-keyword">if</span> (strategy == <span class="code-keyword">null</span>) {
+            <span class="code-keyword">throw new</span> <span class="code-class">UnsupportedOperationException</span>(<span class="code-string">"Không tìm thấy dịch vụ thanh toán: "</span> + paymentType);
+        }
+        strategy.processPayment(orderId, amount);
+    }
+}</code></pre>
+            </div>
+            
+            <div class="alert alert-success">
+                <h5>💡 Tại sao giải pháp này được các System Architects ưa thích?</h5>
+                <ul>
+                    <li><strong>Hoàn toàn tuân thủ OCP:</strong> Khi dự án tích hợp thêm một cổng thanh toán mới (ví dụ: Google Pay, Momo), lập trình viên chỉ cần tạo một class mới triển khai <code>PaymentStrategy</code> và đánh dấu <code>@Component</code>. Lớp <code>PaymentService</code> và các đoạn code cũ không cần sửa đổi hay re-deploy, giảm thiểu tối đa rủi ro gây lỗi hồi quy (regression bugs).</li>
+                    <li><strong>Dễ dàng viết Unit Test:</strong> Bạn có thể dễ dàng mock từng <code>PaymentStrategy</code> riêng lẻ mà không lo lắng về các nhánh điều kiện ẩn bên trong câu lệnh switch lớn.</li>
+                    <li><strong>Tối ưu hóa Thread-safe:</strong> Bản đồ Registry được khởi tạo một lần duy nhất lúc khởi động hệ thống và chuyển đổi sang dạng <code>unmodifiableMap</code>, giúp chống race condition hoàn hảo khi hàng ngàn luồng truy cập cùng lúc.</li>
+                </ul>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>3. Bộ Câu hỏi Phỏng vấn Senior (Q&A)</h2>
+            </div>
+            
+            <div class="qa-block">
+                <div class="qa-question">Làm thế nào để tránh tình trạng "Over-engineering" (Thiết kế quá mức cần thiết) khi refactoring code?</div>
+                <div class="qa-answer">Cần tuân thủ nguyên lý <strong>YAGNI</strong> (You Aren't Gonna Need It) và <strong>KISS</strong> (Keep It Simple, Stupid). Không tạo interface trừ khi có ít nhất 2 implementation thực tế hoặc cần thực hiện Mocking trong Unit Test. Chỉ refactor khi đoạn mã đó cần thay đổi thường xuyên (vi phạm OCP - Open/Closed Principle) hoặc gặp lỗi hiệu năng thực tế.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Builder Pattern giải quyết bài toán gì của Constructor trong Java, và làm sao đảm bảo tính Thread-safe?</div>
+                <div class="qa-answer">Builder Pattern giải quyết bài toán "Telescoping Constructor" (quá nhiều tham số khởi tạo chồng chéo). Nó giúp tăng tính tường minh và cho phép kiểm soát tính hợp lệ của dữ liệu trước khi build. Để đảm bảo an toàn luồng và tính bất biến (immutability), tất cả các trường trong thực thể chính nên được khai báo là <code>private final</code> và không có phương thức setter.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Sự khác nhau giữa Composition và Inheritance (Kế thừa)? Khi nào nên ưu tiên Composition?</div>
+                <div class="qa-answer">Inheritance tạo mối quan hệ chặt chẽ "IS-A", dễ dẫn đến vi phạm tính đóng gói nếu lớp cha thay đổi (Refused Bequest smell). Composition tạo mối quan hệ lỏng "HAS-A", cho phép thay đổi hành vi động lúc runtime (ví dụ qua Strategy Pattern). Chuẩn Senior luôn ưu tiên Composition hơn Inheritance ("Favor composition over inheritance") để giữ hệ thống linh hoạt và giảm thiểu rủi ro lan truyền lỗi.</div>
+            </div>
+
+            <!-- Checklist sections for remaining topics to reach 7 checkboxes -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>4. Nguyên lý SOLID chuyên sâu</h2>
+            </div>
+            <p>Phân tích các vi phạm thực tế đối với nguyên lý Liskov Substitution Principle (LSP) và Interface Segregation Principle (ISP) trong các dự án Spring Boot lớn.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>5. Các công cụ kiểm tra tĩnh (Static Analysis Tools)</h2>
+            </div>
+            <p>Tìm hiểu cách tích hợp SonarQube, SpotBugs, ArchUnit (để kiểm tra vi phạm kiến trúc kiến thức) và Checkstyle vào CI/CD pipeline cho dự án Java.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>6. Tối ưu hóa hiệu năng Clean Code</h2>
+            </div>
+            <p>Tránh các lỗi tạo rác bộ nhớ (Memory Leak), lạm dụng String concatenation thay vì StringBuilder, cách sử dụng hợp lý các Collection trong luồng chạy đa luồng.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>7. Viết Pull Request & Code Review chuẩn mực</h2>
+            </div>
+            <p>Cách phân rã các tính năng lớn thành các Stacked PRs trong Java, sử dụng Git pre-commit hooks cho auto-formatter (như Google Java Format).</p>
+
+            <footer>
+                <p>&copy; 2026 Java Senior Interview Preparation Roadmap.</p>
+            </footer>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

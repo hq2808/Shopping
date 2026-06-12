@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Senior Prep - HTTP & Spring Security</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <span>Java Senior Prep</span>
+            </a>
+            <div class="header-tagline">HTTP & Spring Security</div>
+        </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">1. Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">2. Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">3. Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">4. Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">5. Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">6. Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">7. Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">8. Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">9. Performance Benchmark</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">10. Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">11. Checklist trước Release</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="dev_clean_code.html" class="sidebar-link" id="nav-java-clean">✨ Clean Code & Refactoring</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="http_spring_security.html" class="sidebar-link active" id="nav-java-http">🌐 HTTP & Spring Security</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="database_mongodb_jpa.html" class="sidebar-link" id="nav-java-db">💾 Database & JPA/Mongo</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="async_message_queues.html" class="sidebar-link" id="nav-java-async">⚡ Async & Task Queues</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="swag_business_flows.html" class="sidebar-link" id="nav-java-swag">🚀 Swag Business Flows</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-wrapper">
+            <div class="hero-section">
+                <h1>HTTP & Spring Security <span class="gradient-text">chuyên sâu</span></h1>
+                <p>Khảo sát sâu cơ chế mạng, các bộ lọc Servlet trong Spring Boot và xây dựng hệ thống phân quyền JWT stateless an toàn.</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="card">
+                <h3>📈 Tiền độ ôn tập chủ đề</h3>
+                <p id="progress-stats" class="text-highlight">Tiến trình: 0% hoàn thành</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Checklist & Study Material -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>1. So sánh HTTP/1.1 vs HTTP/2 vs HTTP/3 trong Spring Boot</h2>
+            </div>
+            <p>Hiểu rõ cách tối ưu hóa giao thức mạng ở tầng Web Server (Tomcat/Undertow) của Spring Boot:</p>
+            <ul>
+                <li><strong>HTTP/2:</strong> Giải quyết lỗi Head-of-Line Blocking ở mức HTTP bằng cơ chế Multiplexing. Trong Spring Boot, có thể cấu hình HTTP/2 dễ dàng qua file <code>application.properties</code> bằng việc bật SSL (HTTP/2 yêu cầu TLS).</li>
+                <li><strong>HTTP/3:</strong> Sử dụng giao thức QUIC chạy trên UDP. Hiện tại, Spring Boot (thông qua Project Reactor Netty) đã có các thử nghiệm tích hợp HTTP/3 giúp tăng tốc thiết lập kết nối (0-RTT) và chống rớt gói tin cực tốt khi chuyển đổi mạng (nhờ Connection ID).</li>
+            </ul>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>2. Bộ lọc ETag Caching với ShallowEtagHeaderFilter</h2>
+            </div>
+            <p>Tiết kiệm băng thông mạng bằng cách gửi mã phản hồi <code>304 Not Modified</code> khi nội dung tài nguyên không thay đổi:</p>
+            
+            <div class="code-container">
+                <div class="code-header">
+                    <span>WebMvcConfig.java</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@Configuration</span>
+<span class="code-keyword">public class</span> <span class="code-class">WebMvcConfig</span> {
+    <span class="code-annotation">@Bean</span>
+    <span class="code-keyword">public</span> <span class="code-class">FilterRegistrationBean</span>&lt;<span class="code-class">ShallowEtagHeaderFilter</span>&gt; etagFilter() {
+        <span class="code-class">FilterRegistrationBean</span>&lt;<span class="code-class">ShallowEtagHeaderFilter</span>&gt; registration = 
+            <span class="code-keyword">new</span> <span class="code-class">FilterRegistrationBean</span>&lt;&gt;(<span class="code-keyword">new</span> <span class="code-class">ShallowEtagHeaderFilter</span>());
+        registration.addUrlPatterns(<span class="code-string">"/api/products/*"</span>, <span class="code-string">"/api/assets/*"</span>);
+        <span class="code-keyword">return</span> registration;
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>3. Bộ lọc xác thực Stateless JWT trong Spring Security</h2>
+            </div>
+            <p>Trong kiến trúc microservice hoặc RESTful API stateless, Spring Security không duy trì HttpSession của người dùng. Thay vào đó, mỗi request phải tự đính kèm JWT trong header. Lớp bộ lọc kế thừa từ <code>OncePerRequestFilter</code> đảm bảo kiểm tra token này một lần duy nhất cho mỗi yêu cầu.</p>
+            
+            <p><strong>Lưu ý cấp độ Senior:</strong> Bộ lọc JWT chạy trước Spring Security filter chain. Nếu xảy ra lỗi (token hết hạn, chữ ký sai), việc ném Exception trực tiếp trong Filter sẽ làm sập request và trả về lỗi 500 mặc định vì nó nằm ngoài tầm kiểm soát của ControllerAdvice. Code chuẩn cần bắt Exception của JWT và ghi dữ liệu lỗi JSON chuẩn (401 Unauthorized) trực tiếp vào HttpServletResponse.</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>JwtAuthenticationFilter.java (Chuẩn Production)</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@Component</span>
+<span class="code-keyword">public class</span> <span class="code-class">JwtAuthenticationFilter</span> <span class="code-keyword">extends</span> <span class="code-class">OncePerRequestFilter</span> {
+    <span class="code-keyword">private final</span> <span class="code-class">JwtProvider</span> jwtProvider;
+    <span class="code-keyword">private final</span> <span class="code-class">UserDetailsService</span> userDetailsService;
+    <span class="code-keyword">private final</span> <span class="code-class">ObjectMapper</span> objectMapper = <span class="code-keyword">new</span> <span class="code-class">ObjectMapper</span>();
+
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">public</span> <span class="code-class">JwtAuthenticationFilter</span>(<span class="code-class">JwtProvider</span> jwtProvider, <span class="code-class">UserDetailsService</span> userDetailsService) {
+        <span class="code-keyword">this</span>.jwtProvider = jwtProvider;
+        <span class="code-keyword">this</span>.userDetailsService = userDetailsService;
+    }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected boolean</span> shouldNotFilter(<span class="code-class">HttpServletRequest</span> request) {
+        <span class="code-comment">// Bỏ qua các API public không cần xác thực để tránh giải mã token vô ích</span>
+        <span class="code-class">String</span> path = request.getServletPath();
+        <span class="code-keyword">return</span> path.startsWith(<span class="code-string">"/api/auth/"</span>) || path.startsWith(<span class="code-string">"/public/"</span>);
+    }
+
+    <span class="code-annotation">@Override</span>
+    <span class="code-keyword">protected void</span> doFilterInternal(<span class="code-class">HttpServletRequest</span> request, 
+                                    <span class="code-class">HttpServletResponse</span> response, 
+                                    <span class="code-class">FilterChain</span> filterChain) <span class="code-keyword">throws</span> <span class="code-class">ServletException</span>, <span class="code-class">IOException</span> {
+        <span class="code-class">String</span> token = resolveToken(request);
+        <span class="code-keyword">if</span> (token == <span class="code-keyword">null</span>) {
+            filterChain.doFilter(request, response);
+            <span class="code-keyword">return</span>;
+        }
+
+        <span class="code-keyword">try</span> {
+            <span class="code-keyword">if</span> (jwtProvider.validateToken(token)) {
+                <span class="code-class">String</span> username = jwtProvider.getUsernameFromToken(token);
+                <span class="code-class">UserDetails</span> userDetails = userDetailsService.loadUserByUsername(username);
+                
+                <span class="code-class">UsernamePasswordAuthenticationToken</span> authentication = 
+                    <span class="code-keyword">new</span> <span class="code-class">UsernamePasswordAuthenticationToken</span>(userDetails, <span class="code-keyword">null</span>, userDetails.getAuthorities());
+                authentication.setDetails(<span class="code-keyword">new</span> <span class="code-class">WebAuthenticationDetailsSource</span>().buildDetails(request));
+                
+                <span class="code-comment">// Ghi nhận thông tin xác thực vào SecurityContext của Spring</span>
+                <span class="code-class">SecurityContextHolder</span>.getContext().setAuthentication(authentication);
+            }
+            filterChain.doFilter(request, response);
+        } <span class="code-keyword">catch</span> (<span class="code-class">ExpiredJwtException</span> ex) {
+            handleException(response, <span class="code-string">"Token đã hết hạn sử dụng"</span>);
+        } <span class="code-keyword">catch</span> (<span class="code-class">SignatureException</span> | <span class="code-class">MalformedJwtException</span> ex) {
+            handleException(response, <span class="code-string">"Chữ ký Token không hợp lệ"</span>);
+        } <span class="code-keyword">catch</span> (<span class="code-class">Exception</span> ex) {
+            handleException(response, <span class="code-string">"Lỗi xác thực Token hệ thống"</span>);
+        }
+    }
+
+    <span class="code-keyword">private</span> <span class="code-class">String</span> resolveToken(<span class="code-class">HttpServletRequest</span> request) {
+        <span class="code-class">String</span> bearerToken = request.getHeader(<span class="code-string">"Authorization"</span>);
+        <span class="code-keyword">if</span> (StringUtils.hasText(bearerToken) && bearerToken.startsWith(<span class="code-string">"Bearer "</span>)) {
+            <span class="code-keyword">return</span> bearerToken.substring(<span class="code-number">7</span>);
+        }
+        <span class="code-keyword">return null</span>;
+    }
+
+    <span class="code-keyword">private void</span> handleException(<span class="code-class">HttpServletResponse</span> response, <span class="code-class">String</span> message) <span class="code-keyword">throws</span> <span class="code-class">IOException</span> {
+        <span class="code-class">SecurityContextHolder</span>.clearContext(); <span class="code-comment">// Xóa bỏ context nếu có lỗi xảy ra</span>
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType(<span class="code-string">"application/json; charset=utf-8"</span>);
+        
+        <span class="code-class">Map</span>&lt;<span class="code-class">String</span>, <span class="code-class">Object</span>&gt; errorDetails = <span class="code-class">Map</span>.of(
+            <span class="code-string">"timestamp"</span>, Instant.now().toString(),
+            <span class="code-string">"status"</span>, HttpServletResponse.SC_UNAUTHORIZED,
+            <span class="code-string">"error"</span>, <span class="code-string">"Unauthorized"</span>,
+            <span class="code-string">"message"</span>, message
+        );
+        response.getWriter().write(objectMapper.writeValueAsString(errorDetails));
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>4. Bộ câu hỏi phỏng vấn Senior (Q&A)</h2>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Lọc ShallowEtagHeaderFilter hoạt động thế nào dưới nền? Nó có giúp giảm tải cho database không?</div>
+                <div class="qa-answer"><strong>ShallowEtagHeaderFilter</strong> hoạt động bằng cách ghi đè OutputStream của Response và tính toán mã băm MD5 dựa trên toàn bộ body nhận được. Nó sẽ đối chiếu mã MD5 này với header <code>If-None-Match</code> từ Client. Nếu trùng, nó xóa sạch Body và trả về mã 304.
+                <br><strong class="text-error">Chú ý:</strong> Bộ lọc này KHÔNG giúp giảm tải cho database, vì Controller vẫn xử lý bình thường và query DB bình thường. Để giảm tải DB, ta phải dùng cơ chế Deep ETag (truy vấn nhanh hash/last-modified từ DB trước) hoặc ứng dụng Cache cấp độ Repository.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Vì sao nên chọn OncePerRequestFilter thay vì bộ lọc Filter thông thường trong Spring Security?</div>
+                <div class="qa-answer">Mỗi Servlet Filter thông thường có thể bị gọi nhiều lần cho cùng một request trong các kịch bản Forwarding (Chuyển tiếp trang nội bộ) hoặc xử lý lỗi bất đồng bộ. <code>OncePerRequestFilter</code> đảm bảo logic xác thực token (như giải mã JWT, truy vấn UserDetails) chỉ chạy đúng **một lần duy nhất** cho mỗi request gửi lên, tối ưu tài nguyên CPU và kết nối.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Làm thế nào để phòng chống tấn công CSRF khi xây dựng hệ thống Stateless REST API sử dụng JWT?</div>
+                <div class="qa-answer">Nếu JWT được lưu trong Cookie (với cờ <code>HttpOnly</code> và <code>Secure</code> để chống XSS), ứng dụng sẽ bị phơi nhiễm trước tấn công CSRF. Để phòng chống, ta có thể triển khai cơ chế <strong>Double Submit Cookie</strong>, yêu cầu Client đính kèm một token CSRF ngẫu nhiên trong Custom HTTP Header (ví dụ <code>X-XSRF-TOKEN</code>). Vì các trang web độc hại không thể đọc/ghi cookie của domain khác do chính sách Same-Origin Policy, chúng không thể đính kèm Header này. Nếu JWT lưu trong LocalStorage, ta không lo bị tấn công CSRF, nhưng phải có các biện pháp kiểm soát chống tấn công XSS nghiêm ngặt (như cấu hình Content Security Policy - CSP).</div>
+            </div>
+
+            <!-- Remaining checkboxes to reach 8 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>5. Luồng xoay vòng Refresh Token (Token Rotation) an toàn</h2>
+            </div>
+            <p>Cách quản lý Refresh Token an toàn: lưu trữ dạng băm một chiều trong Redis, thiết lập thời gian hết hạn TTL tương ứng và hủy toàn bộ các token cũ khi phát hiện có hành vi đăng nhập/sử dụng lại token đáng ngờ.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>6. Quản lý cấu hình CORS nâng cao</h2>
+            </div>
+            <p>Tránh các lỗi bảo mật cấu hình CORS tùy tiện (<code>*</code>) khi API yêu cầu chứng thực credentials. Cách triển khai <code>CorsConfigurationSource</code> chuẩn chỉ.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>7. Cấu hình HSTS & bảo mật Header trong Spring Security</h2>
+            </div>
+            <p>Bảo vệ ứng dụng chống tấn công Man-in-the-middle bằng cách ép trình duyệt chỉ kết nối HTTPS thông qua cấu hình <code>Strict-Transport-Security</code> (HSTS) và các header bảo mật (X-Frame-Options, CSP).</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>8. RESTful API error handling toàn cục</h2>
+            </div>
+            <p>Xây dựng hệ thống xử lý lỗi đồng bộ bằng cách sử dụng <code>@ControllerAdvice</code> kết hợp <code>@ExceptionHandler</code> để ẩn đi các lỗi StackTrace nhạy cảm của hệ thống trước Client.</p>
+
+            <footer>
+                <p>&copy; 2026 Java Senior Interview Preparation Roadmap.</p>
+            </footer>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

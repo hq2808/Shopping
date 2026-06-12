@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Senior Prep - Database & JPA/MongoDB</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <span>Java Senior Prep</span>
+            </a>
+            <div class="header-tagline">Database & JPA/MongoDB</div>
+        </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">1. Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">2. Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">3. Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">4. Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">5. Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">6. Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">7. Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">8. Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">9. Performance Benchmark</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">10. Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">11. Checklist trước Release</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="dev_clean_code.html" class="sidebar-link" id="nav-java-clean">✨ Clean Code & Refactoring</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="http_spring_security.html" class="sidebar-link" id="nav-java-http">🌐 HTTP & Spring Security</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="database_mongodb_jpa.html" class="sidebar-link active" id="nav-java-db">💾 Database & JPA/Mongo</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="async_message_queues.html" class="sidebar-link" id="nav-java-async">⚡ Async & Task Queues</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="swag_business_flows.html" class="sidebar-link" id="nav-java-swag">🚀 Swag Business Flows</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-wrapper">
+            <div class="hero-section">
+                <h1>Database & JPA/MongoDB <span class="gradient-text">tối ưu hóa</span></h1>
+                <p>Khảo sát chuyên sâu truy vấn cơ sở dữ liệu MongoDB, thiết lập giao dịch đa tài liệu và tối ưu hóa hiệu năng ORM Hibernate.</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="card">
+                <h3>📈 Tiến độ ôn tập chủ đề</h3>
+                <p id="progress-stats" class="text-highlight">Tiến trình: 0% hoàn thành</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Checklist & Study Material -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>1. MongoDB Aggregation Pipeline trong Spring Data MongoDB</h2>
+                <span class="badge badge-info">MongoTemplate</span>
+            </div>
+            <p>Trong MongoDB, Aggregation Pipeline là công cụ mạnh mẽ để xử lý, biến đổi và thống kê dữ liệu qua nhiều giai đoạn (Stages) nối tiếp. Đối với lập trình viên Senior, việc nắm vững cách phối hợp các stage như <code>$match</code>, <code>$lookup</code>, <code>$unwind</code>, <code>$group</code>, <code>$project</code> và tối ưu hóa hiệu năng của chúng trong Java là bắt buộc.</p>
+            
+            <p><strong>Lưu ý tối ưu hóa hiệu năng (Performance Tuning):</strong>
+            <ul>
+                <li>Luôn đặt stage <code>$match</code> và <code>$sort</code> lên đầu tiên của pipeline để tận dụng tối đa Index. Nếu đặt sau <code>$project</code> hay <code>$lookup</code>, MongoDB sẽ buộc phải quét toàn bộ Collection (Collscan).</li>
+                <li>Mặc định, mỗi Stage trong Aggregation bị giới hạn bộ nhớ RAM tối đa **100MB**. Nếu tập dữ liệu lớn vượt ngưỡng, truy vấn sẽ bị crash. Cần cấu hình <code>allowDiskUse(true)</code> để cho phép ghi dữ liệu tạm ra ổ đĩa nếu cần thiết.</li>
+            </ul>
+            </p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>OrderAggregationRepositoryImpl.java (Production Ready với Join $lookup)</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@Repository</span>
+<span class="code-keyword">public class</span> <span class="code-class">OrderAggregationRepositoryImpl</span> {
+    <span class="code-keyword">private final</span> <span class="code-class">MongoTemplate</span> mongoTemplate;
+
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">public</span> <span class="code-class">OrderAggregationRepositoryImpl</span>(<span class="code-class">MongoTemplate</span> mongoTemplate) {
+        <span class="code-keyword">this</span>.mongoTemplate = mongoTemplate;
+    }
+
+    <span class="code-keyword">public</span> <span class="code-class">List</span>&lt;<span class="code-class">UserOrderRevenueDto</span>&gt; getUserOrderRevenueReport(<span class="code-class">String</span> status, <span class="code-type">double</span> minSpent) {
+        <span class="code-comment">// Stage 1: Match - Lọc các order thành công bằng index</span>
+        <span class="code-class">MatchOperation</span> matchOrders = Aggregation.match(
+            Criteria.where(<span class="code-string">"status"</span>).is(status).and(<span class="code-string">"deletedAt"</span>).exists(<span class="code-keyword">false</span>)
+        );
+
+        <span class="code-comment">// Stage 2: Lookup - Thực hiện Join nối bảng với Collection 'users'</span>
+        <span class="code-class">LookupOperation</span> lookupUser = LookupOperation.newLookup()
+            .from(<span class="code-string">"users"</span>)                  <span class="code-comment">// Collection cần join</span>
+            .localField(<span class="code-string">"userId"</span>)          <span class="code-comment">// Khóa ngoại bên Collection orders</span>
+            .foreignField(<span class="code-string">"_id"</span>)           <span class="code-comment">// Khóa chính bên Collection users</span>
+            .as(<span class="code-string">"userDetails"</span>);            <span class="code-comment">// Tên mảng kết quả sau khi join</span>
+
+        <span class="code-comment">// Stage 3: Unwind - Làm phẳng mảng kết quả join thành object đơn lẻ</span>
+        <span class="code-class">UnwindOperation</span> unwindUser = Aggregation.unwind(<span class="code-string">"userDetails"</span>);
+
+        <span class="code-comment">// Stage 4: Group - Gom nhóm theo User, tính tổng doanh thu và đếm số đơn hàng</span>
+        <span class="code-class">GroupOperation</span> groupUser = Aggregation.group(<span class="code-string">"userDetails._id"</span>)
+            .first(<span class="code-string">"userDetails.email"</span>).as(<span class="code-string">"userEmail"</span>)
+            .first(<span class="code-string">"userDetails.name"</span>).as(<span class="code-string">"userName"</span>)
+            .sum(<span class="code-string">"price"</span>).as(<span class="code-string">"totalSpent"</span>)
+            .count().as(<span class="code-string">"totalOrders"</span>);
+
+        <span class="code-comment">// Stage 5: Match (Post-group) - Lọc tiếp các User tiêu dùng vượt ngưỡng yêu cầu</span>
+        <span class="code-class">MatchOperation</span> filterRevenue = Aggregation.match(Criteria.where(<span class="code-string">"totalSpent"</span>).gte(minSpent));
+
+        <span class="code-comment">// Stage 6: Project - Định hình cấu trúc JSON trả về cho Client</span>
+        <span class="code-class">ProjectionOperation</span> projectFields = Aggregation.project()
+            .and(<span class="code-string">"_id"</span>).as(<span class="code-string">"userId"</span>)
+            .andInclude(<span class="code-string">"userEmail"</span>, <span class="code-string">"userName"</span>, <span class="code-string">"totalSpent"</span>, <span class="code-string">"totalOrders"</span>)
+            .andExclude(<span class="code-string">"_id"</span>); <span class="code-comment">// Ẩn trường ID gốc</span>
+
+        <span class="code-comment">// Stage 7: Sort - Sắp xếp theo tổng tiền tiêu dùng giảm dần</span>
+        <span class="code-class">SortOperation</span> sortByRevenue = Aggregation.sort(Sort.Direction.DESC, <span class="code-string">"totalSpent"</span>);
+
+        <span class="code-comment">// Khởi tạo Aggregation với tùy chọn allowDiskUse để chống lỗi tràn RAM (100MB limit)</span>
+        <span class="code-class">Aggregation</span> aggregation = Aggregation.newAggregation(
+            matchOrders, lookupUser, unwindUser, groupUser, filterRevenue, projectFields, sortByRevenue
+        ).withOptions(Aggregation.newAggregationOptions().allowDiskUse(<span class="code-keyword">true</span>).build());
+
+        <span class="code-class">AggregationResults</span>&lt;<span class="code-class">UserOrderRevenueDto</span>&gt; results = 
+            mongoTemplate.aggregate(aggregation, <span class="code-string">"orders"</span>, <span class="code-class">UserOrderRevenueDto</span>.<span class="code-keyword">class</span>);
+        <span class="code-keyword">return</span> results.getMappedResults();
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>2. Giải quyết lỗi N+1 Query trong Spring Data JPA</h2>
+                <span class="badge badge-success">Hibernate Optimization</span>
+            </div>
+            <p>Sử dụng truy vấn nạp dữ liệu chủ động (Eager Fetching) để tránh việc sinh ra hàng loạt truy vấn con khi duyệt danh sách:</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>UserRepository.java</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-keyword">public interface</span> <span class="code-class">UserRepository</span> <span class="code-keyword">extends</span> <span class="code-class">JpaRepository</span>&lt;<span class="code-class">User</span>, <span class="code-class">Long</span>&gt; {
+    <span class="code-comment">// Cách 1: Sử dụng JOIN FETCH trong JPQL truy vấn</span>
+    <span class="code-annotation">@Query</span>(<span class="code-string">"SELECT u FROM User u LEFT JOIN FETCH u.orders WHERE u.email = :email"</span>)
+    <span class="code-class">Optional</span>&lt;<span class="code-class">User</span>&gt; findByEmailWithOrdersFetch(<span class="code-class">String</span> email);
+
+    <span class="code-comment">// Cách 2: Sử dụng EntityGraph động của JPA 2.1</span>
+    <span class="code-annotation">@EntityGraph</span>(attributePaths = {<span class="code-string">"orders"</span>, <span class="code-string">"roles"</span>})
+    <span class="code-class">List</span>&lt;<span class="code-class">User</span>&gt; findAll();
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>3. Bộ câu hỏi phỏng vấn Senior (Q&A)</h2>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Làm cách nào cấu hình Giao dịch đa tài liệu (Multi-document Transaction) trong MongoDB sử dụng Spring Boot? Những lưu ý về hiệu năng là gì?</div>
+                <div class="qa-answer">Để sử dụng <code>@Transactional</code> với MongoDB, ta phải đăng ký Bean <code>MongoTransactionManager</code> trong file cấu hình. Đồng thời, MongoDB yêu cầu database phải đang chạy dưới dạng <strong>Replica Set</strong> hoặc Sharded Cluster.
+                <br><strong class="text-error">Lưu ý hiệu năng:</strong> Giao dịch đa tài liệu khóa các document liên quan và sinh ra chi phí đồng bộ lớn. Chỉ sử dụng khi thực sự cần tính toàn vẹn dữ liệu tuyệt đối (Ví dụ: Khấu trừ tiền ví điện tử để mua vé livestream). Tránh các giao dịch chạy quá lâu (hơn 60 giây mặc định) vì sẽ làm nghẽn bộ nhớ đệm có dây (WiredTiger cache).</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Sự khác nhau giữa First-level Cache và Second-level Cache trong Hibernate? Khi nào nên cấu hình L2 Cache?</div>
+                <div class="qa-answer"><strong>First-level Cache:</strong> Gắn liền với <code>Session</code> (hoặc <code>EntityManager</code>), là cache mặc định và hoạt động ở mức luồng (transaction scope). Dữ liệu tự động giải phóng khi transaction kết thúc.
+                <br><strong>Second-level Cache:</strong> Hoạt động ở mức <code>SessionFactory</code> (application scope), chia sẻ giữa tất cả các session. Cần tích hợp thư viện ngoài (như Ehcache, Redis).
+                <br><strong class="text-warning">Khi nào dùng L2 Cache:</strong> Thích hợp cho các bảng dữ liệu ít biến động nhưng đọc rất nhiều (như bảng Config hệ thống, danh mục quốc gia). Không dùng cho các bảng ghi liên tục vì chi phí đồng bộ cache (eviction/invalidation) sẽ làm giảm hiệu năng hệ thống.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Khi nào ta nên bỏ qua cơ chế mapping của JPA/MongoEngine để chuyển sang viết truy vấn Native SQL/Raw Document?</div>
+                <div class="qa-answer">Khi cần thực hiện các thao tác ghi dữ liệu lớn hàng loạt (Bulk Write) hoặc tải các tập dữ liệu khổng lồ chỉ đọc để kết xuất báo cáo. Quá trình ánh xạ (Mapping) hàng triệu bản ghi từ DB sang Object thực thể Java tiêu tốn rất nhiều tài nguyên CPU và bộ nhớ JVM (sinh ra rác). Sử dụng truy vấn Native SQL trả về DTO trực tiếp hoặc thao tác trực tiếp với Driver (ví dụ <code>Pymongo</code> hoặc <code>mongoTemplate.getCollection()</code>) để bypass cơ chế quản lý vòng đời (Persistence Context) của ORM, tăng tốc độ xử lý gấp nhiều lần.</div>
+            </div>
+
+            <!-- Remaining checkboxes to reach 7 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>4. Cấu hình Index MongoDB chuyên sâu</h2>
+            </div>
+            <p>Hiểu cơ chế hoạt động của Compound Index, luật ưu tiên tiền tố (Prefix Rule). Thiết kế Index cho các bài toán truy vấn lồng nhau (Embedded Document Index).</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>5. Chiến lược khóa dữ liệu (Pessimistic Locking vs Optimistic Locking)</h2>
+            </div>
+            <p>Tránh race condition khi cập nhật số dư ví điện tử hoặc số lượng vé livestream. Cách triển khai `@Version` trong JPA và toán tử nguyên tử `$inc` trong MongoDB.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>6. Tối ưu hóa Database Connection Pool</h2>
+            </div>
+            <p>Cấu hình tối ưu thư viện HikariCP (Connection Timeout, Maximum Pool Size) cho các ứng dụng Spring Boot chịu tải cao.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>7. Hibernate Lazy Initialization Exception</h2>
+            </div>
+            <p>Nguyên nhân xảy ra lỗi khi cố truy cập thuộc tính Lazy load ngoài phạm vi Transaction (Session đã đóng) và cách khắc phục triệt để bằng DTO Projections.</p>
+
+            <footer>
+                <p>&copy; 2026 Java Senior Interview Preparation Roadmap.</p>
+            </footer>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

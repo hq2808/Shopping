@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Senior Prep - Swag Business Flows</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <span>Java Senior Prep</span>
+            </a>
+            <div class="header-tagline">Swag Business Flows</div>
+        </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">1. Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">2. Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">3. Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">4. Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">5. Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">6. Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">7. Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">8. Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">9. Performance Benchmark</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">10. Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">11. Checklist trước Release</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="dev_clean_code.html" class="sidebar-link" id="nav-java-clean">✨ Clean Code & Refactoring</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="http_spring_security.html" class="sidebar-link" id="nav-java-http">🌐 HTTP & Spring Security</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="database_mongodb_jpa.html" class="sidebar-link" id="nav-java-db">💾 Database & JPA/Mongo</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="async_message_queues.html" class="sidebar-link" id="nav-java-async">⚡ Async & Task Queues</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="swag_business_flows.html" class="sidebar-link active" id="nav-java-swag">🚀 Swag Business Flows</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-wrapper">
+            <div class="hero-section">
+                <h1>Swag Business Flows <span class="gradient-text">in Java</span></h1>
+                <p>Khảo sát và chuyển đổi toàn bộ luồng nghiệp vụ phức tạp của Swag Server sang kiến trúc Spring Boot và hệ sinh thái GCP.</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="card">
+                <h3>📈 Tiến độ ôn tập chủ đề</h3>
+                <p id="progress-stats" class="text-highlight">Tiến trình: 0% hoàn thành</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Checklist & Study Material -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>1. Luồng Upload Asset lên Google Cloud Storage (GCS)</h2>
+                <span class="badge badge-info">GCP Java SDK</span>
+            </div>
+            <p>Sinh link upload pre-signed trực tiếp từ Client lên bucket để giảm tải băng thông Web Server, đồng thời lắng nghe Pub/Sub để xác nhận tài nguyên:</p>
+            
+            <div class="code-container">
+                <div class="code-header">
+                    <span>GcsAssetService.java</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@Service</span>
+<span class="code-keyword">public class</span> <span class="code-class">GcsAssetService</span> {
+    <span class="code-keyword">private final</span> <span class="code-class">Storage</span> storage; <span class="code-comment">// Google Cloud Storage client</span>
+    <span class="code-keyword">private final</span> <span class="code-class">String</span> bucketName = <span class="code-string">"swag-assets-bucket"</span>;
+
+    <span class="code-annotation">@Autowired</span>
+    <span class="code-keyword">public</span> <span class="code-class">GcsAssetService</span>(<span class="code-class">Storage</span> storage) {
+        <span class="code-keyword">this</span>.storage = storage;
+    }
+
+    <span class="code-keyword">public</span> <span class="code-class">URL</span> generateUploadPresignedUrl(<span class="code-class">String</span> objectName, <span class="code-class">String</span> contentType) {
+        <span class="code-class">BlobInfo</span> blobInfo = BlobInfo.newBuilder(bucketName, objectName)
+                                    .setContentType(contentType)
+                                    .build();
+        
+        <span class="code-comment">// Link upload có giá trị trong vòng 15 phút sử dụng phương thức PUT</span>
+        <span class="code-keyword">return</span> storage.signUrl(blobInfo, <span class="code-number">15</span>, <span class="code-class">TimeUnit</span>.<span class="code-class">MINUTES</span>,
+            Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+            Storage.SignUrlOption.withExtHeaders(Map.of(<span class="code-string">"Content-Type"</span>, contentType)),
+            Storage.SignUrlOption.withV4Signature()
+        );
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>2. Tích hợp cổng thanh toán So-net (Checkout & Callback)</h2>
+                <span class="badge badge-success">Payment Flow</span>
+            </div>
+            <p>Xử lý chuyển hướng an toàn và callback xác nhận đơn hàng từ cổng thanh toán trong Java sử dụng WebClient:</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>CheckoutController.java</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@RestController</span>
+<span class="code-annotation">@RequestMapping</span>(<span class="code-string">"/api/shop"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">CheckoutController</span> {
+    <span class="code-keyword">private final</span> <span class="code-class">WebClient</span> webClient;
+    <span class="code-keyword">private final</span> <span class="code-class">OrderRepository</span> orderRepository;
+
+    <span class="code-annotation">@PostMapping</span>(<span class="code-string">"/checkout/complete"</span>)
+    <span class="code-keyword">public</span> <span class="code-class">ResponseEntity</span>&lt;<span class="code-class">Void</span>&gt; completePayment(<span class="code-annotation">@RequestBody</span> <span class="code-class">PaymentCallbackDto</span> callbackData) {
+        <span class="code-comment">// 1. Xác thực tính hợp lệ của chữ ký (signature verification) từ cổng So-net</span>
+        <span class="code-keyword">if</span> (!verifySignature(callbackData)) {
+            <span class="code-keyword">return</span> ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        <span class="code-comment">// 2. Gọi API kiểm tra trạng thái giao dịch (confirmOrder)</span>
+        <span class="code-class">Mono</span>&lt;<span class="code-class">PaymentConfirmResponse</span>&gt; responseMono = webClient.post()
+            .uri(<span class="code-string">"https://api.so-net.net.tw/confirm"</span>)
+            .bodyValue(new ConfirmRequest(callbackData.getOrderId()))
+            .retrieve()
+            .bodyToMono(<span class="code-class">PaymentConfirmResponse</span>.<span class="code-keyword">class</span>);
+
+        responseMono.subscribe(response -> {
+            <span class="code-keyword">if</span> (<span class="code-string">"SUCCESS"</span>.equals(response.getStatus())) {
+                <span class="code-comment">// 3. Kích hoạt ví điện tử, cập nhật trạng thái đơn hàng trong DB</span>
+                orderRepository.markAsPaid(callbackData.getOrderId());
+            }
+        });
+        <span class="code-keyword">return</span> ResponseEntity.ok().build();
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>3. Bộ câu hỏi phỏng vấn Senior (Q&A)</h2>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Làm cách nào thiết kế Luồng hẹn giờ hoàn tiền (Escrow Refund) cho livestream đảm bảo bền vững nếu server bị crash?</div>
+                <div class="qa-answer">Ta KHÔNG được sử dụng các bộ hẹn giờ trong bộ nhớ (như <code>Thread.sleep</code> hoặc <code>Timer</code> trong Java) vì dữ liệu sẽ mất sạch khi server restart hoặc crash.
+                <br><strong>Giải pháp Senior:</strong> Lưu trữ trạng thái mục tiêu (Goal) trong MongoDB/PostgreSQL cùng với mốc thời gian kết thúc (Expiry Time). Sử dụng kết hợp:
+                <ol>
+                    <li><strong>Redis Keyspace Notifications:</strong> Ghi một key vào Redis với TTL hết hạn bằng thời điểm buổi diễn kết thúc. Lắng nghe sự kiện hết hạn (expired event) để kích hoạt logic kiểm tra: nếu <code>ShowGoal</code> chưa hoàn thành -> Kích hoạt hoàn tiền cho người dùng.</li>
+                    <li><strong>Distributed Scheduler (Quartz / Spring Batch):</strong> Chạy định kỳ mỗi phút quét DB để tìm các Goal đã quá hạn mà chưa được xử lý để làm cơ chế dự phòng (fail-safe) nếu Redis bị mất gói tin sự kiện.</li>
+                </ol></div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Làm sao để Scale ngang (Horizontal Scaling) hệ thống kết nối real-time WebSocket cho phòng livestream?</div>
+                <div class="qa-answer">Vì kết nối WebSocket giữ trạng thái (stateful - duy trì kết nối TCP liên tục giữa Client và một Server instance cụ thể), khi scale ngang thành nhiều instance chạy đằng sau Load Balancer, các Client ở các instance khác nhau sẽ không thể nhận được tin nhắn của nhau.
+                <br><strong>Giải pháp:</strong> Tận dụng cơ chế <strong>Pub/Sub</strong> thông qua một Broker tập trung (như Redis Pub/Sub, RabbitMQ, hoặc Kafka). Khi một instance nhận được tin nhắn (ví dụ: người dùng tặng quà livestream), nó sẽ gửi tin nhắn đó lên kênh Pub/Sub chung. Tất cả các instance khác đăng ký kênh này sẽ nhận được tin nhắn và phát (broadcast) trực tiếp xuống các client đang kết nối với riêng chúng.</div>
+            </div>
+
+            <!-- Remaining checkboxes to reach 8 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>4. Mã hóa DRM & GCP Transcoder API</h2>
+            </div>
+            <p>Tích hợp Java Transcoder Client SDK để khởi tạo các luồng chuyển đổi định dạng video sang HLS/DASH, cấu hình khóa giải mã bảo vệ bản quyền nội dung DRM.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>5. Tạo video Trailer và Làm mờ (Blur) qua Cloud Run</h2>
+            </div>
+            <p>Kích hoạt các microservice xử lý ffmpeg trên GCP Cloud Run bất đồng bộ từ Spring Boot. Lưu trữ metadata artifact tương ứng (trailer-blurred, SOURCE-blurred).</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>6. Luồng tạo Post & Claim Asset an toàn</h2>
+            </div>
+            <p>Tránh việc sử dụng các tài nguyên Asset chưa được xác minh. Cách thiết kế cơ chế khóa và xác nhận quyền sở hữu Asset (Asset Claiming) chống tấn công giả mạo dữ liệu upload.</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>7. Quản lý trạng thái và đồng bộ hóa Leaderboard Livestream</h2>
+            </div>
+            <p>Sử dụng cấu trúc dữ liệu <strong>Sorted Set (ZSET)</strong> của Redis từ Spring Boot (thông qua Spring Data Redis) để cập nhật điểm số và bảng xếp hạng người dùng tặng quà thời gian thực với độ phức tạp O(log(N)).</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>8. Quản lý phân cấp ví điện tử (Wallet Provisioning)</h2>
+            </div>
+            <p>Quy trình tạo tài khoản ví (Wallet Account) và tài khoản ngân hàng ảo liên kết một cách bất đồng bộ sử dụng hàng đợi xử lý lỗi khi đăng ký đơn hàng thành công.</p>
+
+            <footer>
+                <p>&copy; 2026 Java Senior Interview Preparation Roadmap.</p>
+            </footer>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

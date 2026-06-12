@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Java Senior Prep - Async & Task Queues</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <span>Java Senior Prep</span>
+            </a>
+            <div class="header-tagline">Async & Task Queues</div>
+        </div>
+    </header>
+
+    <!-- Layout Wrapper -->
+    <div class="layout-wrapper">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../index.html" class="sidebar-link" id="nav-index">Trang chủ cổng tài liệu</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../qa/run_guide.html" class="sidebar-link" id="nav-run">1. Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/project_spec.html" class="sidebar-link" id="nav-project-spec">2. Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_cases.html" class="sidebar-link" id="nav-test-cases">3. Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/test_data_guide.html" class="sidebar-link" id="nav-test-data">4. Quản lý Test Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/testing_guide.html" class="sidebar-link" id="nav-testing">5. Hướng dẫn kiểm thử</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/postman_guide.html" class="sidebar-link" id="nav-postman">6. Postman Collection</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/sa_test_guide.html" class="sidebar-link" id="nav-sa-test">7. Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/automation_guide.html" class="sidebar-link" id="nav-automation">8. Automation Testing Setup</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/performance_benchmark.html" class="sidebar-link" id="nav-performance">9. Performance Benchmark</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/bug_report_template.html" class="sidebar-link" id="nav-bug-report">10. Mẫu Bug Report chuẩn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../qa/release_checklist.html" class="sidebar-link" id="nav-release-checklist">11. Checklist trước Release</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="../dev/scalability_audit.html" class="sidebar-link" id="nav-scalability">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/concurrency_solution.html" class="sidebar-link" id="nav-concurrency">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/sync_interview.html" class="sidebar-link" id="nav-sync-interview">Phỏng vấn: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="../dev/db_migration_interview.html" class="sidebar-link" id="nav-db-migration">Phỏng vấn: Migrate DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="dev_clean_code.html" class="sidebar-link" id="nav-java-clean">✨ Clean Code & Refactoring</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="http_spring_security.html" class="sidebar-link" id="nav-java-http">🌐 HTTP & Spring Security</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="database_mongodb_jpa.html" class="sidebar-link" id="nav-java-db">💾 Database & JPA/Mongo</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="async_message_queues.html" class="sidebar-link active" id="nav-java-async">⚡ Async & Task Queues</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="swag_business_flows.html" class="sidebar-link" id="nav-java-swag">🚀 Swag Business Flows</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content-wrapper">
+            <div class="hero-section">
+                <h1>Async & Task Queues <span class="gradient-text">hệ thống</span></h1>
+                <p>Thiết kế luồng xử lý nền bất đồng bộ, cấu hình Thread Pool an toàn và vận hành các hệ thống Message Broker chịu tải cao.</p>
+            </div>
+
+            <!-- Progress Tracker -->
+            <div class="card">
+                <h3>📈 Tiến độ ôn tập chủ đề</h3>
+                <p id="progress-stats" class="text-highlight">Tiến trình: 0% hoàn thành</p>
+                <div class="progress-container">
+                    <div class="progress-bar"></div>
+                </div>
+            </div>
+
+            <!-- Checklist & Study Material -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>1. Xử lý bất đồng bộ Spring @Async & Custom Thread Pool</h2>
+                <span class="badge badge-info">ThreadPoolTaskExecutor</span>
+            </div>
+            <p>Tránh việc sử dụng Thread Pool mặc định (SimpleAsyncTaskExecutor - tạo luồng mới cho mỗi task làm cạn kiệt tài nguyên JVM). Ta phải định nghĩa một Thread Pool có giới hạn:</p>
+            
+            <div class="code-container">
+                <div class="code-header">
+                    <span>AsyncConfig.java</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@Configuration</span>
+<span class="code-annotation">@EnableAsync</span>
+<span class="code-keyword">public class</span> <span class="code-class">AsyncConfig</span> {
+    <span class="code-annotation">@Bean</span>(name = <span class="code-string">"taskExecutor"</span>)
+    <span class="code-keyword">public</span> <span class="code-class">Executor</span> taskExecutor() {
+        <span class="code-class">ThreadPoolTaskExecutor</span> executor = <span class="code-keyword">new</span> <span class="code-class">ThreadPoolTaskExecutor</span>();
+        executor.setCorePoolSize(<span class="code-number">10</span>);          <span class="code-comment">// Số luồng tối thiểu luôn hoạt động</span>
+        executor.setMaxPoolSize(<span class="code-number">50</span>);          <span class="code-comment">// Số luồng tối đa khi hàng đợi đầy</span>
+        executor.setQueueCapacity(<span class="code-number">1000</span>);       <span class="code-comment">// Dung lượng hàng đợi chứa task chờ</span>
+        executor.setThreadNamePrefix(<span class="code-string">"Async-"</span>);
+        <span class="code-comment">// Chiến lược xử lý khi Thread Pool bị quá tải (bị đầy cả luồng lẫn hàng đợi)</span>
+        executor.setRejectedExecutionHandler(<span class="code-keyword">new</span> <span class="code-class">ThreadPoolExecutor</span>.<span class="code-class">CallerRunsPolicy</span>());
+        executor.initialize();
+        <span class="code-keyword">return</span> executor;
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>2. Bảo vệ Scheduled Task đa instance với ShedLock</h2>
+                <span class="badge badge-success">Distributed Lock</span>
+            </div>
+            <p>Ngăn chặn việc các instance khác nhau của cùng một service Spring Boot chạy trùng lặp một cron task gây lỗi logic hoặc spam database:</p>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>SchedulerConfig.java</span>
+                    <span>Java</span>
+                </div>
+                <pre><code><span class="code-annotation">@Configuration</span>
+<span class="code-annotation">@EnableScheduling</span>
+<span class="code-annotation">@EnableSchedulerLock</span>(defaultLockAtMostFor = <span class="code-string">"10m"</span>)
+<span class="code-keyword">public class</span> <span class="code-class">SchedulerConfig</span> {
+    <span class="code-comment">// Sử dụng Redis làm nơi lưu trữ trạng thái Khóa phân tán</span>
+    <span class="code-annotation">@Bean</span>
+    <span class="code-keyword">public</span> <span class="code-class">LockProvider</span> lockProvider(<span class="code-class">RedisConnectionFactory</span> connectionFactory) {
+        <span class="code-keyword">return new</span> <span class="code-class">RedisLockProvider</span>(connectionFactory);
+    }
+}
+
+<span class="code-annotation">@Component</span>
+<span class="code-keyword">public class</span> <span class="code-class">AppScheduler</span> {
+    <span class="code-annotation">@Scheduled</span>(cron = <span class="code-string">"0 0/5 * * * *"</span>)
+    <span class="code-annotation">@SchedulerLock</span>(name = <span class="code-string">"cleanupExpiredSessions"</span>, lockAtLeastFor = <span class="code-string">"1m"</span>, lockAtMostFor = <span class="code-string">"4m"</span>)
+    <span class="code-keyword">public void</span> run() {
+        <span class="code-comment">// Logic dọn dẹp các session livestream hết hạn</span>
+    }
+}</code></pre>
+            </div>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>3. Bộ câu hỏi phỏng vấn Senior (Q&A)</h2>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Nếu một phương thức @Async kiểu trả về void ném ra ngoại lệ (Exception), JVM sẽ xử lý thế nào? Làm sao để bắt lỗi đó?</div>
+                <div class="qa-answer">Vì phương thức trả về <code>void</code> chạy bất đồng bộ trong một luồng khác, Thread xử lý chính không thể bắt được ngoại lệ bằng khối try-catch thông thường. Ngoại lệ sẽ bị nuốt và chỉ in ra log lỗi của Thread Pool.
+                <br>Để bắt và xử lý triệt để, ta phải triển khai interface <code>AsyncConfigurer</code> và ghi đè phương thức <code>getAsyncUncaughtExceptionHandler()</code> để đăng ký một custom <code>AsyncUncaughtExceptionHandler</code> ghi nhận log lỗi tập trung (Sentry/ELK) hoặc bắn thông báo khẩn cấp.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Lựa chọn RabbitMQ hay Kafka cho hệ thống xử lý tác vụ nền? Có gì khác biệt khi so sánh với Celery?</div>
+                <div class="qa-answer"><strong>RabbitMQ:</strong> Phù hợp cho các bài toán phân phối tác vụ truyền thống (Task Queue) giống Celery. AMQP hỗ trợ định tuyến phức tạp (Direct, Topic, Fanout), tin nhắn được xóa ngay sau khi Consumer xác nhận (ack). Thích hợp cho luồng đặt hàng, xử lý giao dịch.
+                <br><strong>Kafka:</strong> Phù hợp cho xử lý dòng dữ liệu lớn (Event Streaming) và lưu trữ log phân tán. Tin nhắn được lưu vĩnh viễn trên ổ đĩa dựa theo thời gian cấu hình (Retention Policy), Client tự quản lý vị trí đọc (Offset). Thích hợp cho luồng phân tích hành vi người dùng, tổng hợp log hệ thống.
+                <br><strong>So với Celery:</strong> Celery là một framework hoàn chỉnh trong Python tích hợp sẵn cơ chế phân tải, kết nối task (chain, chord). Trong Java, Spring không có một thư viện tương đương hoàn toàn, lập trình viên thường tự xây dựng luồng xử lý hoặc sử dụng **Spring Cloud Stream** để giao tiếp với các Message Broker.</div>
+            </div>
+
+            <div class="qa-block">
+                <div class="qa-question">Làm sao đảm bảo nguyên tắc "At-Least-Once" (Ít nhất một lần nhận được tin nhắn) khi làm việc với RabbitMQ trong Spring Boot?</div>
+                <div class="qa-answer">Để đảm bảo tin nhắn không bị thất thoát ở bất kỳ giai đoạn nào:
+                <ol>
+                    <li><strong>Phía Producer:</strong> Bật tính năng <em>Publisher Confirms</em> và <em>Publisher Returns</em> của Spring RabbitTemplate để lắng nghe xác nhận từ Broker là đã nhận được tin nhắn.</li>
+                    <li><strong>Phía Broker (RabbitMQ):</strong> Cấu hình Queue và Message ở chế độ <code>durable</code> (bền vững) để dữ liệu được ghi xuống đĩa cứng, chống mất mát khi server khởi động lại.</li>
+                    <li><strong>Phía Consumer:</strong> Chuyển cấu hình Acknowledge Mode từ AUTO sang <strong>MANUAL</strong>. Chỉ gửi tín hiệu <code>basicAck</code> về cho Broker sau khi code xử lý nghiệp vụ thành công. Nếu xảy ra lỗi, gửi <code>basicNack</code> với cờ <code>requeue=true</code> để đẩy tin nhắn vào hàng đợi xử lý lại, hoặc cấu hình chuyển sang <strong>Dead Letter Exchange (DLX)</strong> để xử lý thủ công sau đó.</li>
+                </ol></div>
+            </div>
+
+            <!-- Remaining checkboxes to reach 6 -->
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>4. Cấu hình Backoff & Retry trong Spring RabbitMQ / Kafka</h2>
+            </div>
+            <p>Tránh tình trạng Consumer bị nghẽn (Spam log liên tục) khi xử lý tin nhắn lỗi. Cấu hình Exponential Backoff (Thời gian giãn cách tăng dần) và hàng đợi tin nhắn lỗi (DLQ).</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>5. Cơ chế xử lý tin nhắn trùng lặp (Idempotent Consumer Pattern)</h2>
+            </div>
+            <p>Đảm bảo một tin nhắn bị gửi trùng 2 lần do lỗi mạng không làm thay đổi trạng thái DB lần 2. Cách sử dụng Redis làm cơ chế lưu trữ phân tán kiểm tra khóa trùng (Idempotent Key).</p>
+
+            <div class="topic-header">
+                <input type="checkbox" class="topic-check">
+                <h2>6. Tối ưu hóa Thread Pool trong ứng dụng Reactive (Spring WebFlux)</h2>
+            </div>
+            <p>Hiểu cơ chế Non-blocking I/O của Netty Event Loop, tránh việc thực hiện các thao tác chặn (Blocking I/O như JDBC, JPA) trên Event Loop Thread.</p>
+
+            <footer>
+                <p>&copy; 2026 Java Senior Interview Preparation Roadmap.</p>
+            </footer>
+        </main>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
