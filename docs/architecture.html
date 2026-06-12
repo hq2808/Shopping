@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Architecture - Main Suite Docs Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="sidebar.js" defer></script>
+
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Tổng quan</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="index.html" class="sidebar-link">Trang chủ cổng tài liệu</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="architecture.html" class="sidebar-link active">Kiến trúc Hệ thống</a>
+                    <ul class="sidebar-sub-menu">
+                        <li><a href="#overview" class="sidebar-sub-link">Tổng quan kiến trúc</a></li>
+                        <li><a href="#diagram" class="sidebar-sub-link">Sơ đồ luồng đi</a></li>
+                        <li><a href="#main-server" class="sidebar-sub-link">1. main-server (Backend)</a></li>
+                        <li><a href="#sync-worker" class="sidebar-sub-link">2. sync-worker (Pipeline)</a></li>
+                        <li><a href="#db-layers" class="sidebar-sub-link">3. Vai trò Database</a></li>
+                        <li><a href="#migration-strategy" class="sidebar-sub-link">4. Chiến lược di chuyển</a></li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho QA / Tester</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="sa_test_guide.html" class="sidebar-link">Kiểm thử kiến trúc SA</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="run_guide.html" class="sidebar-link">Hướng dẫn khởi chạy</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="project_spec.html" class="sidebar-link">Tài liệu đặc tả dự án</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="test_cases.html" class="sidebar-link">Danh sách Test Cases</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="testing_guide.html" class="sidebar-link">Hướng dẫn kiểm thử</a>
+                </li>
+            </ul>
+
+            <div class="sidebar-title">Dành cho Dev / Architect</div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item">
+                    <a href="scalability_audit.html" class="sidebar-link">Đánh giá chịu tải DB</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="concurrency_solution.html" class="sidebar-link">Giải pháp chịu tải cực hạn</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="sync_interview.html" class="sidebar-link">Phỏng vấn Senior: Sync Data</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="db_migration_interview.html" class="sidebar-link">Phỏng vấn Senior: Migrate DB</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Kiến trúc Hệ thống Tổng thể</span>
+                <h1>Thiết Kế Kiến Trúc Hệ Thống Main <br><span class="gradient-text">High-Throughput Sync & Migration Suite</span></h1>
+                <p>Bản vẽ đặc tả kiến trúc tổng thể, mô hình luồng dữ liệu, sự tương tác giữa <code>main-server</code>, <code>search_sync_worker</code> và các tầng lưu trữ dữ liệu (MongoDB, PostgreSQL, Redis, Elasticsearch).</p>
+            </section>
+
+            <!-- System Overview -->
+            <section id="overview" class="card">
+                <span class="badge badge-success">Tổng quan</span>
+                <h2>Tổng quan về Kiến trúc Hệ thống</h2>
+                <p class="mb-16">
+                    Hệ thống Main là một nền tảng Live-streaming và mạng xã hội chịu tải lớn (High CCU). Kiến trúc của hệ thống được tối ưu hóa để giải quyết đồng thời hai bài toán nghiệp vụ phức tạp:
+                </p>
+                <ul>
+                    <li class="mb-8"><strong>Đồng bộ Tìm kiếm Toàn văn (Search Indexing Pipeline):</strong> Chuyển dịch và cập nhật thời gian thực dữ liệu tin nhắn (messages) và người dùng (users) từ MongoDB sang Elasticsearch phục vụ tính năng tìm kiếm siêu tốc.</li>
+                    <li class="mb-8"><strong>Di chuyển Cơ sở Dữ liệu Không gián đoạn (Zero-Downtime Database Migration):</strong> Từng bước dịch chuyển cấu phần mối quan hệ người dùng (<code>user_relation</code>) từ MongoDB sang PostgreSQL để đảm bảo tính toàn vẹn dữ liệu.</li>
+                </ul>
+                <div class="alert">
+                    <h5>Nguyên lý thiết kế cốt lõi:</h5>
+                    Tách biệt tuyệt đối giữa <strong>luồng xử lý API giao dịch trực tuyến (Online Transaction Flow)</strong> đảm nhiệm bởi <code>main-server</code> và <strong>luồng xử lý đồng bộ bất đồng bộ (Offline/Asynchronous Processing Pipeline)</strong> đảm nhiệm bởi <code>search_sync_worker</code>.
+                </div>
+            </section>
+
+            <!-- Visual Architecture Diagram -->
+            <section id="diagram" class="card">
+                <span class="badge badge-info">Sơ đồ Luồng đi Dữ liệu</span>
+                <h2>Kiến trúc Phân tầng & Luồng xử lý</h2>
+                <p class="mb-20">
+                    Dưới đây là sơ đồ tương tác vật lý giữa client, backend server, pipeline chạy ngầm và các database:
+                </p>
+
+                <div class="arch-container">
+                    <div class="arch-flow">
+                        <!-- Layer 1: Client & API Gateway -->
+                        <div class="arch-row">
+                            <div style="width: 230px;"></div>
+                            <div class="arch-box highlight-primary">
+                                <h4>Client / User App</h4>
+                                <p>Gửi request Đọc/Ghi qua REST API / WebSockets</p>
+                            </div>
+                            <div style="width: 230px;"></div>
+                        </div>
+
+                        <!-- Connector V -->
+                        <div class="arch-connector-v"></div>
+
+                        <!-- Layer 2: Main Server (Main App) -->
+                        <div class="arch-row">
+                            <div class="arch-box highlight-warning">
+                                <h4>Redis Flag Manager</h4>
+                                <p>Quản lý Feature Flags điều phối Đọc/Ghi động</p>
+                            </div>
+                            <div class="arch-connector-h arrow-left active-arrow">
+                                <span class="arch-label">1. Check Flag</span>
+                            </div>
+                            <div class="arch-box highlight-primary">
+                                <h4>main-server (Backend API)</h4>
+                                <p>Nhận ghi, kiểm soát nghiệp vụ chính. Ghi kép (Dual-Write) & Đọc bóng (Shadow-Read)</p>
+                            </div>
+                            <div class="arch-connector-h arrow-right">
+                                <span class="arch-label">2. Push Message</span>
+                            </div>
+                            <div class="arch-box highlight-warning">
+                                <h4>Redis State & Checkpoint</h4>
+                                <p>Lưu Resume Offset, Token và Timestamp đồng bộ</p>
+                            </div>
+                        </div>
+
+                        <!-- Connectors V -->
+                        <div class="arch-row">
+                            <div style="width: 230px; display: flex; justify-content: center;">
+                                <div class="arch-connector-v"></div>
+                            </div>
+                            <div style="width: 230px; display: flex; justify-content: center;">
+                                <div class="arch-connector-v"></div>
+                            </div>
+                            <div style="width: 230px; display: flex; justify-content: center;">
+                                <div class="arch-connector-v"></div>
+                            </div>
+                        </div>
+
+                        <!-- Layer 3: Databases & Sync Pipeline -->
+                        <div class="arch-row">
+                            <div class="arch-box highlight-secondary">
+                                <h4>PostgreSQL (Relational)</h4>
+                                <p>Lưu trữ giao dịch sạch, ràng buộc khóa ngoại chặt chẽ (đang migrate user_relation)</p>
+                            </div>
+                            <div class="arch-connector-h arrow-left">
+                                <span class="arch-label">Dual-Write (Async)</span>
+                            </div>
+                            <div class="arch-box highlight-secondary">
+                                <h4>MongoDB (Primary DB)</h4>
+                                <p>Source of Truth ban đầu cho tin nhắn, user, và relation cũ</p>
+                            </div>
+                            <div class="arch-connector-h arrow-right active-arrow">
+                                <span class="arch-label">Change Stream CDC / Keyset Query</span>
+                            </div>
+                            <div class="arch-box highlight-primary">
+                                <h4>search_sync_worker</h4>
+                                <p>Pipeline đồng bộ (Backfile & Changestream) từ Mongo sang Elasticsearch</p>
+                            </div>
+                        </div>
+
+                        <!-- Connector V from Sync worker to ES -->
+                        <div class="arch-row">
+                            <div style="width: 230px;"></div>
+                            <div style="width: 230px; display: flex; justify-content: center;">
+                                <div class="arch-connector-h arrow-left active-arrow" style="height: 30px; background: transparent;">
+                                    <span class="arch-label">3. Shadow-Read & Compare</span>
+                                </div>
+                            </div>
+                            <div style="width: 230px; display: flex; justify-content: center;">
+                                <div class="arch-connector-v"></div>
+                            </div>
+                        </div>
+
+                        <!-- Layer 4: Search Engine -->
+                        <div class="arch-row">
+                            <div style="width: 230px;"></div>
+                            <div class="arch-box highlight-secondary">
+                                <h4>Elasticsearch (Cluster)</h4>
+                                <p>Chứa chỉ mục tối ưu, phục vụ tìm kiếm tin nhắn & user toàn văn siêu tốc</p>
+                            </div>
+                            <div class="arch-connector-h arrow-left active-arrow">
+                                <span class="arch-label">4. Flush Buffered Bulk Actions</span>
+                            </div>
+                            <div style="width: 230px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- main-server Details -->
+            <section id="main-server" class="card">
+                <span class="badge badge-danger">Cấu phần 1</span>
+                <h2>1. main-server (Backend Application Layer)</h2>
+                <p class="mb-16">
+                    Là máy chủ API chính nhận lưu lượng truy cập từ Client. Tận dụng kiến trúc linh hoạt để thực hiện quá trình chuyển đổi database an toàn thông qua hai kỹ thuật:
+                </p>
+
+                <h3 class="mt-20 mb-12">Dual-Write (Ghi kép đồng thời)</h3>
+                <p class="mb-16">
+                    Khi người dùng thực hiện một hành động ghi mới (ví dụ: tạo mối quan hệ follow giữa 2 user), <code>main-server</code> sẽ thực thi:
+                </p>
+                <ol class="mb-16">
+                    <li class="mb-4">Ghi đồng bộ vào <strong>MongoDB</strong> (được chọn là Primary DB để đảm bảo luồng API cũ hoạt động 100% bình thường).</li>
+                    <li class="mb-4">Bọc luồng ghi vào <strong>PostgreSQL</strong> (Secondary DB) trong một tác vụ bất đồng bộ độc lập (Background thread hoặc Event Listener), bắt sạch exception để lỗi bên Postgres không làm hỏng request chính của user.</li>
+                </ol>
+
+                <h3 class="mt-20 mb-12">Shadow-Read (Đọc bóng đối chiếu)</h3>
+                <p class="mb-16">
+                    Để kiểm nghiệm chất lượng dữ liệu của PostgreSQL và Elasticsearch trước khi chính thức đưa vào sử dụng:
+                </p>
+                <ol class="mb-16">
+                    <li class="mb-4">Ứng dụng đọc dữ liệu trực tiếp từ DB tin cậy cũ (MongoDB).</li>
+                    <li class="mb-4">Kích hoạt một Shadow Thread ngầm đọc bản ghi tương ứng bên DB mới (Postgres hoặc Elasticsearch).</li>
+                    <li class="mb-4">Sử dụng thuật toán so khớp chéo (Deep-Compare) để phát hiện chênh lệch dữ liệu (Mismatch) và ghi log giám sát.</li>
+                </ol>
+
+                <h3 class="mt-20 mb-12">Dynamic Feature Flags (Cấu hình chuyển đổi nóng)</h3>
+                <p class="mb-12">
+                    Các chế độ đọc ghi được điều phối linh hoạt thông qua cấu hình cờ (Flags) lưu tại Redis, cho phép chuyển mạch hệ thống mà không cần restart server:
+                </p>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tên chế độ (Mode)</th>
+                            <th>Hành vi Đọc (Read Path)</th>
+                            <th>Hành vi Ghi (Write Path)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>MONGO_ONLY</strong></td>
+                            <td>Chỉ đọc từ MongoDB</td>
+                            <td>Chỉ ghi vào MongoDB</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DUAL_WRITE & SHADOW_READ</strong></td>
+                            <td>Đọc MongoDB + Đọc ngầm Postgres/ES so khớp</td>
+                            <td>Ghi MongoDB + Ghi ngầm Postgres/ES (try-catch)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POSTGRES_PRIMARY</strong></td>
+                            <td>Đọc Postgres chính + Đọc ngầm Mongo đối chiếu</td>
+                            <td>Ghi Postgres chính + Ghi ngầm Mongo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>POSTGRES_ONLY</strong></td>
+                            <td>Chỉ đọc từ PostgreSQL</td>
+                            <td>Chỉ ghi vào PostgreSQL</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- search_sync_worker Details -->
+            <section id="sync-worker" class="card">
+                <span class="badge badge-info">Cấu phần 2</span>
+                <h2>2. search_sync_worker (Data Sync Pipeline)</h2>
+                <p class="mb-16">
+                    Là dịch vụ chạy nền (chạy bằng Python hoặc Node.js) chịu trách nhiệm đồng bộ dữ liệu cũ và dữ liệu mới sinh từ MongoDB sang Elasticsearch Index. Pipeline được thiết kế làm hai pha rõ rệt:
+                </p>
+
+                <h3 class="mt-20 mb-12">Pha 1: Initial Load (Backfile / Đồng bộ ban đầu)</h3>
+                <p class="mb-16">
+                    Thực hiện đồng bộ toàn bộ dữ liệu lịch sử từ MongoDB sang Elasticsearch trước khi bật stream:
+                </p>
+                <ul>
+                    <li class="mb-8"><strong>Phân trang Keyset Pagination:</strong> Sử dụng truy vấn <code>{_id: {'$gt': last_id}}</code> kết hợp sort tăng dần theo <code>_id</code>. Tốc độ quét luôn đạt mức tối ưu $O(\log N)$ nhờ chỉ mục index mặc định trên khóa chính.</li>
+                    <li class="mb-8"><strong>Tối ưu hóa Write Index Settings:</strong> Trước khi chạy, worker thay đổi settings của ES index thành <code>refresh_interval: -1</code> (tắt sinh segment nhỏ) và <code>number_of_replicas: 0</code> (tắt nhân bản) giúp tăng tốc độ bulk insert lên gấp 3 lần. Cấu hình được khôi phục về chế độ sản xuất an toàn khi bulk hoàn tất.</li>
+                    <li class="mb-8"><strong>Parallel Bulk Write:</strong> Gom dữ liệu thành từng batch 1000 bản ghi, gửi đa luồng song song thông qua cơ chế <code>parallel_bulk</code> của Elasticsearch Client.</li>
+                </ul>
+
+                <h3 class="mt-24 mb-12">Pha 2: Watch Change Stream (Changestream / Đồng bộ thời gian thực)</h3>
+                <p class="mb-16">
+                    Sau khi hoàn thành Backfile, worker chuyển mạch sang chế độ CDC (Change Data Capture) để đồng bộ thời gian thực:
+                </p>
+                <ul>
+                    <li class="mb-8"><strong>Lắng nghe MongoDB Oplog:</strong> Sử dụng hàm <code>db.collection.watch()</code> để lắng nghe toàn bộ các sự kiện thay đổi (insert, update, replace, delete) trên collection MongoDB.</li>
+                    <li class="mb-8"><strong>Bộ đệm gom lô (Buffer & Flush):</strong> Để bảo vệ Elasticsearch khỏi quá tải do ghi lẻ tẻ, worker gom các sự kiện vào bộ đệm và chỉ flush hàng loạt khi đạt số lượng <code>SYNC_BATCH_SIZE</code> (1000 docs) hoặc sau khoảng thời gian <code>SYNC_POLL_INTERVAL</code> (2 giây).</li>
+                    <li class="mb-8"><strong>Quản lý trạng thái (State & Checkpointing) trên Redis:</strong> 
+                        <ul>
+                            <li>Pha Backfile: Lưu lại <code>last_id</code> (BSON ObjectId) của bản ghi cuối được xử lý.</li>
+                            <li>Pha Changestream: Lưu lại <code>clusterTime</code> (BSON Timestamp) của sự kiện change stream cuối được flush thành công.</li>
+                        </ul>
+                    </li>
+                    <li class="mb-8"><strong>Tự động khôi phục lỗi Oplog Rollover:</strong> Khi worker bị ngắt kết nối quá lâu khiến Resume Token bị lỗi thời do Oplog cũ bị ghi đè, hệ thống tự động bắt lỗi (ví dụ lỗi code 136 hoặc invalid resume token), tự động xóa checkpoint trên Redis và chạy lại tiến trình Backfile tự động để tái thiết lập tính nhất quán của dữ liệu.</li>
+                </ul>
+            </section>
+
+            <!-- DB Layers -->
+            <section id="db-layers" class="card">
+                <span class="badge badge-success">Cấu phần 3</span>
+                <h2>3. Vai trò của các Tầng lưu trữ (Database Roles)</h2>
+                <p class="mb-20">
+                    Mỗi cơ sở dữ liệu đóng một vai trò chuyên biệt, phối hợp tạo nên tính chịu tải cao và bền bỉ cho hệ thống:
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Database</th>
+                            <th>Mô hình dữ liệu</th>
+                            <th>Vai trò trong hệ thống</th>
+                            <th>Lý do lựa chọn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>MongoDB</strong></td>
+                            <td>Document Store (NoSQL)</td>
+                            <td>Lưu trữ giao dịch gốc (Primary Source of Truth) ban đầu của messages và users.</td>
+                            <td>Tốc độ ghi chép dữ liệu dạng JSON thô cực nhanh, phù hợp cho dữ liệu live chat.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>PostgreSQL</strong></td>
+                            <td>Relational (SQL)</td>
+                            <td>Nguồn dữ liệu giao dịch sạch đích cho phân hệ <code>user_relation</code>.</td>
+                            <td>Đảm bảo ràng buộc toàn vẹn khóa ngoại (Foreign Keys), tối ưu hóa các câu truy vấn quan hệ phức tạp (Mutual Friends).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Elasticsearch</strong></td>
+                            <td>Search Engine (Inverted Index)</td>
+                            <td>Chỉ mục tìm kiếm toàn văn. Đọc chịu tải chính cho tính năng tìm kiếm user và message.</td>
+                            <td>Tìm kiếm văn bản siêu tốc, hỗ trợ phân tích ngôn ngữ tự nhiên, tách tải đọc tìm kiếm ra khỏi DB chính.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redis RAM</strong></td>
+                            <td>In-Memory Key-Value</td>
+                            <td>Lưu trữ trạng thái Checkpoint đồng bộ của worker + Lưu trữ Feature Flags chuyển mạch cấu hình.</td>
+                            <td>Độ trễ truy cập cực thấp (micro-seconds), hỗ trợ cấu hình chuyển mạch động tức thì.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Migration Strategy -->
+            <section id="migration-strategy" class="card">
+                <span class="badge badge-warning">Quy trình vận hành</span>
+                <h2>4. Quy trình di chuyển dữ liệu (Migration Workflow)</h2>
+                <p class="mb-16">
+                    Chiến dịch di chuyển phân hệ <code>user_relation</code> từ MongoDB sang PostgreSQL được thực hiện tuần tự qua 5 bước sau để đảm bảo an toàn tuyệt đối:
+                </p>
+                
+                <div class="steps-flow">
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-primary); margin-bottom: 16px;">
+                        <h5>BƯỚC 1: Kích hoạt Dual-Write (Ghi kép)</h5>
+                        <p class="mt-4">Bật flag <code>WRITE_MODE = DUAL_WRITE_MONGO_PRIMARY</code>. Mọi quan hệ follow/block mới sinh ra sẽ được ghi đồng thời vào MongoDB và PostgreSQL ngầm. Postgres hoạt động dưới dạng non-blocking task để bảo vệ luồng API chính.</p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-secondary); margin-bottom: 16px;">
+                        <h5>BƯỚC 2: Di chuyển dữ liệu lịch sử (Historical Batch Migration)</h5>
+                        <p class="mt-4">Khởi chạy Batch Job quét toàn bộ quan hệ cũ trên MongoDB ghi sang PostgreSQL. Sử dụng câu lệnh ghi đè Postgres <code>ON CONFLICT ... DO UPDATE</code> để tránh lỗi trùng lặp khóa với các bản ghi được ghi kép ở Bước 1.</p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-warning); margin-bottom: 16px;">
+                        <h5>BƯỚC 3: Kích hoạt Shadow-Read & Đối soát ngầm (Data Verification)</h5>
+                        <p class="mt-4">Bật flag <code>READ_MODE = SHADOW_READ_COMPARE</code>. Hệ thống đọc từ MongoDB và đối chiếu ngầm với PostgreSQL. Dev theo dõi log mismatch, chạy các tiến trình Reconciliation sửa lỗi tự động cho đến khi tỷ lệ khớp đạt 100%.</p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-error); margin-bottom: 16px;">
+                        <h5>BƯỚC 4: Hoán đổi nguồn dữ liệu chính (Cutover)</h5>
+                        <p class="mt-4">Bật flag <code>WRITE_MODE = DUAL_WRITE_PG_PRIMARY</code> và <code>READ_MODE = PG_PRIMARY_SHADOW_MONGO</code>. PostgreSQL chính thức trở thành nguồn dữ liệu chính phục vụ nghiệp vụ đọc/ghi. MongoDB trở thành DB phụ ghi ngầm để dự phòng.</p>
+                    </div>
+
+                    <div class="alert alert-success" style="background: rgba(17, 24, 39, 0.4); border-left-color: var(--color-success); margin-bottom: 0px;">
+                        <h5>BƯỚC 5: Ngắt kết nối hoàn toàn (Deprecation)</h5>
+                        <p class="mt-4">Sau thời gian theo dõi hệ thống chạy ổn định trên Postgres, bật flag <code>WRITE_MODE = PG_ONLY</code> và <code>READ_MODE = PG_ONLY</code>. Ngắt kết nối và giải phóng hoàn toàn MongoDB đối với phân hệ user_relation.</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee - Main Architecture Portal</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>

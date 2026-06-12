@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Architecture: main-feature-search - Mini Shopee Docs Portal</title>
+    <link rel="stylesheet" href="../style.css">
+    <script src="../sidebar.js" defer></script>
+    <!-- Load Mermaid JS for Architecture Flowcharts -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.mermaid) {
+                window.mermaid.initialize({
+                    startOnLoad: true,
+                    theme: 'dark',
+                    securityLevel: 'loose',
+                    themeVariables: {
+                        background: '#131926',
+                        primaryColor: '#818CF8',
+                        secondaryColor: '#22D3EE',
+                        tertiaryColor: '#34D399',
+                        mainBkg: '#131926',
+                        nodeBorder: '#232C3F',
+                        lineColor: '#818CF8'
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+
+    <header>
+        <div class="container nav-container">
+            <a href="../index.html" class="logo">Mini <span>Shopee</span></a>
+            <span class="header-tagline">Documentation Portal</span>
+        </div>
+    </header>
+
+    <div class="layout-wrapper">
+        <!-- Left Sidebar Navigation -->
+        <aside class="sidebar"></aside>
+
+        <!-- Right Main Content Area -->
+        <main class="content-wrapper">
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <span class="badge badge-info">Cẩm Nang Phỏng Vấn Senior</span>
+                <h1>Kiến Trúc CDC & Bộ Câu Hỏi Phỏng Vấn Hệ Thống<br><span class="gradient-text">Elasticsearch Sync & DB Migration (Zero-Downtime)</span></h1>
+                <p>Tài liệu giải thích chi tiết cơ chế hoạt động của <code>search_sync_worker</code> (MongoDB → ES), quy trình di chuyển DB (MongoDB → PostgreSQL) của dự án main-server và bộ câu hỏi đối thoại thực chiến với nhà tuyển dụng.</p>
+            </section>
+
+            <!-- General Alert -->
+            <div class="alert">
+                <h5>Bối cảnh kiến trúc hệ thống:</h5>
+                Hệ thống sử dụng <strong>MongoDB</strong> làm cơ sở dữ liệu giao dịch chính và <strong>Elasticsearch</strong> phục vụ công việc tìm kiếm. Để duy trì tính nhất quán, worker đồng bộ <code>search_sync_worker</code> chạy CDC dựa trên MongoDB Change Streams. Bên cạnh đó, dự án main-server triển khai lộ trình chuyển đổi DB sang <strong>PostgreSQL</strong> sử dụng mô hình Dual-Write + Shadow-Read và CDC để đảm bảo không downtime.
+            </div>
+
+            <!-- SECTION 1: SEARCH SYNC WORKER CDC -->
+            <section id="search-sync-worker" class="card">
+                <span class="badge badge-success">Đồng bộ Elasticsearch</span>
+                <h2>1. Cơ chế Hoạt động của search_sync_worker (MongoDB → ES)</h2>
+                <p class="mb-20">
+                    Kiến trúc đồng bộ dữ liệu hoạt động theo mô hình 2 pha độc lập nhằm tối ưu hóa hiệu năng ghi khối lượng lớn (Backfill) và đảm bảo cập nhật gần như thời gian thực (Watch/CDC).
+                </p>
+
+                <!-- Mermaid Diagram Container -->
+                <div class="mermaid-container" style="background: rgba(17, 24, 39, 0.4); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; margin-bottom: 28px; overflow-x: auto;">
+                    <pre class="mermaid" style="background: transparent; border: none; box-shadow: none; margin: 0 auto; text-align: center;">
+graph TD
+    A[Bắt đầu đồng bộ] --> B{Đã có State Checkpoint?}
+    B -- Có --> C[Khôi phục từ Checkpoint]
+    B -- Không --> D[Khởi chạy Initial Load - Backfill]
+    
+    subgraph "Pha 1: Backfill (Initial Load - Dữ liệu lịch sử)"
+    D --> D1[Lấy Timestamp hiện tại - start_time]
+    D1 --> D2[Tối ưu ES Index: refresh_interval=-1, replicas=0]
+    D2 --> D3[Quét MongoDB theo lô batch, sort _id]
+    D3 --> D4[Bulk Index vào Elasticsearch]
+    D4 --> D5{Hết dữ liệu lịch sử?}
+    D5 -- Chưa --> D3
+    end
+    
+    D5 -- Rồi --> E[Chuyển đổi sang Watch Mode]
+    
+    subgraph "Pha 2: Watch (CDC Change Stream - Thời gian thực)"
+    E --> E1[Khôi phục ES Settings: refresh_interval=1s, replicas=1]
+    E1 --> E2[Mở Change Stream từ start_time]
+    E2 --> E3[Lắng nghe sự kiện: Insert, Update, Delete]
+    E3 --> E4[Cập nhật ES theo thời gian thực]
+    E4 --> E3
+    end
+                    </pre>
+                </div>
+
+                <h3 class="mt-24 mb-12">Chi tiết các giai đoạn hoạt động</h3>
+                <ul>
+                    <li class="mb-12">
+                        <strong>Pha 1: Backfill (Initial Load) - Hàm <code>initial_load()</code>:</strong>
+                        <p class="mt-4 text-muted">Mục tiêu là đưa toàn bộ dữ liệu lịch sử từ MongoDB sang Elasticsearch với tốc độ nhanh nhất. Hệ thống sử dụng <strong>Keyset Pagination</strong> quét qua collection (sắp xếp tăng dần theo <code>_id</code>) và lọc điều kiện <code>_id > last_id</code>. Checkpoint <code>last_id</code> được lưu liên tục vào Redis qua <code>StateManager</code> để có thể tiếp tục (resume) nếu hệ thống gặp lỗi.</p>
+                        <p class="mt-4 text-muted"><strong>Kỹ thuật tối ưu (Fast Write Mode):</strong> Tạm thời thiết lập <code>refresh_interval: -1</code> và <code>number_of_replicas: 0</code> trên index Elasticsearch để triệt tiêu overhead phân mảnh và nhân bản. Dữ liệu được gom lô lớn (ví dụ: batch size 1000) và đẩy đồng thời qua nhiều luồng (<code>parallel_bulk</code>).</p>
+                    </li>
+                    <li class="mb-12">
+                        <strong>Pha 2: Watch (Change Stream CDC) - Hàm <code>watch_change_stream()</code>:</strong>
+                        <p class="mt-4 text-muted">Khi pha Backfill hoàn tất, hệ thống chuyển sang chế độ CDC. Trước khi quét dữ liệu cũ, hệ thống đã lưu lại một <strong>MongoDB BSON Timestamp (<code>start_time</code>)</strong>. Watcher sẽ mở Change Stream bắt đầu đúng từ mốc thời gian này để không bỏ sót bất kỳ thay đổi nào xảy ra trong quá trình Backfill.</p>
+                        <p class="mt-4 text-muted">Sự kiện thay đổi (Insert, Update, Delete) được bắt từ MongoDB Oplog, xử lý cấu trúc dữ liệu (Transform) rồi đẩy sang ES. Checkpoint (Resume Token) được liên tục cập nhật vào Redis.</p>
+                    </li>
+                </ul>
+
+                <h3 class="mt-28 mb-12">Tại sao dùng Change Stream thay vì Polling?</h3>
+                <p class="mb-16">Nhà tuyển dụng thường hỏi: <em>"Tại sao bạn dùng cơ chế Watch/CDC thay vì viết cronjob chạy định kỳ truy vấn cơ sở dữ liệu?"</em>. Đây là các luận điểm chính:</p>
+                <ol>
+                    <li class="mb-8"><strong>Độ trễ thấp (Low Latency):</strong> Change Streams hoạt động theo cơ chế Push-based, đẩy sự kiện ngay lập tức khi phát sinh transaction. Polling (Pull-based) luôn bị trễ phụ thuộc vào chu kỳ quét.</li>
+                    <li class="mb-8"><strong>Hiệu năng hệ thống (Efficiency):</strong> Change Streams chỉ tiêu thụ CPU và I/O khi có biến động dữ liệu. Polling liên tục thực hiện truy vấn nặng (ví dụ <code>SELECT ... WHERE updated_at > ?</code>) gây tải rất lớn lên cơ sở dữ liệu ngay cả khi hệ thống không có thay đổi.</li>
+                    <li class="mb-8"><strong>Xử lý sự kiện Xóa (Hard Deletes):</strong> Change Stream nhận biết được sự kiện <code>delete</code> trong Oplog để đồng bộ xóa trên ES. Polling không thể biết bản ghi nào bị xóa cứng nếu không sử dụng cờ Soft-Delete (xóa mềm).</li>
+                    <li class="mb-8"><strong>Khả năng tự phục hồi (Resilience):</strong> Nhờ <code>Resume Token</code>, nếu worker bị sập 15-30 phút, khi khởi động lại nó chỉ cần đọc token cuối từ Redis và yêu cầu MongoDB gửi tiếp các sự kiện bị bỏ lỡ, đảm bảo không mất mát dữ liệu.</li>
+                </ol>
+
+                <h3 class="mt-28 mb-12">Xử lý sự cố Oplog bị đè (Oplog Rollover)</h3>
+                <p class="mb-16">
+                    Nếu worker bị dừng quá lâu (ví dụ vài ngày) khiến các thay đổi cũ trong Oplog bị ghi đè (vì Oplog là Capped Collection có kích thước giới hạn), MongoDB sẽ ném ra lỗi <code>OperationFailure</code> (Resume Token không còn hợp lệ). 
+                </p>
+                <div class="alert alert-error">
+                    <strong>Cơ chế tự phục hồi (Self-Healing):</strong> Trong mã nguồn <code>core.py</code>, khối lệnh <code>watch_change_stream</code> được bao bọc trong <code>try-except</code>. Khi bắt được lỗi token hết hạn, worker sẽ tự động xóa checkpoint cũ trên Redis, kích hoạt lại hàm <code>initial_load()</code> thực hiện re-sync toàn bộ dữ liệu lịch sử để tái thiết lập tính nhất quán dữ liệu, sau đó mới quay lại chế độ Watch.
+                </div>
+            </section>
+
+            <!-- SECTION 2: ARCHITECTURE COMPARISON & ES SYNC Q&A -->
+            <section id="compare-and-es-qa" class="card">
+                <span class="badge badge-warning">Q&A & Lựa chọn Công nghệ</span>
+                <h2>2. So sánh Kiến trúc & Bộ câu hỏi Elasticsearch Sync</h2>
+                
+                <h3 class="mt-20 mb-12">Tại sao không dùng Kafka hoặc Debezium cho MongoDB → ES?</h3>
+                <p class="mb-16">
+                    Trong hệ thống của chúng tôi, MongoDB là source of truth duy nhất và Elasticsearch chỉ đóng vai trò làm công cụ tìm kiếm. Do đó, việc thiết lập trực tiếp Change Stream giúp tối giản hóa cơ sở hạ tầng.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tiêu chí</th>
+                            <th>Dùng trực tiếp Change Stream</th>
+                            <th>Kiến trúc Kafka + Debezium CDC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Độ phức tạp</strong></td>
+                            <td>Thấp (Chỉ cần ứng dụng Python/Java làm worker đọc ghi).</td>
+                            <td>Cao (Cần vận hành cụm Kafka, Kafka Connect, Debezium, Schema Registry).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Bảo trì hạ tầng</strong></td>
+                            <td>Không phát sinh chi phí vận hành hạ tầng mới.</td>
+                            <td>Phát sinh chi phí giám sát, sao lưu và quản lý cụm MQ lớn.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Khả năng mở rộng</strong></td>
+                            <td>Đủ đáp ứng cho 1 consumer duy nhất (Elasticsearch).</td>
+                            <td>Rất tốt khi cần phát sóng sự kiện cho nhiều downstream consumer.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="alert alert-success">
+                    <strong>Định hướng kiến trúc khi phỏng vấn:</strong>
+                    <em>"Bọn em đã cân nhắc Kafka và Debezium. Tuy nhiên, vì pipeline đồng bộ này chỉ phục vụ duy nhất một consumer là Elasticsearch Indexer, việc bổ sung Kafka sẽ tăng operational overhead và độ phức tạp không cần thiết. Team quyết định ưu tiên giải pháp đơn giản trước. Nếu sau này hệ thống mở rộng, có thêm nhiều downstream consumer khác (như Analytics, Data Warehouse, Cache Update), bọn em sẽ đẩy event CDC vào cụm Kafka chung."</em>
+                </div>
+
+                <h3 class="mt-32 mb-16">Bộ câu hỏi phỏng vấn Elasticsearch Sync (CDC)</h3>
+                
+                <!-- Q1 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Làm sao đảm bảo tính Idempotency (Ghi trùng không lỗi) khi chạy lại pipeline đồng bộ?
+                    </div>
+                    <div class="qa-answer">
+                        Đối với <code>user-index</code> và <code>message-index</code>, chúng tôi dùng chính <code>_id</code> (ObjectId) của MongoDB làm ID tài liệu trên Elasticsearch. Giao dịch ghi đè sẽ trở thành hành động <code>upsert</code> thay vì tạo mới. Đối với <code>message-hashtag-index</code>, chúng tôi sử dụng thuật toán <strong>UUIDv5</strong> mã hóa chuỗi <code>{message_id}-{hashtag}</code> để sinh ID tài liệu cố định, đảm bảo ghi đè chính xác khi re-sync.
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Nếu Elasticsearch trả về lỗi HTTP 429 (Too Many Requests) trong pha Backfill, worker xử lý thế nào?
+                    </div>
+                    <div class="qa-answer">
+                        Hệ thống áp dụng cơ chế <strong>Exponential Backoff với Jitter</strong> để thử lại sau các khoảng thời gian tăng dần ngẫu nhiên, tránh gây nghẽn do Thundering Herd. Đồng thời, cấu hình <code>queue_size</code> trong <code>parallel_bulk</code> sẽ tự động block luồng đọc từ MongoDB khi hàng đợi ghi ES đầy, tạo ra cơ chế <strong>Backpressure</strong> tự nhiên bảo vệ tài nguyên bộ nhớ.
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Làm sao để thay đổi cấu trúc Mapping (Schema) trên ES mà không gây gián đoạn dịch vụ (Zero-Downtime)?
+                    </div>
+                    <div class="qa-answer">
+                        Sử dụng chiến lược <strong>Blue-Green Indexing</strong> kết hợp <strong>Index Aliases</strong>. Ứng dụng đọc dữ liệu qua Alias (ví dụ: <code>user-index</code>) đang trỏ tới index vật lý <code>user-index-v1</code>. Ta tạo index mới <code>user-index-v2</code> với mapping mới và chạy sync dữ liệu lịch sử cùng CDC vào đó. Khi dữ liệu của v2 đã bắt kịp thời gian thực, ta gọi API cập nhật Alias trỏ từ v1 sang v2 một cách nguyên tử (atomic switch) rồi mới xóa v1.
+                    </div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Nếu service/worker bị crash giữa chừng, dữ liệu sự kiện có bị mất mát không?
+                    </div>
+                    <div class="qa-answer">
+                        Không. Dữ liệu thay đổi vẫn nằm trong MongoDB Oplog. Khi worker phục hồi, nó sẽ đọc Resume Token cuối cùng được lưu trong Redis và tiếp tục lắng nghe sự kiện từ thời điểm sập hệ thống.
+                    </div>
+                </div>
+
+                <!-- Q5 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Nếu xảy ra hiện tượng lệch dữ liệu (Data Drift) sau thời gian dài vận hành, bạn xử lý thế nào?
+                    </div>
+                    <div class="qa-answer">
+                        Áp dụng cơ chế <strong>Shadow-Read & Deep-Compare</strong> để phát hiện bất đồng bộ khi client gọi API đọc, kết hợp chạy một <strong>Reconciliation Batch Job</strong> ngầm định kỳ vào khung giờ thấp điểm để đếm số lượng tài liệu (Count Check) và so khớp checksum giữa hai bên nhằm tự động ghi bù các bản ghi lỗi lệch.
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 3: DB MIGRATION MONGO TO POSTGRES -->
+            <section id="db-migration-postgres" class="card">
+                <span class="badge badge-danger">Chiến dịch Migration</span>
+                <h2>3. Chiến dịch di chuyển Database Zero-Downtime (MongoDB → PostgreSQL)</h2>
+                <p class="mb-20">
+                    Trong dự án main-server, do yêu cầu cao về tính toàn vẹn quan hệ (Strong Consistency, Foreign Keys) và các truy vấn kết hợp phức tạp, team quyết định dịch chuyển cơ sở dữ liệu chính từ MongoDB sang PostgreSQL. Thử thách là hệ thống đang chạy sản xuất (production) với lượng truy cập cao, yêu cầu quá trình di chuyển phải đạt <strong>Zero-Downtime</strong>.
+                </p>
+
+                <h3 class="mt-24 mb-12">Kiến trúc di chuyển an toàn</h3>
+                <ul>
+                    <li class="mb-12">
+                        <strong>Ghi kép (Dual-Write):</strong>
+                        <p class="mt-4 text-muted">Sửa đổi mã nguồn ứng dụng thông qua một lớp dịch vụ chung (Facade). Khi phát sinh thao tác ghi mới (ví dụ tạo đơn hàng/user), ứng dụng sẽ ghi đồng bộ xuống MongoDB trước (Source of Truth tạm thời). Giao dịch ghi xuống PostgreSQL được thực hiện phi đồng bộ (qua Celery / Thread Pool / Spring @Async) và được bọc hoàn toàn trong khối try-catch để nếu PostgreSQL lỗi hoặc timeout, API chính vẫn thành công và không bị rollback giao dịch của MongoDB.</p>
+                    </li>
+                    <li class="mb-12">
+                        <strong>Đọc thử nghiệm (Shadow-Read & Compare):</strong>
+                        <p class="mt-4 text-muted">Khi người dùng thực hiện truy vấn đọc, hệ thống trả về kết quả lấy từ MongoDB. Đồng thời, một luồng phụ (Shadow Thread) sẽ thực hiện truy vấn tương tự xuống PostgreSQL và thực hiện so khớp sâu cấu trúc dữ liệu hai bên. Mọi trường hợp lệch dữ liệu (data mismatch) hoặc lỗi định dạng đều được ghi log chi tiết phục vụ sửa lỗi.</p>
+                    </li>
+                    <li class="mb-12">
+                        <strong>Đường ống xử lý sự kiện (CDC Pipeline) & DLQ:</strong>
+                        <p class="mt-4 text-muted">Sử dụng pipeline CDC quét MongoDB Oplog để thực hiện đồng bộ bù những thay đổi lịch sử hoặc các giao dịch bị lỗi trong quá trình ghi kép. Nếu một sự kiện đồng bộ bị thất bại nhiều lần, nó sẽ được chuyển vào <strong>Dead Letter Queue (DLQ)</strong> để tránh tắc nghẽn luồng đồng bộ chính, cho phép Dev kiểm tra lỗi và chạy phát lại thủ công (manual replay).</p>
+                    </li>
+                </ul>
+
+                <h3 class="mt-32 mb-16">Bộ câu hỏi phỏng vấn về di chuyển Database (Migration Q&A)</h3>
+
+                <!-- Q1 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Cơ chế Dual-write có nguy cơ gây bất đồng nhất dữ liệu (Inconsistency) không? Làm sao xử lý?
+                    </div>
+                    <div class="qa-answer">
+                        Có nguy cơ lớn nếu một bên ghi thành công còn bên kia lỗi. Chúng tôi giải quyết bằng cách:
+                        <ul class="mt-8">
+                            <li>Thiết kế các hàm ghi phía PostgreSQL có tính chất <strong>Idempotent</strong> (sử dụng Upsert: <code>ON CONFLICT DO UPDATE</code>).</li>
+                            <li>Sử dụng pipeline CDC làm cơ chế <strong>Self-Healing</strong> liên tục quét sự thay đổi ở MongoDB để cập nhật đè lên PostgreSQL, đảm bảo tính nhất quán cuối cùng (Eventual Consistency).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Q2 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Nếu đường ống CDC (Change Stream) bị lag hoặc tải quá nặng, bạn sẽ xử lý thế nào?
+                    </div>
+                    <div class="qa-answer">
+                        Chúng tôi triển khai giám sát độ trễ (CDC Lag Monitoring). Nếu độ trễ vượt ngưỡng an toàn, hệ thống sẽ tự động kích hoạt scaling tăng số lượng worker tiêu thụ sự kiện. Với dữ liệu lịch sử bị chậm quá sâu, chúng tôi chạy song song một tác vụ Batch Replay/Backfill theo phân đoạn thời gian để chia sẻ tải cho pipeline CDC chính.
+                    </div>
+                </div>
+
+                <!-- Q3 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Làm sao bạn chứng minh được dữ liệu giữa MongoDB và PostgreSQL đã khớp hoàn toàn để sẵn sàng ngắt kết nối MongoDB cũ?
+                    </div>
+                    <div class="qa-answer">
+                        Chúng tôi dựa trên dữ liệu đối soát từ **Shadow-Read**:
+                        <ul class="mt-8">
+                            <li>Theo dõi tỷ lệ so khớp thành công (Mismatch Rate) qua Grafana Dashboard.</li>
+                            <li>Chỉ tiến hành chuyển đổi hoàn toàn (Cutover) khi tỷ lệ so khớp thành công đạt **100% liên tục trong vòng 7 ngày** dưới tải thực tế của hệ thống.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Q4 -->
+                <div class="qa-block">
+                    <div class="qa-question">
+                        Tại sao bạn không dùng Debezium cho chiến dịch di chuyển dữ liệu MongoDB → PostgreSQL này?
+                    </div>
+                    <div class="qa-answer">
+                        Dự án main-server đã có sẵn các cấu trúc worker xử lý Change Stream trực tiếp từ MongoDB. Việc triển khai thêm Debezium Connectors yêu cầu dựng thêm một layer hạ tầng (Kafka Connect) làm tăng tải quản trị hệ thống. Chúng tôi tận dụng trực tiếp thư viện trong code để giữ thiết kế tinh gọn và dễ kiểm soát transaction ở tầng ứng dụng.
+                    </div>
+                </div>
+
+                <div class="alert alert-success">
+                    <strong>Mẫu phát biểu chốt hạ cực mạnh khi kết thúc phỏng vấn:</strong>
+                    <p class="mt-4">
+                        <em>"Theo kinh nghiệm của em, việc di chuyển cơ sở dữ liệu lớn trên môi trường production đang chạy thực tế không bao giờ có thể làm theo kiểu 'big-bang' (ngắt hệ thống và chuyển đổi một lần). Thay vào đó, nó phải là một quy trình chuyển dịch dần dần và an toàn thông qua sự kết hợp của các thiết kế: <strong>Dual-Write</strong> (để ghi nhận dữ liệu mới), <strong>CDC</strong> (để xử lý dữ liệu cũ & bù lỗi), và <strong>Shadow-Read & Compare</strong> (để kiểm chứng tính chính xác của dữ liệu trên PostgreSQL trước khi chuyển giao quyền lực hoàn toàn)."</em>
+                    </p>
+                </div>
+            </section>
+
+            <!-- SECTION 4: SPRING BOOT EQUIVALENT -->
+            <section id="java-porting" class="card">
+                <span class="badge badge-success">Dịch chuyển tư duy</span>
+                <h2>4. Định hướng chuyển đổi sang Spring Boot (Java)</h2>
+                <p class="mb-20">
+                    Khi ứng tuyển các vị trí Java Senior, bạn hãy chuẩn bị sẵn cách ánh xạ cấu trúc mã nguồn Python/Celery sang hệ sinh thái Spring Enterprise tương đương:
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Khái niệm / Thành phần</th>
+                            <th>Triển khai Python hiện tại</th>
+                            <th>Triển khai tương đương trong Spring Boot</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>ORM & Client Connection</strong></td>
+                            <td>pymongo & elasticsearch-py</td>
+                            <td><code>Spring Data MongoDB</code> & <code>Spring Data Elasticsearch</code> (sử dụng <code>MongoTemplate</code> và <code>ElasticsearchOperations</code>).</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Change Stream CDC</strong></td>
+                            <td><code>db.collection.watch()</code> trong vòng lặp vô hạn.</td>
+                            <td>Sử dụng <code>MessageListenerContainer</code> của Spring Data MongoDB hoặc tích hợp công cụ chuyên dụng như <strong>Debezium</strong> để push Oplog sang Kafka.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Multi-threading & Bulk</strong></td>
+                            <td><code>helpers.parallel_bulk</code> (ThreadPool)</td>
+                            <td>Cấu hình <code>ThreadPoolTaskExecutor</code> kết hợp với <code>BulkRequest</code> của Elasticsearch Java API Client. Ghi bất đồng bộ dùng <code>CompletableFuture</code> hoặc reactive stream với <code>WebClient</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>State Checkpoint</strong></td>
+                            <td>state.py (Redis client)</td>
+                            <td><code>Spring Data Redis</code> (sử dụng <code>StringRedisTemplate</code> hoặc <code>RedisRepository</code>).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <footer>
+                <p>&copy; 2026 Mini Shopee - Documentation Portal</p>
+            </footer>
+        </main>
+    </div>
+
+</body>
+</html>

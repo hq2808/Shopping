@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Java Senior Prep - Swag Business Flows</title>
+    <title>Java Senior Prep - Main Business Flows</title>
     <link rel="stylesheet" href="../style.css">
     <script src="../sidebar.js" defer></script>
 </head>
@@ -15,7 +15,7 @@
             <a href="index.html" class="logo">
                 <span>Java Senior Prep</span>
             </a>
-            <div class="header-tagline">Swag Business Flows</div>
+            <div class="header-tagline">Main Business Flows</div>
         </div>
     </header>
 
@@ -28,8 +28,8 @@
         <!-- Content Area -->
         <main class="content-wrapper">
             <div class="hero-section">
-                <h1>Swag Business Flows <span class="gradient-text">in Java</span></h1>
-                <p>Khảo sát và chuyển đổi toàn bộ luồng nghiệp vụ phức tạp của Swag Server sang kiến trúc Spring Boot và hệ sinh thái GCP.</p>
+                <h1>Main Business Flows <span class="gradient-text">in Java</span></h1>
+                <p>Khảo sát và chuyển đổi toàn bộ luồng nghiệp vụ phức tạp của Main Server sang kiến trúc Spring Boot và hệ sinh thái GCP.</p>
             </div>
 
             <!-- Progress Tracker -->
@@ -57,7 +57,7 @@
                 <pre><code><span class="code-annotation">@Service</span>
 <span class="code-keyword">public class</span> <span class="code-class">GcsAssetService</span> {
     <span class="code-keyword">private final</span> <span class="code-class">Storage</span> storage; <span class="code-comment">// Google Cloud Storage client</span>
-    <span class="code-keyword">private final</span> <span class="code-class">String</span> bucketName = <span class="code-string">"swag-assets-bucket"</span>;
+    <span class="code-keyword">private final</span> <span class="code-class">String</span> bucketName = <span class="code-string">"main-assets-bucket"</span>;
 
     <span class="code-annotation">@Autowired</span>
     <span class="code-keyword">public</span> <span class="code-class">GcsAssetService</span>(<span class="code-class">Storage</span> storage) {
